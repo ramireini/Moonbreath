@@ -45,7 +45,7 @@ typedef struct
 
 struct DebugVariable
 {
-    char name[32];
+    String32 name;
     Color color;
     
     DebugVariable *next;

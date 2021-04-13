@@ -175,7 +175,7 @@ apply_entity_resistance_to_damage(Entity *defender, UI *ui, u32 damage, DamageTy
         u32 damage_change = (u32)((f32)damage * resistance_percentage);
         damage -= damage_change;
         
-        #if 1
+        #if 0
         printf("\nDamage: %u (%s)\n", result, get_damage_type_text(damage_type));
         printf("Defender Resistance: %dp (%.01f%%)\n", resistance, resistance_percentage * 100.0f);
         printf("Damage After: %d (%d old; %d change)\n\n", result - damage_change, result, damage_change);
@@ -428,9 +428,7 @@ get_enemy_normal_turn_count(f32 *current_time, f32 enemy_action_time)
 }
 
 internal u32
-get_enemy_turn_count(DungeonTiles tiles,
-                     Entity *enemy,
-                     f32 *current_time)
+get_enemy_turn_count(DungeonTiles tiles, Entity *enemy, f32 *current_time)
 {
     assert(is_entity_valid_and_enemy(enemy));
     
@@ -458,8 +456,33 @@ get_enemy_turn_count(DungeonTiles tiles,
     return(result);
 }
 
+internal u32
+get_dungeon_pos_entity_count(EntityState *entities, u32 dungeon_level, v2u pos, b32 enemy_only)
+{
+    u32 result = 0;
+    
+    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+    {
+        Entity *entity = &entities->array[index];
+        
+        if(enemy_only && !is_entity_valid_and_enemy(entity))
+        {
+            continue;
+        }
+        
+        if(is_entity_valid(entity) &&
+           entity->dungeon_level == dungeon_level &&
+           is_v2u_equal(entity->pos, pos))
+        {
+            ++result;
+        }
+    }
+    
+    return(result);
+}
+
 internal Entity *
-get_entity_on_pos(EntityState *entities, u32 dungeon_level, v2u pos, b32 enemy_only)
+get_dungeon_pos_entity(EntityState *entities, u32 dungeon_level, v2u pos, b32 enemy_only)
 {
     Entity *result = 0;
     
@@ -492,7 +515,7 @@ other_windows_are_closed(Examine *examine, Inventory *inventory, UI *ui)
                       !is_set(inventory->flags, InventoryFlag_Open) &&
                       !is_set(inventory->flags, InventoryFlag_MultiplePickup) &&
                       !is_set(inventory->flags, InventoryFlag_MultipleExamine) &&
-                  !ui->is_full_log_open);
+                      !ui->full_log_open);
     
     return(result);
 }
@@ -750,7 +773,7 @@ update_entity_status_effects(Game *game,
                         switch(entity->type)
                         {
                             case EntityType_Player: log_add(ui, "%sPoison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value); break;
-                            case EntityType_Enemy: log_add(ui, "%sPoison wrecks the %s for %u damage.", start_color(Color_DarkGreen), entity->name, status->value); break;
+                            case EntityType_Enemy: log_add(ui, "%sPoison wrecks the %s for %u damage.", start_color(Color_DarkGreen), entity->name.s, status->value); break;
                             
                             invalid_default_case;
                         }
@@ -1020,7 +1043,7 @@ move_entity(Random *random,
                 }
                 else if(entity->type == EntityType_Enemy)
                 {
-                    log_add(ui, "%sThe %s stumbles slightly..", start_color(Color_LightGray), entity->name);
+                        log_add(ui, "%sThe %s stumbles slightly..", start_color(Color_LightGray), entity->name.s);
                 }
             }
         }
@@ -1161,11 +1184,11 @@ get_entity_attack_text(Random *random,
         
         if(is_set(defender->flags, EntityFlag_IsInvisible))
         {
-            snprintf(result.str, sizeof(result.str), "You attack the something, dealing %u damage.", value);
+            snprintf(result.s, sizeof(result.s), "You attack the something, dealing %u damage.", value);
         }
         else
         {
-            snprintf(result.str, sizeof(result.str), "You %s the %s, dealing %u damage.", attack_text, defender->name, value);
+            snprintf(result.s, sizeof(result.s), "You %s the %s, dealing %u damage.", attack_text, defender->name.s, value);
         }
     }
     else if(attacker->type == EntityType_Enemy)
@@ -1176,24 +1199,24 @@ get_entity_attack_text(Random *random,
             
             if(defender->type == EntityType_Player)
             {
-                snprintf(result.str, sizeof(result.str), "The %s casts %s at you, dealing %u damage.", attacker->name, get_spell_name(spell->id), value);
+                snprintf(result.s, sizeof(result.s), "The %s casts %s at you, dealing %u damage.", attacker->name.s, get_spell_name(spell->id), value);
             }
             else
             {
-                snprintf(result.str, sizeof(result.str), "The %s casts %s at the %s, healing it for %u health.", attacker->name, get_spell_name(spell->id), defender->name, value);
+                snprintf(result.s, sizeof(result.s), "The %s casts %s at the %s, healing it for %u health.", attacker->name.s, get_spell_name(spell->id), defender->name.s, value);
             }
         }
         else if(is_set(attacker->flags, EntityFlag_UsesRangedAttacks))
         {
-            snprintf(result.str, sizeof(result.str), "The %s fires an arrow at you, dealing %u damage.", attacker->name, value);
+            snprintf(result.s, sizeof(result.s), "The %s fires an arrow at you, dealing %u damage.", attacker->name.s, value);
         }
         else if(is_set(attacker->flags, EntityFlag_IsInvisible))
         {
-            snprintf(result.str, sizeof(result.str), "Something attacks you, dealing %u damage.", value);
+            snprintf(result.s, sizeof(result.s), "Something attacks you, dealing %u damage.", value);
         }
         else
         {
-            snprintf(result.str, sizeof(result.str), "The %s attacks you, dealing %u damage.", attacker->name, value);
+            snprintf(result.s, sizeof(result.s), "The %s attacks you, dealing %u damage.", attacker->name.s, value);
         }
     }
     
@@ -1218,7 +1241,7 @@ kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
     }
     else if(entity->type == EntityType_Enemy)
     {
-        log_add(ui, "%sThe %s dies!", start_color(Color_LightRed), entity->name);
+        log_add(ui, "%sThe %s dies!", start_color(Color_LightRed), entity->name.s);
         
         // Place entity death remains
         if(entity->remains && can_place_dungeon_remains_on_pos(dungeon->tiles, entity->pos))
@@ -1315,7 +1338,7 @@ attack_entity(Random *random,
             {
                 if(!has_no_attacker)
                 {
-                log_add(ui, get_entity_attack_text(random, inventory, attacker, defender, damage).str);
+                log_add(ui, get_entity_attack_text(random, inventory, attacker, defender, damage).s);
                 }
                 
                 defender->hp -= damage;
@@ -1462,7 +1485,7 @@ attack_entity(Random *random,
             }
             else if(defender->type == EntityType_Enemy)
             {
-                log_add(ui, "%sThe %s's armor blocks your attack.", start_color(Color_LightGray), defender->name);
+                log_add(ui, "%sThe %s's armor blocks your attack.", start_color(Color_LightGray), defender->name.s);
             }
         }
     }
@@ -1476,7 +1499,7 @@ attack_entity(Random *random,
             }
             else
             {
-            log_add(ui, "%sYou miss the %s.", start_color(Color_LightGray), defender->name);
+            log_add(ui, "%sYou miss the %s.", start_color(Color_LightGray), defender->name.s);
             }
         }
         else if(attacker->type == EntityType_Enemy)
@@ -1684,14 +1707,15 @@ update_player_input(Game *game,
                     {
                         if((is_set(examine->flags, ExamineFlag_Open) || examine->type))
                         {
-                            if(examine->type == ExamineType_EntitySpell)
+                            if(examine->type == ExamineType_Spell)
                             {
                                 examine->type = ExamineType_Entity;
                             }
                             else
                             {
                             unset(examine->flags, ExamineFlag_Open | ExamineFlag_ReadyForKeypress);
-                                examine->type = ExamineType_None;
+                            examine->type = ExamineType_None;
+                            examine->selected_passage = 0;
                             }
                         }
                     else if(is_set(inventory->flags, InventoryFlag_Adjust))
@@ -1718,12 +1742,12 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
-                        reset_multiple_item_selections(items, dungeon->level);
+                        reset_letters(ui->letters);
                         unset(inventory->flags, InventoryFlag_MultipleExamine);
                     }
-                        else if(ui->is_full_log_open)
+                        else if(ui->full_log_open)
                     {
-                            ui->is_full_log_open = false;
+                            ui->full_log_open = false;
                     }
                     else
                     {
@@ -1735,7 +1759,7 @@ update_player_input(Game *game,
             {
                 if(other_windows_are_closed(examine, inventory, ui))
                 {
-                    if(get_dungeon_pos_item_count(items, player->pos, dungeon->level) > 1)
+                    if(get_dungeon_pos_item_count(items, dungeon->level, player->pos) > 1)
                     {
                         set(inventory->flags, InventoryFlag_MultiplePickup);
                         set_view_at_start(&inventory->pickup_view);
@@ -1817,18 +1841,16 @@ update_player_input(Game *game,
                 {
                 if(other_windows_are_closed(examine, inventory, ui))
                 {
-                    set(examine->flags, ExamineFlag_Open);
+                    set(examine->flags, ExamineFlag_Open | ExamineFlag_CameraFollow);
                     examine->pos = player->pos;
-                    
-                    examine->selected_passage = 0;
                     }
                 }
                 else if(was_pressed(&input->GameKey_Log))
                 {
                 if(other_windows_are_closed(examine, inventory, ui))
-                    {
-                        ui->is_full_log_open = true;
-                    ui->is_full_log_at_end = false;
+                {
+                    ui->full_log_open = true;
+                    ui->full_log_at_end = false;
                         
                         set_view_at_start(&ui->full_log_view);
                     }
@@ -1857,7 +1879,7 @@ update_player_input(Game *game,
                 {
                     update_view_scrolling(&inventory->pickup_view, input);
                 }
-                    else if(ui->is_full_log_open)
+                    else if(ui->full_log_open)
                     {
                         update_view_scrolling(&ui->full_log_view, input);
                     }
@@ -1885,17 +1907,17 @@ update_player_input(Game *game,
                                 if(was_pressed(&input->Key_A))
                                 {
                                 set(inventory->flags, InventoryFlag_Adjust);
-                                log_add(ui, "%sAdjust to which letter? (%s to quit).", start_color(Color_Yellow), get_printable_key(input, game->keybinds[GameKey_Back]).str);
+                                log_add(ui, "%sAdjust to which letter? (%s to quit).", start_color(Color_Yellow), get_printable_key(input, game->keybinds[GameKey_Back]).s);
                                 }
                                 else if(was_pressed(&input->Key_E))
                                 {
-                                    equip_item(game, player, examine_item, inventory, ui);
+                                equip_item(game, player, examine_item, inventory, ui);
                                 }
                                 else if(was_pressed(&input->Key_U))
                                 {
                                 if(unequip_item(game, player, examine_item, ui))
                                 {
-                                    log_add_item_action_text(ui, examine_item, ItemActionType_Unequip);
+                                    log_add_item_action_text(examine_item, ui, ItemActionType_Unequip);
                                     }
                                 }
                                 else if(was_pressed(&input->Key_R))
@@ -1919,15 +1941,15 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
-                                // Begin marking the examine item
+                                // Start examine item mark
                                 set(inventory->flags, InventoryFlag_Mark);
                                 Mark *mark = &ui->mark;
                                 
                                 if(is_set(examine_item->flags, ItemFlag_IsMarked))
                                 {
-                                    assert(!examine_item->mark.should_render);
+                                    assert(!examine_item->mark.render_cursor);
                                     assert(!examine_item->mark.cursor_index);
-                                    assert(!examine_item->mark.render_start);
+                                    assert(!examine_item->mark.cursor_render_start);
                                     
                                     ui->mark.view = examine_item->mark.view;
                                     strcpy(ui->mark.array, examine_item->mark.array);
@@ -1958,7 +1980,7 @@ update_player_input(Game *game,
                                     }
                                     else
                                 {
-                                    // Examine the item from inventory if we find it
+                                    // Examine item
                                     Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_Letter, true);
                                     if(item)
                                     {
@@ -2005,13 +2027,36 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
-                        if(pressed)
+                        if(pressed && !examine->type)
                         {
-                            Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_SelectLetter, false);
-                            if(item)
+                            LetterParent parent = get_letter_parent(ui->letters, pressed);
+                            if(parent.type)
                             {
-                                set(inventory->flags, InventoryFlag_Examine);
-                                inventory->examine_item = item;
+                                set(examine->flags, ExamineFlag_Open);
+                                unset(examine->flags, ExamineFlag_CameraFollow);
+                                
+                                switch(parent.type)
+                                {
+                                    case LetterParentType_Entity:
+                                    {
+                                        examine->type = ExamineType_Entity;
+                                        examine->entity = parent.entity;
+                                    } break;
+                                    
+                                    case LetterParentType_Item:
+                                    {
+                                        examine->type = ExamineType_Item;
+                                        examine->item = parent.item;
+                                    } break;
+                                    
+                                    case LetterParentType_Trap:
+                                    {
+                                        examine->type = ExamineType_Trap;
+                                        examine->trap = parent.trap;
+                                    } break;
+                                    
+                                    invalid_default_case;
+                                }
                             }
                         }
                     }
@@ -2019,6 +2064,13 @@ update_player_input(Game *game,
             }
             }
     }
+}
+
+internal Entity *
+get_player_entity(EntityState *entities)
+{
+    Entity *result = &entities->array[0];
+    return(result);
 }
 
 internal void
@@ -2034,7 +2086,7 @@ UI *ui)
     Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
     
     // Update player
-    Entity *player = &entities->array[0];
+    Entity *player = get_player_entity(entities);
     assert(is_entity_valid_and_player(player));
     
     update_player_input(game, input, player, entities, items, inventory, dungeons, assets, ui);
@@ -2304,7 +2356,7 @@ UI *ui)
         // Inform the player if there are multiple items on their position
         if(is_set(player->flags, EntityFlag_NotifyAboutMultipleItems))
         {
-            if(get_dungeon_pos_item_count(items, player->pos, dungeon->level) > 1)
+            if(get_dungeon_pos_item_count(items, dungeon->level, player->pos) > 1)
             {
                 log_add(ui, "There are multiple items here.");
             }
@@ -2533,7 +2585,7 @@ render_entities(Game *game,
                 Assets *assets)
 {
         { // Render player
-            Entity *player = &entities->array[0];
+        Entity *player = get_player_entity(entities);
         assert(is_entity_valid_and_player(player));
         
             v4u dest = get_game_dest(game, player->pos);
@@ -2684,7 +2736,7 @@ internal void
 add_player_entity(Entity *player)
 {
     player->id = EntityID_Player;
-    strcpy(player->name, "Name");
+    strcpy(player->name.s, "Name");
     
     player->max_hp = 80;
     player->hp = player->max_hp;
@@ -2742,7 +2794,9 @@ add_enemy_entity(EntityState *entities,
             status_effect.chance = 100;
             status_effect.duration = 5;
             start_entity_status_effect(enemy, status_effect);
+            #endif
             
+            #if 1
             enemy->resistances[DamageType_Physical] = -5;
             enemy->resistances[DamageType_Fire] = -3;
             enemy->resistances[DamageType_Ice] = -1;
@@ -2757,7 +2811,7 @@ add_enemy_entity(EntityState *entities,
                 case EntityID_Dummy:
                 {
                     // This is a dummy entity for testing purposes.
-                    strcpy(enemy->name, "Dummy");
+                    strcpy(enemy->name.s, "Dummy");
                     enemy->max_hp = enemy->hp = U32_MAX;
                     
                     enemy->evasion = 10;
@@ -2766,7 +2820,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_SkeletonWarrior:
                 {
-                    strcpy(enemy->name, "Skeleton Warrior");
+                    strcpy(enemy->name.s, "Skeleton Warrior");
                     enemy->max_hp = enemy->hp = 18;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2777,7 +2831,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_SkeletonArcher:
                 {
-                    strcpy(enemy->name, "Skeleton Archer");
+                    strcpy(enemy->name.s, "Skeleton Archer");
                     enemy->max_hp = enemy->hp = 15;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2790,7 +2844,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_SkeletonMage:
                 {
-                    strcpy(enemy->name, "Skeleton Mage");
+                    strcpy(enemy->name.s, "Skeleton Mage");
                     enemy->max_hp = enemy->hp = 15;
                     
                     enemy->evasion = 4;
@@ -2802,7 +2856,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Bat:
                 {
-                    strcpy(enemy->name, "Bat");
+                    strcpy(enemy->name.s, "Bat");
                     enemy->max_hp = enemy->hp = 14;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2814,7 +2868,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Rat:
                 {
-                    strcpy(enemy->name, "Rat");
+                    strcpy(enemy->name.s, "Rat");
                     enemy->max_hp = enemy->hp = 11;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2826,7 +2880,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_KoboldWarrior:
                 {
-                    strcpy(enemy->name, "Kobold Warrior");
+                    strcpy(enemy->name.s, "Kobold Warrior");
                     enemy->max_hp = enemy->hp = 22;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2838,7 +2892,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_KoboldShaman:
                 {
-                    strcpy(enemy->name, "Kobold Shaman");
+                    strcpy(enemy->name.s, "Kobold Shaman");
                     enemy->max_hp = enemy->hp = 18;
                     
                     enemy->evasion = 7;
@@ -2853,7 +2907,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Snail:
                 {
-                    strcpy(enemy->name, "Snail");
+                    strcpy(enemy->name.s, "Snail");
                     enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2865,7 +2919,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Slime:
                 {
-                    strcpy(enemy->name, "Slime");
+                    strcpy(enemy->name.s, "Slime");
                     enemy->max_hp = enemy->hp = 20;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2877,7 +2931,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Dog:
                 {
-                    strcpy(enemy->name, "Dog");
+                    strcpy(enemy->name.s, "Dog");
                     enemy->max_hp = enemy->hp = 18;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2889,7 +2943,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OrcWarrior:
                 {
-                    strcpy(enemy->name, "Orc Warrior");
+                    strcpy(enemy->name.s, "Orc Warrior");
                     enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2901,7 +2955,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OrcArcher:
                 {
-                    strcpy(enemy->name, "Orc Archer");
+                    strcpy(enemy->name.s, "Orc Archer");
                     enemy->max_hp = enemy->hp = 26;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2915,7 +2969,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OrcShaman:
                 {
-                    strcpy(enemy->name, "Orc Shaman");
+                    strcpy(enemy->name.s, "Orc Shaman");
                     enemy->max_hp = enemy->hp = 26;
                     
                     enemy->evasion = 8;
@@ -2930,7 +2984,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Python:
                 {
-                    strcpy(enemy->name, "Python");
+                    strcpy(enemy->name.s, "Python");
                     enemy->max_hp = enemy->hp = 15;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2947,7 +3001,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Shade:
                 {
-                    strcpy(enemy->name, "Shade");
+                    strcpy(enemy->name.s, "Shade");
                     enemy->max_hp = enemy->hp = 18;
                     
                     enemy->e.damage_type = DamageType_Dark;
@@ -2960,7 +3014,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_ElfKnight:
                 {
-                    strcpy(enemy->name, "Elf Knight");
+                    strcpy(enemy->name.s, "Elf Knight");
                     enemy->max_hp = enemy->hp = 32;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -2973,7 +3027,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_ElfArbalest:
                 {
-                    strcpy(enemy->name, "Elf Arbalest");
+                    strcpy(enemy->name.s, "Elf Arbalest");
                     enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage = 14;
@@ -2986,7 +3040,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_ElfMage:
                 {
-                    strcpy(enemy->name, "Elf Mage");
+                    strcpy(enemy->name.s, "Elf Mage");
                     enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage = 0;
@@ -3002,7 +3056,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_GiantSlime:
                 {
-                    strcpy(enemy->name, "Giant Slime");
+                    strcpy(enemy->name.s, "Giant Slime");
                     enemy->max_hp = enemy->hp = 40;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3017,7 +3071,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Spectre:
                 {
-                    strcpy(enemy->name, "Spectre");
+                    strcpy(enemy->name.s, "Spectre");
                     enemy->max_hp = enemy->hp = 25;
                     
                     enemy->e.damage_type = DamageType_Dark;
@@ -3033,7 +3087,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OrcAssassin:
                 {
-                    strcpy(enemy->name, "Orc Assassin");
+                    strcpy(enemy->name.s, "Orc Assassin");
                     enemy->max_hp = enemy->hp = 28;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3045,7 +3099,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OrcSorcerer:
                 {
-                    strcpy(enemy->name, "Orc Sorcerer");
+                    strcpy(enemy->name.s, "Orc Sorcerer");
                     enemy->max_hp = enemy->hp = 26;
                     
                     enemy->evasion = 5;
@@ -3059,7 +3113,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Minotaur:
                 {
-                    strcpy(enemy->name, "Minotaur");
+                    strcpy(enemy->name.s, "Minotaur");
                     enemy->max_hp = enemy->hp = 34;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3071,7 +3125,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Treant:
                 {
-                    strcpy(enemy->name, "Treant");
+                    strcpy(enemy->name.s, "Treant");
                     enemy->max_hp = enemy->hp = 40;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3083,7 +3137,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Viper:
                 {
-                    strcpy(enemy->name, "Viper");
+                    strcpy(enemy->name.s, "Viper");
                     enemy->max_hp = enemy->hp = 18;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3100,7 +3154,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_CentaurWarrior:
                 {
-                    strcpy(enemy->name, "Centaur Warrior");
+                    strcpy(enemy->name.s, "Centaur Warrior");
                     enemy->max_hp = enemy->hp = 35;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3112,7 +3166,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_CentaurSpearman:
                 {
-                    strcpy(enemy->name, "Centaur Spearman");
+                    strcpy(enemy->name.s, "Centaur Spearman");
                     enemy->max_hp = enemy->hp = 35;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3124,7 +3178,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_CentaurArcher:
                 {
-                    strcpy(enemy->name, "Centaur Archer");
+                    strcpy(enemy->name.s, "Centaur Archer");
                     enemy->max_hp = enemy->hp = 32;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3138,7 +3192,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_CursedSkull:
                 {
-                    strcpy(enemy->name, "Cursed Skull");
+                    strcpy(enemy->name.s, "Cursed Skull");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3152,7 +3206,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Wolf:
                 {
-                    strcpy(enemy->name, "Wolf");
+                    strcpy(enemy->name.s, "Wolf");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3164,7 +3218,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OgreWarrior:
                 {
-                    strcpy(enemy->name, "Ogre Warrior");
+                    strcpy(enemy->name.s, "Ogre Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3176,7 +3230,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OgreArcher:
                 {
-                    strcpy(enemy->name, "Ogre Archer");
+                    strcpy(enemy->name.s, "Ogre Archer");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3192,7 +3246,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_OgreMage:
                 {
-                    strcpy(enemy->name, "Ogre Mage");
+                    strcpy(enemy->name.s, "Ogre Mage");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage = 0;
@@ -3205,7 +3259,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Cyclops:
                 {
-                    strcpy(enemy->name, "Cyclops");
+                    strcpy(enemy->name.s, "Cyclops");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3217,7 +3271,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_ShadowWalker:
                 {
-                    strcpy(enemy->name, "Shadow Walker");
+                    strcpy(enemy->name.s, "Shadow Walker");
                     enemy->max_hp = enemy->hp = 10;
                     
                     enemy->e.damage_type = DamageType_Dark;
@@ -3230,7 +3284,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_DwarwenWarrior:
                 {
-                    strcpy(enemy->name, "Dwarwen Warrior");
+                    strcpy(enemy->name.s, "Dwarwen Warrior");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3242,7 +3296,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_DwarwenSorcerer:
                 {
-                    strcpy(enemy->name, "Dwarwen Sorcerer");
+                    strcpy(enemy->name.s, "Dwarwen Sorcerer");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage = 0;
@@ -3255,7 +3309,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_DwarwenPriest:
                 {
-                    strcpy(enemy->name, "Dwarwen Priest");
+                    strcpy(enemy->name.s, "Dwarwen Priest");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage = 0;
@@ -3268,7 +3322,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_ScarletSnake:
                 {
-                    strcpy(enemy->name, "Scarlet Snake");
+                    strcpy(enemy->name.s, "Scarlet Snake");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3280,7 +3334,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Lich:
                 {
-                    strcpy(enemy->name, "Lich");
+                    strcpy(enemy->name.s, "Lich");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage = 0;
@@ -3292,7 +3346,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_AbyssalFiend:
                 {
-                    strcpy(enemy->name, "Abyssal Fiend");
+                    strcpy(enemy->name.s, "Abyssal Fiend");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3306,7 +3360,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_BloodTroll:
                 {
-                    strcpy(enemy->name, "Blood Troll");
+                    strcpy(enemy->name.s, "Blood Troll");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3318,7 +3372,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_IronGolem:
                 {
-                    strcpy(enemy->name, "Iron Golem");
+                    strcpy(enemy->name.s, "Iron Golem");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3329,7 +3383,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Griffin:
                 {
-                    strcpy(enemy->name, "Griffin");
+                    strcpy(enemy->name.s, "Griffin");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3341,7 +3395,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Imp:
                 {
-                    strcpy(enemy->name, "Imp");
+                    strcpy(enemy->name.s, "Imp");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3353,7 +3407,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_BlackKnight:
                 {
-                    strcpy(enemy->name, "Black Knight");
+                    strcpy(enemy->name.s, "Black Knight");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3364,7 +3418,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_GiantDemon:
                 {
-                    strcpy(enemy->name, "Giant Demon");
+                    strcpy(enemy->name.s, "Giant Demon");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3376,7 +3430,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Hellhound:
                 {
-                    strcpy(enemy->name, "Hellhound");
+                    strcpy(enemy->name.s, "Hellhound");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage_type = DamageType_Physical;
@@ -3388,7 +3442,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_AbyssalHexmaster:
                 {
-                    strcpy(enemy->name, "Abyssal Hexmaster");
+                    strcpy(enemy->name.s, "Abyssal Hexmaster");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage = 0;
@@ -3401,7 +3455,7 @@ add_enemy_entity(EntityState *entities,
                 
                 case EntityID_Mahjarrat:
                 {
-                    strcpy(enemy->name, "Mahjarrat");
+                    strcpy(enemy->name.s, "Mahjarrat");
                     enemy->max_hp = enemy->hp = 0;
                     
                     enemy->e.damage = 0;

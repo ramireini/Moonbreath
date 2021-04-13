@@ -5,14 +5,14 @@ typedef enum
 } NameType;
 
 internal b32
-is_vowel(char character)
+is_vowel(char c)
 {
     b32 result = false;
     
     char vowels[10] = "aeiouAEIOU";
-    for(u32 index = 0; index < 10; ++index)
+    for(u32 index = 0; index < array_count(vowels); ++index)
     {
-        if(character == vowels[index])
+        if(c == vowels[index])
         {
             result = true;
             break;
@@ -23,14 +23,14 @@ is_vowel(char character)
 }
 
 internal b32
-is_consonant(char character)
+is_consonant(char c)
 {
     b32 result = false;
     
     char consonants[42] = "bcdfghjklmnpqrstvxzwyBCDFGHJKLMNPQRSTVXZWY";
-    for(u32 index = 0; index < 42; ++index)
+    for(u32 index = 0; index < array_count(consonants); ++index)
     {
-        if(character == consonants[index])
+        if(c == consonants[index])
         {
             result = true;
             break;
@@ -55,16 +55,23 @@ get_random_consonant(Random *random)
 }
 
 internal char
-get_random_character(Random *random)
+get_random_lower_char(Random *random)
 {
     char result = ('a' + get_random_number(random, 0, 25));
+    return(result);
+}
+
+internal char
+get_random_upper_char(Random *random)
+{
+    char result = make_uppercase(get_random_lower_char(random));
     return(result);
 }
 
 internal char *
 get_random_name(Random *random, char *name, NameType type)
 {
-    u32 space_pos = 0;
+    u32 space_index = 0;
     u32 name_length = 0;
     u32 name_index = 0;
     
@@ -75,22 +82,21 @@ get_random_name(Random *random, char *name, NameType type)
     else if(type == NameType_NPC)
     {
         name_length = get_random_number(random, 8, 12);
-        space_pos = get_random_number(random, 3, name_length - 3);
+        space_index = get_random_number(random, 3, name_length - 3);
     }
     
     while(name_index < name_length)
     {
-        char prev = name_index ? name[name_index - 1] : 0;
+        char prev = name_index >= 1 ? name[name_index - 1] : 0;
         char prev_prev = name_index >= 2 ? name[name_index - 2] : 0;
         
         if(!name_index || prev == ' ')
         {
-            char random_c = get_random_character(random);
-            name[name_index++] = make_uppercase(random_c);
+            name[name_index++] = get_random_upper_char(random);
         }
-        else if(space_pos && name_index >= space_pos)
+        else if(space_index && name_index >= space_index)
         {
-            space_pos = 0;
+            space_index = 0;
             name[name_index++] = ' ';
         }
         else

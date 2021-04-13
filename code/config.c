@@ -27,13 +27,13 @@ typedef struct
     {
         u32 uint;
         b32 boolean;
-        char string[64];
+        String64 string;
     };
 } ConfigValue;
 
 typedef struct
 {
-    char name[64];
+    String64 name;
     
     TokenError error;
     TokenValue value;
@@ -41,7 +41,7 @@ typedef struct
     {
         u32 uint;
         b32 boolean;
-        char string[64];
+        String64 string;
     };
 } Token;
 
@@ -64,7 +64,7 @@ get_config_uint(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_Uint && strings_match(token_name, token->name))
+        if(token->value == TokenValue_Uint && strings_match(token_name, token->name.s))
         {
             value.is_valid = true;
             value.uint = token->uint;
@@ -83,7 +83,7 @@ get_config_bool(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_Bool && strings_match(token_name, token->name))
+        if(token->value == TokenValue_Bool && strings_match(token_name, token->name.s))
         {
             value.is_valid = true;
             value.boolean = token->boolean;
@@ -102,10 +102,10 @@ get_config_string(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_String && strings_match(token_name, token->name))
+        if(token->value == TokenValue_String && strings_match(token_name, token->name.s))
         {
             result.is_valid = true;
-            strcpy(result.string, token->string);
+            strcpy(result.string.s, token->string.s);
             break;
         }
     }
@@ -243,7 +243,7 @@ get_token(Tokenizer *tokenizer)
         {
             while(tokenizer->at[0] && !is_whitespace(tokenizer->at[0]))
             {
-                token.name[token_name_length++] = tokenizer->at[0];
+                token.name.s[token_name_length++] = tokenizer->at[0];
                 ++tokenizer->at;
             }
         }
@@ -269,7 +269,7 @@ get_token(Tokenizer *tokenizer)
         {
             token.value = TokenValue_String;
             
-            token.string[0] = tokenizer->at[0];
+            token.string.s[0] = tokenizer->at[0];
             ++tokenizer->at;
         }
         else if(tokenizer->at[0] && is_alpha(tokenizer->at[0]))
@@ -301,7 +301,7 @@ get_token(Tokenizer *tokenizer)
                 
                 while(tokenizer->at[0] && is_alpha(tokenizer->at[0]))
                 {
-                    token.string[string_value_length++] = tokenizer->at[0];
+                    token.string.s[string_value_length++] = tokenizer->at[0];
                     ++tokenizer->at;
                 }
             }
@@ -309,7 +309,7 @@ get_token(Tokenizer *tokenizer)
             {
                 token.value = TokenValue_String;
                 
-                token.string[0] = tokenizer->at[0];
+                token.string.s[0] = tokenizer->at[0];
                 ++tokenizer->at;
             }
         }
@@ -317,6 +317,7 @@ get_token(Tokenizer *tokenizer)
         {
             token.value = TokenValue_Uint;
             
+            // Turn string to number
             while(tokenizer->at[0] && is_numeric(tokenizer->at[0]))
             {
                 token.uint = (tokenizer->at[0] - '0') + (token.uint * 10);
@@ -361,13 +362,13 @@ get_config(MemoryArena *memory_arena, char *file_path)
         {
             is_parsing = false;
             
-            printf("Token Error: Invalid separator for token name: %s\n", token.name);
+            printf("Token Error: Invalid separator for token name: %s\n", token.name.s);
         }
         else if(token.error == TokenError_InvalidValue)
         {
             is_parsing = false;
             
-            printf("Token Error: Invalid value for token name: %s\n", token.name);
+            printf("Token Error: Invalid value for token name: %s\n", token.name.s);
         }
         else
         {

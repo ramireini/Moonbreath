@@ -221,7 +221,7 @@ create_font_ttf(Game *game, Font *result, char *font_path, u32 font_size)
                     SDL_SetRenderTarget(game->renderer, 0);
                     TTF_CloseFont(ttf_font);
                     
-                    result->set = true;
+            result->is_valid = true;
                 }
             }
         }
@@ -258,7 +258,7 @@ create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyph_per_ro
                     ++glyph_count;
                 }
                 
-        result->set = true;
+        result->is_valid = true;
             }
         }
 
@@ -293,7 +293,7 @@ initialize_assets(Game *game, Assets *assets)
     for(u32 index = 0; index < FontName_Count; ++index)
     {
         Font *font = &assets->fonts[index];
-        if(!font->set)
+        if(!font->is_valid)
         {
             // TODO(rami): Logging
             fonts_success = false;
@@ -335,7 +335,7 @@ free_assets(Assets *assets)
     for(u32 index = 0; index < FontName_Count; ++index)
     {
         Font *font = &assets->fonts[index];
-        if(font->set)
+        if(font->is_valid)
         {
             SDL_DestroyTexture(font->atlas);
         }
@@ -360,24 +360,29 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
     assert(game);
     assert(text);
     assert(font);
+    assert(font->is_valid);
     
     b32 is_using_code = false;
     b32 is_word_scanned = false;
     
-    String128 formatted = {0};
+    String128 text_format = {0};
     v2u text_pos = {start_x, start_y};
     
     va_list arg_list;
     va_start(arg_list, wrap_x);
-    vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
+    vsnprintf(text_format.s, sizeof(text_format), text, arg_list);
     va_end(arg_list);
     
     set_texture_color(font->atlas, Color_White);
     
-    for(char *at = formatted.str; *at;)
+    for(char *at = text_format.s; *at;)
     {
-        u32 index = get_metric_index(at[0]);
-        GlyphMetrics *metrics = &font->metrics[index];
+        u32 metric_index = get_metric_index(at[0]);
+        GlyphMetrics *metrics = &font->metrics[metric_index];
+        
+        assert(metrics);
+        assert(metrics->w);
+        assert(metrics->h);
         
         if(at[0] == '#' &&
            at[1] == '#')
@@ -486,14 +491,17 @@ update_defer_rect_width(u32 start_x, char *text, UI *ui)
 internal void
 defer_text(UI *ui, char *text, u32 x, u32 y, ...)
 {
-    String128 formatted = {0};
+    assert(ui);
+    assert(text);
+    
+    String128 text_format = {0};
     
     va_list arg_list;
     va_start(arg_list, y);
-    vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
+    vsnprintf(text_format.s, sizeof(text_format), text, arg_list);
     va_end(arg_list);
     
-    update_defer_rect_width(x, formatted.str, ui);
+    update_defer_rect_width(x, text_format.s, ui);
     
     Defer *defer = ui->defer;
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
@@ -501,7 +509,7 @@ defer_text(UI *ui, char *text, u32 x, u32 y, ...)
         if(!defer[index].type)
         {
             defer[index].type = DeferType_Text;
-            strcpy(defer[index].text.str, formatted.str);
+            strcpy(defer[index].text.s, text_format.s);
             defer[index].x = x;
             defer[index].y = y;
             
@@ -557,7 +565,7 @@ defer_fill_rect(UI *ui, u32 x, u32 y, u32 w, u32 h, Color color)
 }
 
 internal void
-process_defer(Game *game, Assets *assets, UI *ui)
+render_defer(Game *game, UI *ui, Texture tileset)
 {
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
@@ -569,7 +577,7 @@ process_defer(Game *game, Assets *assets, UI *ui)
         if(defer->type == DeferType_Text)
         {
             render_text(game,
-                            defer->text.str,
+                            defer->text.s,
                         defer_x,
                         defer_y,
                         ui->font, 0);
@@ -584,7 +592,7 @@ process_defer(Game *game, Assets *assets, UI *ui)
             };
             
             SDL_RenderCopy(game->renderer,
-                           assets->tileset.tex,
+                           tileset.tex,
                                (SDL_Rect *)&defer->tile_src,
                                (SDL_Rect *)&dest);
         }

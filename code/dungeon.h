@@ -142,10 +142,10 @@ typedef enum
 
 typedef enum
 {
-    DungeonRandomType_TraversablePos,
-    DungeonRandomType_TraversableRectPos,
-        DungeonRandomType_FeaturePos
-} DungeonRandomType;
+    DungeonRandomPosType_Traversable,
+    DungeonRandomPosType_TraversableRect,
+        DungeonRandomPosType_Feature
+} DungeonRandomPosType;
 
 typedef enum
 {
@@ -191,9 +191,6 @@ typedef enum
     DungeonPassageType_Up,
     DungeonPassageType_Down
 } DungeonPassageType;
-
-// TODO(rami): Art for dungeon traps
-// TODO(rami): Art for entity HP bars
 
 typedef enum
 {
@@ -249,13 +246,15 @@ typedef enum
     DungeonTrapFlag_HasBeenSeen = (1 << 1)
 } DungeonTrapFlag;
 
-typedef struct
+struct DungeonTrap
 {
     u32 flags;
     
+    char select_letter;
+    
     DungeonTrapType type;
-    char *name;
-    char description[128];
+    String32 name;
+    String128 description;
     
     v2u pos;
     v4u tile_src;
@@ -265,7 +264,7 @@ typedef struct
     b32 is_shaft_set;
     u32 shaft_depth;
     v2u shaft_destination;
-} DungeonTrap;
+};
 
 typedef struct
 {
@@ -384,6 +383,7 @@ internal void dungeon_automaton_room_step(Random *random, DungeonTiles src_tiles
 internal void set_dungeon_pos_wall(Random *random, DungeonTiles tiles, v2u pos);
 internal void set_dungeon_pos_floor(Random *random, DungeonTiles tiles, v2u pos);
 internal void set_dungeon_pos_water(Random *random, DungeonTiles tiles, v2u pos);
+internal u32 get_dungeon_pos_trap_count(DungeonTiles tiles, DungeonTraps *traps, v2u pos);
 internal b32 is_dungeon_pos_closed_door(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_occupied(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos);

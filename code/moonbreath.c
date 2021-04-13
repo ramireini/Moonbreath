@@ -47,7 +47,7 @@ update_examine_mode(Examine *examine,
                     Spell *spell = &examine->entity->e.spells[(pressed - 'a')];
                     if(spell->id)
                     {
-                        examine->type = ExamineType_EntitySpell;
+                        examine->type = ExamineType_Spell;
                         examine->spell = spell;
                     }
                 }
@@ -173,27 +173,11 @@ update_examine_mode(Examine *examine,
                         return;
                     }
             }
-            else if(was_pressed(&input->GameKey_Yes))
+            else if(was_pressed(&input->GameKey_Yes) && !examine->type)
             {
-                // TODO(rami): In the future, maybe we don't need MultipleExamine.
-                // Here you can say to start examine, then in the UI code we loop through
-                // all the examinable types and do the stuff. That way no matter if its
-                // one or multiple examinable things of whatever types, it should work.
-                
-                #if 0
-                if(dungeon_pos_has_multiple_examine_sources())
+                if(get_dungeon_pos_examine_source_count(dungeon, entities, items, examine->pos) > 1)
                 {
-                    // Examine multiple items
-                    unset(examine->flags, ExamineFlag_Open);
-                    set(inventory->flags, InventoryFlag_MultipleExamine);
-                    set_view_at_start(&inventory->examine_view);
-                    
-                    return;
-                }
-                #endif
-                
-                if(get_dungeon_pos_item_count(items, examine->pos, dungeon->level) > 1)
-                {
+                    // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
                     set(inventory->flags, InventoryFlag_MultipleExamine);
                     set_view_at_start(&inventory->examine_view);
@@ -202,7 +186,8 @@ update_examine_mode(Examine *examine,
                 }
                 else
                 {
-                // Examine item
+                    unset(examine->flags, ExamineFlag_CameraFollow);
+                    
                     Item *item = get_dungeon_pos_item(items, dungeon->level, examine->pos, 0);
                     if(item)
                     {
@@ -211,8 +196,7 @@ update_examine_mode(Examine *examine,
                         return;
                     }
                     
-                    // Examine entity
-                    Entity *entity = get_entity_on_pos(entities, dungeon->level, examine->pos, true);
+                    Entity *entity = get_dungeon_pos_entity(entities, dungeon->level, examine->pos, true);
                     if(entity)
                     {
                         examine->type = ExamineType_Entity;
@@ -220,16 +204,14 @@ update_examine_mode(Examine *examine,
                         return;
                     }
                     
-                    // Examine trap
                     DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
                     if(trap)
-                        {
+                    {
                             examine->type = ExamineType_Trap;
                             examine->trap = trap;
                             return;
                         }
                     
-                    // Examine tile
                     examine->type = ExamineType_Tile;
                     examine->tile = get_dungeon_pos_tile(dungeon->tiles, examine->pos);
                     return;
@@ -582,16 +564,20 @@ is_window_size(v2u window_size, u32 width, u32 height)
 }
 
 internal void
-update_camera(Game *game, Entity *player, Dungeon *dungeon)
+update_camera(Game *game, v2u player_pos, v2u dungeon_size)
 {
+    Examine *examine = &game->examine;
+    
     v2u camera_follow_pos = {0};
-    if(is_set(game->examine.flags, ExamineFlag_Open))
+    
+    if(is_set(examine->flags, ExamineFlag_Open) &&
+           is_set(examine->flags, ExamineFlag_CameraFollow))
     {
-        camera_follow_pos = game->examine.pos;
+        camera_follow_pos = examine->pos;
     }
     else
     {
-        camera_follow_pos = player->pos;
+        camera_follow_pos = player_pos;
     }
     
     game->camera.x = tile_mul(camera_follow_pos.x) - (game->camera.w / 2);
@@ -616,10 +602,10 @@ update_camera(Game *game, Entity *player, Dungeon *dungeon)
     }
     
     // if statement is so dungeons smaller than the camera work properly
-    if(tile_mul(dungeon->size.w) >= game->camera.w)
+    if(tile_mul(dungeon_size.w) >= game->camera.w)
     {
-        s32 camera_max_x = (s32)(tile_mul(dungeon->size.w) - game->camera.w);
-        s32 camera_max_y = (s32)(tile_mul(dungeon->size.h) - game->camera.h);
+        s32 camera_max_x = (s32)(tile_mul(dungeon_size.w) - game->camera.w);
+        s32 camera_max_y = (s32)(tile_mul(dungeon_size.h) - game->camera.h);
         
         // Clamp the camera if we get close enough to the map right/bottom edge
         if(game->camera.x >= camera_max_x)
@@ -886,7 +872,7 @@ update_events(Game *game, Input *input)
 }
 
 internal void
-render_window(Game *game, v4u rect, u32 border_size)
+render_rect(Game *game, v4u rect, u32 border_size)
 {
     // Window border
     render_fill_rect(game, rect, Color_WindowBorder);
@@ -931,49 +917,49 @@ get_char(char c, b32 is_shift_down)
     return(result);
 }
 
-internal PrintableKey
+internal String8
 get_printable_key(Input *input, Key key)
 {
-    PrintableKey result = {0};
+    String8 result = {0};
     
     switch(key)
     {
-        case Key_A: result.str[0] = get_char('a', input->Key_Shift.is_down); break;
-        case Key_B: result.str[0] = get_char('b', input->Key_Shift.is_down); break;
-        case Key_C: result.str[0] = get_char('c', input->Key_Shift.is_down); break;
-        case Key_D: result.str[0] = get_char('d', input->Key_Shift.is_down); break;
-        case Key_E: result.str[0] = get_char('e', input->Key_Shift.is_down); break;
-        case Key_F: result.str[0] = get_char('f', input->Key_Shift.is_down); break;
-        case Key_G: result.str[0] = get_char('g', input->Key_Shift.is_down); break;
-        case Key_H: result.str[0] = get_char('h', input->Key_Shift.is_down); break;
-        case Key_I: result.str[0] = get_char('i', input->Key_Shift.is_down); break;
-        case Key_J: result.str[0] = get_char('j', input->Key_Shift.is_down); break;
-        case Key_K: result.str[0] = get_char('k', input->Key_Shift.is_down); break;
-        case Key_L: result.str[0] = get_char('l', input->Key_Shift.is_down); break;
-        case Key_M: result.str[0] = get_char('m', input->Key_Shift.is_down); break;
-        case Key_N: result.str[0] = get_char('n', input->Key_Shift.is_down); break;
-        case Key_O: result.str[0] = get_char('o', input->Key_Shift.is_down); break;
-        case Key_P: result.str[0] = get_char('p', input->Key_Shift.is_down); break;
-        case Key_Q: result.str[0] = get_char('q', input->Key_Shift.is_down); break;
-        case Key_R: result.str[0] = get_char('r', input->Key_Shift.is_down); break;
-        case Key_S: result.str[0] = get_char('s', input->Key_Shift.is_down); break;
-        case Key_T: result.str[0] = get_char('t', input->Key_Shift.is_down); break;
-        case Key_U: result.str[0] = get_char('u', input->Key_Shift.is_down); break;
-        case Key_V: result.str[0] = get_char('v', input->Key_Shift.is_down); break;
-        case Key_W: result.str[0] = get_char('w', input->Key_Shift.is_down); break;
-        case Key_X: result.str[0] = get_char('x', input->Key_Shift.is_down); break;
-        case Key_Y: result.str[0] = get_char('y', input->Key_Shift.is_down); break;
-        case Key_Z: result.str[0] = get_char('z', input->Key_Shift.is_down); break;
+        case Key_A: result.s[0] = get_char('a', input->Key_Shift.is_down); break;
+        case Key_B: result.s[0] = get_char('b', input->Key_Shift.is_down); break;
+        case Key_C: result.s[0] = get_char('c', input->Key_Shift.is_down); break;
+        case Key_D: result.s[0] = get_char('d', input->Key_Shift.is_down); break;
+        case Key_E: result.s[0] = get_char('e', input->Key_Shift.is_down); break;
+        case Key_F: result.s[0] = get_char('f', input->Key_Shift.is_down); break;
+        case Key_G: result.s[0] = get_char('g', input->Key_Shift.is_down); break;
+        case Key_H: result.s[0] = get_char('h', input->Key_Shift.is_down); break;
+        case Key_I: result.s[0] = get_char('i', input->Key_Shift.is_down); break;
+        case Key_J: result.s[0] = get_char('j', input->Key_Shift.is_down); break;
+        case Key_K: result.s[0] = get_char('k', input->Key_Shift.is_down); break;
+        case Key_L: result.s[0] = get_char('l', input->Key_Shift.is_down); break;
+        case Key_M: result.s[0] = get_char('m', input->Key_Shift.is_down); break;
+        case Key_N: result.s[0] = get_char('n', input->Key_Shift.is_down); break;
+        case Key_O: result.s[0] = get_char('o', input->Key_Shift.is_down); break;
+        case Key_P: result.s[0] = get_char('p', input->Key_Shift.is_down); break;
+        case Key_Q: result.s[0] = get_char('q', input->Key_Shift.is_down); break;
+        case Key_R: result.s[0] = get_char('r', input->Key_Shift.is_down); break;
+        case Key_S: result.s[0] = get_char('s', input->Key_Shift.is_down); break;
+        case Key_T: result.s[0] = get_char('t', input->Key_Shift.is_down); break;
+        case Key_U: result.s[0] = get_char('u', input->Key_Shift.is_down); break;
+        case Key_V: result.s[0] = get_char('v', input->Key_Shift.is_down); break;
+        case Key_W: result.s[0] = get_char('w', input->Key_Shift.is_down); break;
+        case Key_X: result.s[0] = get_char('x', input->Key_Shift.is_down); break;
+        case Key_Y: result.s[0] = get_char('y', input->Key_Shift.is_down); break;
+        case Key_Z: result.s[0] = get_char('z', input->Key_Shift.is_down); break;
         
         case Key_0:
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '=';
+                result.s[0] = '=';
             }
             else
             {
-                result.str[0] = '0';
+                result.s[0] = '0';
             }
         } break;
         
@@ -981,11 +967,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '!';
+                result.s[0] = '!';
             }
             else
             {
-                result.str[0] = '1';
+                result.s[0] = '1';
             }
         } break;
         
@@ -993,11 +979,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '"';
+                result.s[0] = '"';
             }
             else
             {
-                result.str[0] = '2';
+                result.s[0] = '2';
             }
         } break;
         
@@ -1005,28 +991,28 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '#';
+                result.s[0] = '#';
             }
             else
             {
-                result.str[0] = '3';
+                result.s[0] = '3';
             }
         } break;
         
         case Key_4:
         {
-            result.str[0] = '4';
+            result.s[0] = '4';
         } break;
         
         case Key_5:
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '%';
+                result.s[0] = '%';
             }
             else
             {
-                result.str[0] = '5';
+                result.s[0] = '5';
             }
         } break;
         
@@ -1034,11 +1020,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '&';
+                result.s[0] = '&';
             }
             else
             {
-                result.str[0] = '6';
+                result.s[0] = '6';
             }
         } break;
         
@@ -1046,11 +1032,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '/';
+                result.s[0] = '/';
             }
             else
             {
-                result.str[0] = '7';
+                result.s[0] = '7';
             }
         } break;
         
@@ -1058,11 +1044,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '(';
+                result.s[0] = '(';
             }
             else
             {
-                result.str[0] = '8';
+                result.s[0] = '8';
             }
         } break;
         
@@ -1070,25 +1056,25 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = ')';
+                result.s[0] = ')';
             }
             else
             {
-                result.str[0] = '9';
+                result.s[0] = '9';
             }
         } break;
         
-        case Key_Space: result.str[0] = ' '; break;
+        case Key_Space: result.s[0] = ' '; break;
         
         case Key_Plus:
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '?';
+                result.s[0] = '?';
             }
             else
             {
-                result.str[0] = '+';
+                result.s[0] = '+';
             }
         } break;
         
@@ -1096,11 +1082,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '_';
+                result.s[0] = '_';
             }
             else
             {
-                result.str[0] = '-';
+                result.s[0] = '-';
             }
         } break;
         
@@ -1108,11 +1094,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = ';';
+                result.s[0] = ';';
             }
             else
             {
-                result.str[0] = ',';
+                result.s[0] = ',';
             }
         } break;
         
@@ -1120,11 +1106,11 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = ':';
+                result.s[0] = ':';
             }
             else
             {
-                result.str[0] = '.';
+                result.s[0] = '.';
             }
         } break;
         
@@ -1132,18 +1118,18 @@ get_printable_key(Input *input, Key key)
         {
             if(input->Key_Shift.is_down)
             {
-                result.str[0] = '>';
+                result.s[0] = '>';
             }
             else
             {
-                result.str[0] = '<';
+                result.s[0] = '<';
             }
         } break;
         
-        case Key_Escape: strcpy(result.str, "ESC"); break;
+        case Key_Escape: strcpy(result.s, "ESC"); break;
     }
     
-    assert(result.str[0]);
+    assert(result.s[0]);
     return(result);
 }
 
@@ -1156,7 +1142,7 @@ get_pressed_keyboard_char(Input *input)
     {
         if(was_pressed(&input->keyboard[key]))
         {
-            result = get_printable_key(input, key).str[0];
+            result = get_printable_key(input, key).s[0];
             break;
         }
     }
@@ -1173,7 +1159,7 @@ get_pressed_alphabet_char(Input *input)
     {
         if(was_pressed(&input->keyboard[key]))
         {
-            result = get_printable_key(input, key).str[0];
+            result = get_printable_key(input, key).s[0];
             break;
         }
     }
@@ -1249,14 +1235,14 @@ update_and_render_game(Game *game,
                     {
                         potion_color_set[potion_index] = true;
                         
-                        // Add a random not already taken adjective to the potion depiction.
+                        // Add a random not already taken adjective to the potion depiction
                         for(;;)
                         {
                             u32 adjective_index = get_random_number(&game->random, 0, 15);
                             if(!potion_adjective_taken[adjective_index])
                             {
                                 potion_adjective_taken[adjective_index] = true;
-                                strcpy(info->depiction, potion_adjectives[adjective_index]);
+                                strcpy(info->depiction.s, potion_adjectives[adjective_index]);
                                 
                                 break;
                             }
@@ -1267,43 +1253,43 @@ update_and_render_game(Game *game,
                             case 0:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(10, 2));
-                                strcat(info->depiction, "Red ");
+                                strcat(info->depiction.s, "Red ");
                             } break;
                             
                             case 1:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(10, 3));
-                                strcat(info->depiction, "Blue ");
+                                strcat(info->depiction.s, "Blue ");
                             } break;
                             
                             case 2:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(10, 4));
-                                strcat(info->depiction, "Cyan ");
+                                strcat(info->depiction.s, "Cyan ");
                             } break;
                             
                             case 3:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(10, 5));
-                                strcat(info->depiction, "Yellow ");
+                                strcat(info->depiction.s, "Yellow ");
                             } break;
                             
                             case 4:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(10, 6));
-                                strcat(info->depiction, "Brown ");
+                                strcat(info->depiction.s, "Brown ");
                             } break;
                             
                             case 5:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(10, 7));
-                                strcat(info->depiction, "Purple ");
+                                strcat(info->depiction.s, "Purple ");
                             } break;
                             
                             case 6:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(10, 8));
-                                strcat(info->depiction, "Green ");
+                                strcat(info->depiction.s, "Green ");
                             } break;
                             
                             invalid_default_case;
@@ -1331,37 +1317,37 @@ update_and_render_game(Game *game,
                             case 0:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(11, 2));
-                                strcpy(info->depiction, "Red ");
+                                strcpy(info->depiction.s, "Red ");
                             } break;
                             
                             case 1:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(11, 3));
-                                strcpy(info->depiction, "Blue ");
+                                strcpy(info->depiction.s, "Blue ");
                             } break;
                             
                             case 2:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(11, 4));
-                                strcpy(info->depiction, "Cyan ");
+                                strcpy(info->depiction.s, "Cyan ");
                             } break;
                             
                             case 3:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(11, 5));
-                                strcpy(info->depiction, "Yellow ");
+                                strcpy(info->depiction.s, "Yellow ");
                             } break;
                             
                             case 4:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(11, 6));
-                                strcpy(info->depiction, "Brown ");
+                                strcpy(info->depiction.s, "Brown ");
                             } break;
                             
                             case 5:
                             {
                                 info->tile_src = get_dungeon_tile_rect(make_v2u(11, 7));
-                                strcpy(info->depiction, "Purple ");
+                                strcpy(info->depiction.s, "Purple ");
                             } break;
                             
                             invalid_default_case;
@@ -1507,20 +1493,18 @@ update_and_render_game(Game *game,
         printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
         #endif
         
-        Examine *examine = &game->examine;
-        
-        update_examine_mode(examine, input, player, entities, items, inventory, dungeon, ui);
+        update_examine_mode(&game->examine, input, player, entities, items, inventory, dungeon, ui);
         update_entities(game, input, entities, items, inventory, dungeons, assets, ui);
-        update_camera(game, player, dungeon);
+        update_camera(game, player->pos, dungeon->size);
         
         render_dungeon(game, player->flags, dungeon, assets);
         render_items(game, player, items, dungeon, assets);
         render_entities(game, entities, inventory, dungeon, assets);
-        render_ui(game, input, player, items, inventory, dungeon, assets, ui);
+        render_ui(game, input, entities, items, inventory, dungeon, assets, ui);
         
 #if MOONBREATH_SLOW
         // Render cursor rectangle
-        if(other_windows_are_closed(examine, inventory, ui))
+        if(other_windows_are_closed(&game->examine, inventory, ui))
         {
         // Render cursor rect on mouse tile
         v2u tile_pos =
@@ -1580,7 +1564,7 @@ int main(int argc, char *argv[])
                        (megabytes(28)) - sizeof(Game));
         
         EntityState *entities = push_memory_struct(&game->memory_arena, EntityState);
-        Entity *player = &entities->array[0];
+        Entity *player = get_player_entity(entities);
         
         Dungeons *dungeons = push_memory_struct(&game->memory_arena, Dungeons);
         

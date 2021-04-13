@@ -193,12 +193,14 @@ typedef struct
     DamageType damage_type;
 } EntityEnemy;
 
-typedef struct
+struct Entity
 {
     u32 flags;
     
+    char select_letter;
+    
     EntityID id;
-    char name[32];
+    String32 name;
     u32 hp;
     u32 max_hp;
     
@@ -234,7 +236,7 @@ typedef struct
         EntityPlayer p;
         EntityEnemy e;
     };
-} Entity;
+};
 
 typedef struct
 {
@@ -252,6 +254,7 @@ internal void start_entity_status_effect(Entity *entity, StatusEffect status);
 internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui);
 internal void set_flag_if_player_is_not_pathfinding(u32 player_flags, u32 *flags, u32 flag);
 internal void attack_entity(Random *random, Entity *attacker, Entity *defender, Dungeon *dungeon, Inventory *inventory, UI *ui, u32 damage, DamageType damage_type, b32 came_from_trap);
+internal u32 get_dungeon_pos_entity_count(EntityState *entities, u32 dungeon_level, v2u pos, b32 enemy_only);
 internal b32 move_entity(Random *random, Entity *entity, DungeonTiles tiles, UI *ui, v2u new_pos);
 internal b32 is_entity_valid_and_player(Entity *entity);
 internal b32 heal_entity(Entity *entity, u32 value);

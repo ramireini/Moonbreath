@@ -1,4 +1,3 @@
-#define MAX_INVENTORY_SLOT_COUNT 52
 #define MAX_ITEM_COUNT 1024
 
 typedef enum
@@ -203,19 +202,19 @@ typedef struct
 typedef struct
 {
     u32 stack_count;
-    char depiction[32];
+    String32 depiction;
     
     u32 heal_value;
     StatusEffect status_effect;
 } ItemConsumable;
 
-typedef struct
+struct Item
 {
     u32 flags;
     
     ItemID id;
-    char name[32];
-    char description[256];
+    String32 name;
+    String256 description;
     
     char letter;
     char select_letter;
@@ -240,13 +239,13 @@ typedef struct
     // TODO(rami): Extra stats for mythical items.
     s32 enchantment_level;
     u32 extra_stat_count;
-} Item;
+};
 
 typedef struct
 {
     b32 known;
     v4u tile_src;
-    char depiction[32];
+    String32 depiction;
 } ConsumableInfo;
 
 typedef struct
@@ -266,12 +265,14 @@ typedef struct
     
     ItemUseType item_use_type;
     ItemType view_update_item_type;
+    
     u32 entry_size;
     View examine_view;
     View pickup_view;
     View view;
     
     Item *examine_item;
+    
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
 } Inventory;
 

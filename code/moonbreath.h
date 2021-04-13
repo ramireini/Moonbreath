@@ -1,21 +1,9 @@
 typedef enum
 {
     ExamineFlag_Open = (1 << 1),
-    ExamineFlag_ReadyForKeypress = (1 << 2),
+    ExamineFlag_CameraFollow = (1 << 2),
+    ExamineFlag_ReadyForKeypress = (1 << 3),
 } ExamineFlag;
-
-typedef enum
-{
-    ExamineType_None,
-    
-    ExamineType_EntitySpell,
-    ExamineType_Entity,
-    ExamineType_Item,
-    ExamineType_Trap,
-    ExamineType_Tile,
-        
-        ExamineType_Count
-} ExamineType;
 
 typedef struct
 {
@@ -25,9 +13,6 @@ typedef struct
     u32 key_pressed_start[GameKey_Count];
     u32 key_hold_duration;
     v2u pos;
-    
-    // TODO(rami): When you examine a position with multiple things that can be examined,
-    // ask which one to examine, just like we did with multiple items on a single position.
     
     ExamineType type;
     union
@@ -41,11 +26,6 @@ typedef struct
     
     u32 selected_passage;
 } Examine;
-
-typedef struct
-{
-    char str[8];
-} PrintableKey;
 
 typedef struct
 {
@@ -88,7 +68,7 @@ typedef struct
 
 internal void render_outline_rect(Game *game, v4u rect, Color color);
 internal void render_fill_rect(Game *game, v4u rect, Color color);
-internal void render_window(Game *game, v4u rect, u32 border_size);
+internal void render_rect(Game *game, v4u rect, u32 border_size);
 internal void render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest, b32 is_flipped);
 internal char get_pressed_keyboard_char(Input *input);
 internal char get_pressed_alphabet_char(Input *input);
@@ -102,7 +82,7 @@ internal b32 is_value_in_range(s32 value, s32 start, s32 end);
 internal v4u get_dungeon_tile_rect(v2u tile);
 internal v4u get_game_dest(Game *game, v2u pos);
 internal v2u get_direction_pos(v2u pos, Direction direction);
-internal PrintableKey get_printable_key(Input *input, Key key);
+internal String8 get_printable_key(Input *input, Key key);
 internal Direction get_random_direction(Random *random);
 internal Direction get_direction_moved_from(v2u old_pos, v2u new_pos);
 internal Texture load_texture(SDL_Renderer *renderer, char *path, v4u *color_key);

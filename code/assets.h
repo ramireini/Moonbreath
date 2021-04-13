@@ -96,7 +96,8 @@ typedef struct
 
 typedef struct
 {
-    b32 set;
+    b32 is_valid;
+    
     FontType type;
     u32 size;
     

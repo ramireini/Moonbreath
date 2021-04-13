@@ -76,7 +76,7 @@ add_debug_variable_(DebugState *debug, DebugTree *tree, char *name, void *value,
     DebugVariable *var = push_memory_struct(&debug->memory_arena, DebugVariable);
     
     var->type = variable_type;
-    strcpy(var->name, name);
+    strcpy(var->name.s, name);
     var->color = color;
     
     var->enum_to_string_callback = enum_to_string_callback;
@@ -215,10 +215,10 @@ add_debug_text_(DebugState *debug, DebugTree *tree, char *text, Color color, ...
     
     va_list arg_list;
     va_start(arg_list, color);
-    vsnprintf(text_final.str, sizeof(text_final), text, arg_list);
+    vsnprintf(text_final.s, sizeof(text_final), text, arg_list);
     va_end(arg_list);
     
-    add_debug_variable_(debug, tree, text_final.str, 0, color, 0, 0, DebugVariableType_Text);
+    add_debug_variable_(debug, tree, text_final.s, 0, color, 0, 0, DebugVariableType_Text);
 }
 
 internal void
@@ -262,30 +262,29 @@ update_and_render_debug_state(Game *game,
                 case DebugVariableType_Newline: break;
                 
                 case DebugVariableType_Group:
-                case DebugVariableType_Text: snprintf(text.str, sizeof(text), "%s", var->name); break;
+                case DebugVariableType_Text: snprintf(text.s, sizeof(text), "%s", var->name.s); break;
                 
-                case DebugVariableType_S32: snprintf(text.str, sizeof(text), "%s: %d", var->name, *var->s32); break;
-                case DebugVariableType_U32: snprintf(text.str, sizeof(text), "%s: %u", var->name, *var->u32); break;
-                case DebugVariableType_B32: snprintf(text.str, sizeof(text), "%s: %s", var->name, (*var->b32 == true) ? "true" : "false"); break;
-                case DebugVariableType_F32: snprintf(text.str, sizeof(text), "%s: %.01f", var->name, *var->f32); break;
-                case DebugVariableType_V2U: snprintf(text.str, sizeof(text), "%s: %u, %u", var->name, var->v2u->x, var->v2u->y); break;
-                case DebugVariableType_V4U: snprintf(text.str, sizeof(text), "%s: %u, %u, %u, %u", var->name, var->v4u->x, var->v4u->y, var->v4u->w, var->v4u->h); break;
-                case DebugVariableType_String: snprintf(text.str, sizeof(text), "%s: %s", var->name, var->string); break;
+                case DebugVariableType_S32: snprintf(text.s, sizeof(text), "%s: %d", var->name.s, *var->s32); break;
+                        case DebugVariableType_U32: snprintf(text.s, sizeof(text), "%s: %u", var->name.s, *var->u32); break;
+                        case DebugVariableType_B32: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, (*var->b32 == true) ? "true" : "false"); break;
+                        case DebugVariableType_F32: snprintf(text.s, sizeof(text), "%s: %.01f", var->name.s, *var->f32); break;
+                        case DebugVariableType_V2U: snprintf(text.s, sizeof(text), "%s: %u, %u", var->name.s, var->v2u->x, var->v2u->y); break;
+                        case DebugVariableType_V4U: snprintf(text.s, sizeof(text), "%s: %u, %u, %u, %u", var->name.s, var->v4u->x, var->v4u->y, var->v4u->w, var->v4u->h); break;
+                        case DebugVariableType_String: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, var->string); break;
                 
                 case DebugVariableType_Enum:
                 {
                     if(var->enum_to_string_callback)
                     {
-                        snprintf(text.str, sizeof(text), "%s: %s",
-                                     var->name, var->enum_to_string_callback(*var->u32));
+                                snprintf(text.s, sizeof(text), "%s: %s", var->name.s, var->enum_to_string_callback(*var->u32));
                     }
                     else
                     {
-                        snprintf(text.str, sizeof(text), "%s: %u", var->name, *var->u32);
+                                snprintf(text.s, sizeof(text), "%s: %u", var->name.s, *var->u32);
                     }
                 } break;
                 
-                case DebugVariableType_Flag: snprintf(text.str, sizeof(text), "%s: %s", var->name, is_set(*var->flags, var->flag) ? "true" : "false"); break;
+                        case DebugVariableType_Flag: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, is_set(*var->flags, var->flag) ? "true" : "false"); break;
                 
                 invalid_default_case;
             }
@@ -317,7 +316,7 @@ update_and_render_debug_state(Game *game,
             {
                 tree->move_rect.x,
                 tree->move_rect.y,
-                get_text_width(font, text.str),
+                get_text_width(font, text.s),
                 font->size
             };
                     
@@ -392,7 +391,7 @@ update_and_render_debug_state(Game *game,
             }
             
                     render_text(game, "%s%s", text_rect.x, text_rect.y, font, 0,
-                                start_color(text_color), text.str);
+                                start_color(text_color), text.s);
             
             // Get next variable
             if(is_var_group(var->type) && var->group.is_expanded)
@@ -477,7 +476,7 @@ update_and_render_debug_state(Game *game,
             DebugTree *new_tree = add_debug_tree(debug, game->window_size.x / 2, 50);
             Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
             
-            Entity *entity = get_entity_on_pos(entities, dungeon->level, input->mouse_tile_pos, false);
+                Entity *entity = get_dungeon_pos_entity(entities, dungeon->level, input->mouse_tile_pos, false);
                 if(entity && is_tile_seen_or_has_been_seen(dungeon->tiles, entity->pos))
             {
                 start_debug_group(debug, new_tree, "Entity", true);
@@ -502,7 +501,7 @@ update_and_render_debug_state(Game *game,
                     
                     add_debug_variable(new_tree, "ID", entity->id, DebugVariableType_U32);
                     add_debug_enum(new_tree, "Type", entity->type, get_entity_type_text);
-                    add_debug_variable(new_tree, "Name", entity->name, DebugVariableType_String);
+                        add_debug_variable(new_tree, "Name", entity->name.s, DebugVariableType_String);
                     add_debug_variable(new_tree, "Max HP", entity->max_hp, DebugVariableType_U32);
                     add_debug_variable(new_tree, "HP", entity->hp, DebugVariableType_U32);
                     add_debug_newline(debug, new_tree);
@@ -587,8 +586,8 @@ update_and_render_debug_state(Game *game,
                     
                     add_debug_variable(new_tree, "ID", item->id, DebugVariableType_U32);
                     add_debug_enum(new_tree, "Type", item->type, get_item_type_text);
-                    add_debug_variable(new_tree, "Name", item->name, DebugVariableType_String);
-                    add_debug_variable(new_tree, "Description", item->description, DebugVariableType_String);
+                        add_debug_variable(new_tree, "Name", item->name.s, DebugVariableType_String);
+                    add_debug_variable(new_tree, "Description", item->description.s, DebugVariableType_String);
                     add_debug_newline(debug, new_tree);
                     
                     add_debug_variable(new_tree, "Letter", item->letter, DebugVariableType_String);
@@ -627,7 +626,7 @@ update_and_render_debug_state(Game *game,
                     {
                         add_debug_variable(new_tree, "Heal Value", item->c.heal_value, DebugVariableType_U32);
                         add_debug_variable(new_tree, "Stack Count", item->c.stack_count, DebugVariableType_U32);
-                        add_debug_variable(new_tree, "Depiction", item->c.depiction, DebugVariableType_String);
+                            add_debug_variable(new_tree, "Depiction", item->c.depiction.s, DebugVariableType_String);
                         add_debug_newline(debug, new_tree);
                         
                         StatusEffect *status_effect = &item->c.status_effect;

@@ -1,8 +1,20 @@
-internal b32
-dungeon_pos_has_multiple_examine_sources()
+internal u32
+get_dungeon_pos_examine_source_count(Dungeon *dungeon,
+                                     EntityState *entities,
+                                     ItemState *items,
+                                         v2u pos)
 {
-    b32 result = false;
+    u32 result = 0;
     
+    result += get_dungeon_pos_item_count(items, dungeon->level, pos);
+    result += get_dungeon_pos_entity_count(entities, dungeon->level, pos, true);
+    result += get_dungeon_pos_trap_count(dungeon->tiles, &dungeon->traps, pos);
+    
+    #if 0
+    printf("Item Count On Pos: %u\n", get_dungeon_pos_item_count(items, dungeon->level, pos));
+    printf("Entity Count On Pos: %u\n", get_dungeon_pos_entity_count(entities, dungeon->level, pos, true));
+    printf("Trap Count On Pos: %u\n\n", get_dungeon_pos_trap_count(dungeon->tiles, &dungeon->traps, pos));
+    #endif
     
     return(result);
 }
@@ -12,13 +24,13 @@ get_random_dungeon_pos_with_type(Random *random,
                                  Dungeon *dungeon,
                                  ItemState *items,
                                  v4u rect,
-                                   DungeonRandomType type)
+                                 DungeonRandomPosType type)
 {
     v2u result = {0};
     
     for(;;)
     {
-        if(type == DungeonRandomType_TraversablePos)
+        if(type == DungeonRandomPosType_Traversable)
             {
                 result = get_random_dungeon_pos(random, dungeon->size);
                 
@@ -27,7 +39,7 @@ get_random_dungeon_pos_with_type(Random *random,
                     break;
                 }
             }
-        else if(type == DungeonRandomType_TraversableRectPos)
+        else if(type == DungeonRandomPosType_TraversableRect)
             {
                 assert(rect.x);
                 assert(rect.y);
@@ -41,7 +53,7 @@ get_random_dungeon_pos_with_type(Random *random,
                     break;
                 }
         }
-        else if(type == DungeonRandomType_FeaturePos)
+        else if(type == DungeonRandomPosType_Feature)
         {
             assert(items);
             
@@ -69,7 +81,7 @@ get_random_dungeon_traversable_pos(Random *random, Dungeon *dungeon)
                                                   dungeon,
                                                       0,
                                                       make_v4u(0, 0, 0, 0),
-                                                      DungeonRandomType_TraversablePos);
+                                                      DungeonRandomPosType_Traversable);
     
     return(result);
 }
@@ -77,11 +89,8 @@ get_random_dungeon_traversable_pos(Random *random, Dungeon *dungeon)
 internal v2u
 get_random_dungeon_traversable_rect_pos(Random *random, Dungeon *dungeon, v4u rect)
 {
-    v2u result = get_random_dungeon_pos_with_type(random,
-                                                      dungeon,
-                                                      0,
-                                                  rect,
-                                                  DungeonRandomType_TraversableRectPos);
+    v2u result = get_random_dungeon_pos_with_type(random, dungeon, 0, rect,
+                                                      DungeonRandomPosType_TraversableRect);
     
     return(result);
 }
@@ -89,11 +98,8 @@ get_random_dungeon_traversable_rect_pos(Random *random, Dungeon *dungeon, v4u re
 internal v2u
 get_random_dungeon_feature_pos(Random *random, Dungeon *dungeon, ItemState *items)
 {
-    v2u result = get_random_dungeon_pos_with_type(random,
-                                                      dungeon,
-                                                      items,
-                                                      make_v4u(0, 0, 0, 0),
-                                                      DungeonRandomType_FeaturePos);
+    v2u result = get_random_dungeon_pos_with_type(random, dungeon, items, make_v4u(0, 0, 0, 0),
+                                                      DungeonRandomPosType_Feature);
     
     return(result);
 }
@@ -413,6 +419,24 @@ is_dungeon_pos_trap(DungeonTraps *traps, v2u pos)
     return(result);
 }
 
+internal u32
+get_dungeon_pos_trap_count(DungeonTiles tiles, DungeonTraps *traps, v2u pos)
+{
+    u32 result = 0;
+    
+    for(u32 index = 0; index < traps->count; ++index)
+    {
+        DungeonTrap *trap = &traps->array[index];
+        
+        if(is_v2u_equal(trap->pos, pos))
+        {
+            ++result;
+        }
+    }
+    
+    return(result);
+}
+
 internal DungeonTrap *
 get_dungeon_pos_trap(DungeonTiles tiles, DungeonTraps *traps, v2u pos)
 {
@@ -433,115 +457,116 @@ get_dungeon_pos_trap(DungeonTiles tiles, DungeonTraps *traps, v2u pos)
 }
 
 internal void
-add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrap new_trap)
+add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v2u pos)
 {
-    assert(new_trap.type);
+    assert(type);
     
     // TODO(rami): Dungeon trap ideas
     // Summoning traps summoning more than one enemy?
     // Teleporting traps teleporting you into other levels than current?
     // Traps with random effects?
     
-    switch(new_trap.type)
-    {
-        case DungeonTrapType_Spike:
-        {
-            new_trap.name = "Spikes";
-            
-            sprintf(new_trap.description,
-                    "Activating these spikes will deal %u - %u physical damage.",
-                    spec->spike_trap_value.min, spec->spike_trap_value.max);
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_SpikeTrap);
-        } break;
-        
-        case DungeonTrapType_Sword:
-        {
-            new_trap.name = "Swords";
-            
-            sprintf(new_trap.description,
-                    "Activating these swords will deal %u - %u physical damage.",
-                    spec->sword_trap_value.min, spec->sword_trap_value.max);
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_SwordTrap);
-        } break;
-        
-        case DungeonTrapType_Arrow:
-        {
-            new_trap.name = "Arrows";
-            
-            sprintf(new_trap.description,
-                    "Activating these arrows will deal %u - %u physical damage.",
-                    spec->arrow_trap_value.min, spec->arrow_trap_value.max);
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_ArrowTrap);
-        } break;
-        
-        case DungeonTrapType_Magic:
-        {
-            new_trap.name = "Magical Glyph";
-            
-            sprintf(new_trap.description,
-                    "Stepping on this glyph will deal %u - %u damage of a random damage type.",
-                    spec->magic_trap_value.min, spec->magic_trap_value.max);
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_MagicTrap);
-        } break;
-        
-        case DungeonTrapType_Bind:
-        {
-            new_trap.name = "Binding Glyph";
-            
-            sprintf(new_trap.description,
-                    "Stepping on this glyph will cause you to be bound for %u - %u turns.",
-                    spec->bind_trap_value.min, spec->bind_trap_value.max);
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_BindTrap);
-        } break;
-        
-        case DungeonTrapType_Shaft:
-        {
-            new_trap.name = "Shaft";
-            
-            sprintf(new_trap.description,
-                    "Shafts cause you to fall %u - %u dungeon levels.",
-                    spec->shaft_trap_value.min, spec->shaft_trap_value.max);
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_ShaftTrap);
-        } break;
-        
-        case DungeonTrapType_Summon:
-        {
-            new_trap.name = "Summoning Glyph";
-            
-            sprintf(new_trap.description,
-                    "This glyph will summon a random enemy of relative strength into your vicinity.");
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_SummonTrap);
-        } break;
-        
-        case DungeonTrapType_Teleport:
-        {
-            new_trap.name = "Teleporting Glyph";
-            
-            sprintf(new_trap.description,
-                    "This glyph will transport you to a random location in the dungeon level.");
-            
-            new_trap.tile_src = get_dungeon_tileset_rect(DungeonTileID_TeleportTrap);
-        } break;
-        
-        invalid_default_case;
-    }
-    
-    for(u32 index = 0; index < spec->trap_count; ++index)
+    for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
     {
         DungeonTrap *trap = &traps->array[index];
         
         if(!trap->type)
         {
-            ++traps->count;
-            *trap = new_trap;
+            trap->type = type;
+            trap->pos = pos;
             
+            switch(type)
+            {
+                case DungeonTrapType_Spike:
+                {
+                    strcpy(trap->name.s, "Spikes");
+                    
+                    sprintf(trap->description.s,
+                            "Activating these spikes will deal %u - %u physical damage.",
+                            spec->spike_trap_value.min, spec->spike_trap_value.max);
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_SpikeTrap);
+                } break;
+                
+                case DungeonTrapType_Sword:
+                {
+                    strcpy(trap->name.s, "Swords");
+                    
+                    sprintf(trap->description.s,
+                            "Activating these swords will deal %u - %u physical damage.",
+                            spec->sword_trap_value.min, spec->sword_trap_value.max);
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_SwordTrap);
+                } break;
+                
+                case DungeonTrapType_Arrow:
+                {
+                    strcpy(trap->name.s, "Arrows");
+                    
+                    sprintf(trap->description.s,
+                            "Activating these arrows will deal %u - %u physical damage.",
+                            spec->arrow_trap_value.min, spec->arrow_trap_value.max);
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_ArrowTrap);
+                } break;
+                
+                case DungeonTrapType_Magic:
+                {
+                    strcpy(trap->name.s, "Magical Glyph");
+                    
+                    sprintf(trap->description.s,
+                            "Stepping on this glyph will deal %u - %u damage of a random damage type.",
+                            spec->magic_trap_value.min, spec->magic_trap_value.max);
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_MagicTrap);
+                } break;
+                
+                case DungeonTrapType_Bind:
+                {
+                    strcpy(trap->name.s, "Binding Glyph");
+                    
+                    sprintf(trap->description.s,
+                            "Stepping on this glyph will cause you to be bound for %u - %u turns.",
+                            spec->bind_trap_value.min, spec->bind_trap_value.max);
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_BindTrap);
+                } break;
+                
+                case DungeonTrapType_Shaft:
+                {
+                    strcpy(trap->name.s, "Shaft");
+                    
+                    sprintf(trap->description.s,
+                            "Shafts cause you to fall %u - %u dungeon levels.",
+                            spec->shaft_trap_value.min, spec->shaft_trap_value.max);
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_ShaftTrap);
+                } break;
+                
+                case DungeonTrapType_Summon:
+                {
+                    strcpy(trap->name.s, "Summoning Glyph");
+                    
+                    sprintf(trap->description.s,
+                            "This glyph will summon a random enemy of relative strength into your vicinity.");
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_SummonTrap);
+                } break;
+                
+                case DungeonTrapType_Teleport:
+                {
+                    strcpy(trap->name.s, "Telporting Glyph");
+                    
+                    sprintf(trap->description.s,
+                            "This glyph will transport you to a random location in the dungeon level.");
+                    
+                    trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_TeleportTrap);
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            ++traps->count;
             return;
         }
     }
@@ -1459,7 +1484,7 @@ can_place_dungeon_feature_on_pos(Dungeon *dungeon, ItemState *items, v2u pos)
                       !is_dungeon_pos_trap(&dungeon->traps, pos) &&
                       !is_dungeon_pos_passage(dungeon->tiles, pos) &&
                       !is_dungeon_pos_occupied(dungeon->tiles, pos) &&
-                      !get_dungeon_pos_item_count(items, pos, dungeon->level));
+                      !get_dungeon_pos_item_count(items, dungeon->level, pos));
     
     return(result);
 }
@@ -1990,9 +2015,10 @@ create_dungeon(Game *game,
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(11, 16), DungeonTileID_Water1);
     #endif
     
-        move_entity(random, player, dungeon->tiles, ui, make_v2u(24, 2));
+    move_entity(random, player, dungeon->tiles, ui, make_v2u(24, 2));
+    //move_entity(random, player, dungeon->tiles, ui, make_v2u(11, 1));
     
-    add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 12, 15);
+    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 23, 2);
     //add_enemy_entity(entities, dungeon, EntityID_Rat, 12, 15);
     
     //add_enemy_entity(entities, dungeon, EntityID_Python, 7, 1);
@@ -2022,13 +2048,11 @@ create_dungeon(Game *game,
     // Test traps
     v2u trap_pos = {25, 2};
     
-    for(DungeonTrapType type = DungeonTrapType_None + 1; type < DungeonTrapType_Count; ++type)
+    for(DungeonTrapType trap_type = DungeonTrapType_None + 1;
+            trap_type < DungeonTrapType_Count;
+            ++trap_type)
     {
-        DungeonTrap new_trap = {0};
-        new_trap.type = type;
-        new_trap.pos = trap_pos;
-        
-        add_dungeon_trap(&dungeon->spec, &dungeon->traps, new_trap);
+        add_dungeon_trap(&dungeon->spec, &dungeon->traps, trap_type, trap_pos);
         
         ++trap_pos.x;
     }
@@ -2521,20 +2545,18 @@ create_dungeon(Game *game,
     }
     #endif
     
-#if 1
+#if 0
     // Place Traps
     for(u32 count = 0; count < spec->trap_count; ++count)
     {
-        DungeonTrap new_trap = {0};
-        
-            new_trap.type = get_random_number(random, DungeonTrapType_None + 1, DungeonTrapType_Count - 1);
-            new_trap.pos = get_random_dungeon_feature_pos(random, dungeon, items);
+        DungeonTrapType trap_type = get_random_number(random, DungeonTrapType_None + 1, DungeonTrapType_Count - 1);
+        v2u trap_pos = get_random_dungeon_feature_pos(random, dungeon, items);
             
-                add_dungeon_trap(&dungeon->spec, &dungeon->traps, new_trap);
+        add_dungeon_trap(&dungeon->spec, &dungeon->traps, trap_type, trap_pos);
         }
 #endif
     
-#if 1
+#if 0
     // Place Items
     for(u32 count = 0; count < spec->item_count; ++count)
     {
@@ -2640,7 +2662,7 @@ create_dungeon(Game *game,
             }
 #endif
     
-#if 1
+#if 0
     // Place Enemies
     for(u32 count = 0; count < spec->enemy_count; ++count)
     {
@@ -2721,7 +2743,7 @@ create_dungeon(Game *game,
         DungeonTrap *trap = &traps->array[index];
         
         printf("Index %u\n", index);
-        printf("Name: %s\n", trap->name);
+        printf("Name: %s\n", trap->name.s);
         printf("Pos: %u, %u\n\n", trap->pos.x, trap->pos.y);
     }
     #endif

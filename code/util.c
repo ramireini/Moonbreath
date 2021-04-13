@@ -219,12 +219,11 @@ is_alpha(char c)
 internal char
 make_uppercase(char c)
 {
-    char result = 0;
+    assert(is_lowercase(c));
     
-    if(is_lowercase(c))
-    {
-        result = c + 32;
-    }
+    char result = (c - 32);
+    
+    assert(is_uppercase(result));
     
     return(result);
 }
@@ -232,6 +231,9 @@ make_uppercase(char c)
 internal b32
 strings_match(char *a, char *b)
 {
+    assert(a);
+    assert(b);
+    
     b32 result = false;
     
     while(*a && *b &&

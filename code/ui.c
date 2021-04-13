@@ -1,3 +1,161 @@
+internal LetterParent
+get_letter_parent(Letter *letters, char c)
+{
+    assert(c);
+    
+    LetterParent result = {0};
+    
+    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    {
+        Letter *letter = &letters[i];
+        
+        if(letter->parent_type &&
+           letter->c == c)
+        {
+            result.type = letter->parent_type;
+            
+            switch(letter->parent_type)
+            {
+                case LetterParentType_Entity:
+                {
+                    assert(0);
+                } break;
+                
+                case LetterParentType_Item:
+                {
+                    result.item = letter->item;
+                } break;
+                
+                case LetterParentType_Trap:
+                {
+                    result.trap = letter->trap;
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            break;
+        }
+    }
+    
+    return(result);
+    }
+
+internal void
+reset_letters(Letter *letters)
+{
+    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    {
+        Letter *letter = &letters[i];
+        
+        if(letter->parent_type)
+        {
+            assert(letter->c);
+            
+            switch(letter->parent_type)
+            {
+                case LetterParentType_Entity:
+                {
+                    assert(letter->entity->select_letter);
+                    
+                    letter->entity->select_letter = 0;
+                } break;
+                
+                case LetterParentType_Item:
+                {
+                    assert(letter->item->select_letter);
+                    
+                    letter->item->select_letter = 0;
+                } break;
+                
+                case LetterParentType_Trap:
+                {
+                    assert(letter->trap->select_letter);
+                    
+                    letter->trap->select_letter = 0;
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            letter->parent_type = LetterParentType_None;
+            }
+    }
+}
+
+internal void
+set_letter(Letter *letters, void *parent, LetterParentType parent_type)
+{
+    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    {
+        Letter *letter = &letters[i];
+        
+        if(!letter->parent_type)
+        {
+            if(!letter->c)
+            {
+                if(i + 97 <= 'z')
+                {
+                    letter->c = i + 97;
+                }
+                else
+                {
+                    letter->c = i + 65;
+                }
+            }
+            assert(is_alpha(letter->c));
+            
+            letter->parent_type = parent_type;
+            switch(letter->parent_type)
+            {
+                
+                #if 0
+                case SelectLetterParent_Entity:
+                {
+                    assert(0);
+                } break;
+                #endif
+                
+                case LetterParentType_Item:
+                {
+                    Item *item = parent;
+                    
+                    letter->item = item;
+                    item->select_letter = letter->c;
+                    
+                    #if 0
+                    printf("Select letter char: %c\n", select_letter->c);
+                    printf("Item char: %c\n\n", item->select_letter);
+                    #endif
+                    
+                    } break;
+                
+                case LetterParentType_Trap:
+                {
+                     DungeonTrap *trap = parent;
+                    
+                    letter->trap = trap;
+                    trap->select_letter = letter->c;
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            return;
+        }
+        }
+    
+    assert(0);
+}
+
+internal void
+ui_print_view(char *name, View view)
+{
+    printf("%s - count: %u\n", name, view.count);
+    printf("%s - start: %u\n", name, view.start);
+    printf("%s - end: %u\n\n", name, view.end);
+}
+
 internal void
 ui_next_line(UI *ui, v2u *pos, u32 multiplier)
 {
@@ -23,37 +181,6 @@ internal void
 log_add_okay(UI *ui)
 {
     log_add(ui, "%sOkay.", start_color(Color_Yellow));
-}
-
-internal void
-log_add_item_cursed_unequip(UI *ui, Item *item)
-{
-    log_add(ui, "You try to unequip the %s.. but a force stops you from doing so!", item->name);
-}
-
-internal void
-log_add_item_action_text(UI *ui, Item *item, ItemActionType action)
-{
-    char action_text[8] = {0};
-    
-    switch(action)
-    {
-        case ItemActionType_PickUp: strcpy(action_text, "pick up"); break;
-        case ItemActionType_Drop: strcpy(action_text, "drop"); break;
-        case ItemActionType_Equip: strcpy(action_text, "equip"); break;
-        case ItemActionType_Unequip: strcpy(action_text, "unequip"); break;
-        
-        invalid_default_case;
-    }
-    
-    log_add(ui, "You %s the %s%s%s%s%s%s",
-            action_text,
-            get_item_status_color(item),
-            get_item_status_prefix(item),
-            get_full_item_name(item).str,
-            get_item_stack_string(item).str,
-            get_item_mark_string(item).str,
-            end_color());
 }
 
 internal void
@@ -117,47 +244,80 @@ init_view_end(View *view, u32 entry_count)
 internal b32
 item_fits_using_item_type(ItemUseType type, Item *item)
 {
-    b32 result = false;
+    if(type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) return(true);
+    else if(type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) return(true);
+    else if(type == UsingItemType_Identify && !is_set(item->flags, ItemFlag_IsIdentified)) return(true);
+    else if(type == UsingItemType_Uncurse && is_set(item->flags, ItemFlag_IsIdentified | ItemFlag_IsCursed)) return(true);
     
-    if((type == UsingItemType_Identify && !is_set(item->flags, ItemFlag_IsIdentified)) ||
-       (type == UsingItemType_EnchantWeapon && item->type == ItemType_Weapon) ||
-       (type == UsingItemType_EnchantArmor && item->type == ItemType_Armor) ||
-           (type == UsingItemType_Uncurse && is_set(item->flags, ItemFlag_IsIdentified | ItemFlag_IsCursed)))
+    return(false);
+}
+
+internal v2u
+get_window_entry_name_pos(v2u pos, UI *ui)
+{
+    v2u result =
     {
-        result = true;
-    }
+        pos.x + (ui->font_newline * 3),
+        pos.y + (ui->font->size / 2)
+    };
     
     return(result);
 }
 
+internal v2u
+render_window_tile(v4u tile_src, v2u pos, UI *ui)
+{
+    v2u result =
+    {
+        pos.x + 8,
+        pos.y
+    };
+    
+    defer_texture(ui, result, tile_src);
+    
+    return(result);
+}
+
+internal v2u
+render_window_separator(v4u rect, v2u pos, UI *ui)
+{
+    v2u result =
+    {
+        pos.x,
+        pos.y + (ui->font_newline / 2)
+    };
+    
+    defer_fill_rect(ui,
+                        result.x,
+                        result.y - 4,
+                        rect.w - (result.x * 2),
+                    1,
+                        Color_WindowAccent);
+    
+    return(result);
+    }
+
 internal void
 render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
 {
-    v2u header = {pos.x, pos.y + (ui->font_newline / 2)};
-    defer_fill_rect(ui,
-                        header.x,
-                        header.y - 4,
-                        rect.w - (header.x * 2),
-                        1,
-                    Color_WindowAccent);
+    v2u header_pos = render_window_separator(rect, pos, ui);
     
     switch(type)
     {
-        
-        case ItemType_Weapon: defer_text(ui, "Weapon", header.x, header.y); break;
-        case ItemType_Armor: defer_text(ui, "Armor", header.x, header.y); break;
-        case ItemType_Potion: defer_text(ui, "Potion", header.x, header.y); break;
-        case ItemType_Scroll: defer_text(ui, "Scroll", header.x, header.y); break;
-        case ItemType_Ration: defer_text(ui, "Ration", header.x, header.y); break;
+        case ItemType_Weapon: defer_text(ui, "Weapons", header_pos.x, header_pos.y); break;
+        case ItemType_Armor: defer_text(ui, "Armors", header_pos.x, header_pos.y); break;
+        case ItemType_Potion: defer_text(ui, "Potions", header_pos.x, header_pos.y); break;
+        case ItemType_Scroll: defer_text(ui, "Scrolls", header_pos.x, header_pos.y); break;
+        case ItemType_Ration: defer_text(ui, "Rations", header_pos.x, header_pos.y); break;
         
         invalid_default_case;
     }
 }
 
 internal v2u
-get_header_text_pos(UI *ui, v2u header)
+get_examine_window_header_pos(UI *ui, v2u pos)
 {
-    v2u result = header;
+    v2u result = pos;
     
     result.x += ui->window_offset * 4;
     result.y += ui->font->size / 2;
@@ -178,7 +338,7 @@ get_header_pos(UI *ui, u32 y_multiplier)
 }
 
 internal v2u
-reset_defer_rect_and_get_header_pos(UI *ui, u32 y_multiplier)
+start_defer_rect(UI *ui, u32 y_multiplier)
 {
     zero_struct(ui->defer_rect);
     v2u result = get_header_pos(ui, y_multiplier);
@@ -238,12 +398,15 @@ entry_has_space(v2u pos, u32 entry_size, u32 window_asset_y)
 }
 
 internal void
-render_scrollbar(Game *game, UI *ui, v4u rect, View *view)
+render_scrollbar_on_rect(Game *game, UI *ui, v4u rect, View *view)
 {
-    if(is_view_scrolling(*view, view->count))
+    assert(game);
+    assert(ui);
+    assert(rect.w);
+    assert(rect.h);
+    
+    if(view && is_view_scrolling(*view, view->count))
     {
-        assert(rect.w && rect.h);
-        
         u32 rect_gutter_x = rect.x + rect.w - get_ui_padding();
         
         v4u gutter = {0};
@@ -283,170 +446,497 @@ get_border_adjusted_rect(v4u rect, u32 border_size)
 }
 
 internal void
-center_window_to_available_screen(v2u game_window_size, Assets *assets, v4u *rect)
+center_rect_to_window(v2u window_size, Assets *assets, v4u *rect)
 {
     if(rect->w && rect->w)
     {
-    rect->x = (game_window_size.w / 2) - (rect->w / 2);
-    rect->y = get_centering_offset(game_window_size.h - assets->stat_and_log_window_h, rect->h);
+    rect->x = (window_size.w / 2) - (rect->w / 2);
+    rect->y = get_centering_offset(window_size.h - assets->stat_and_log_window_h, rect->h);
            }
 }
 
 internal void
-center_and_render_window_to_available_screen(Game *game, Assets *assets, v4u *rect)
+render_centered_rect(Game *game, Assets *assets, v4u *rect)
 {
-    center_window_to_available_screen(game->window_size, assets, rect);
-    render_window(game, *rect, 2);
+    center_rect_to_window(game->window_size, assets, rect);
+    render_rect(game, *rect, 2);
 }
 
 internal void
-process_window_end(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
+end_defer_rect(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
 {
     ui->defer_rect.h = pos.y;
     
-    center_and_render_window_to_available_screen(game, assets, &ui->defer_rect);
+    render_centered_rect(game, assets, &ui->defer_rect);
+    render_scrollbar_on_rect(game, ui, ui->defer_rect, view);
     
-    if(view)
-    {
-    render_scrollbar(game, ui, ui->defer_rect, view);
-    }
-    
-    process_defer(game, assets, ui);
+    render_defer(game, ui, assets->tileset);
 }
 
 internal void
-render_item_examine(Game *game, Item *item, UI *ui, v2u *pos, CameFrom came_from)
+render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
 {
-    // Render item picture and name
-    defer_texture(ui, *pos, item->tile_src);
+    assert(is_entity_valid_and_enemy(entity));
     
-    v2u header = get_header_text_pos(ui, *pos);
+    v2u pos = start_defer_rect(ui, 1);
+    
+    // Render entity stats
+    v2u name = get_examine_window_header_pos(ui, pos);
+    
+    if(is_set(entity->flags, EntityFlag_IsInvisible))
+    {
+        defer_texture(ui, pos, get_dungeon_tileset_rect(DungeonTileID_EntityUnknown));
+        
+        defer_text(ui, "Something", name.x, name.y);
+        ui_next_line(ui, &pos, 2);
+        
+        ui_next_line(ui, &pos, 1);
+        defer_text(ui, "An unknown being.", pos.x, pos.y);
+        
+        ui_next_line(ui, &pos, 2);
+    }
+    else
+    {
+        defer_texture(ui, pos, entity->tile_src);
+        
+        defer_text(ui, "%s", name.x, name.y, entity->name.s);
+        ui_next_line(ui, &pos, 2);
+        
+        ui_next_line(ui, &pos, 1);
+        defer_text(ui, "Max HP: %u", pos.x, pos.y, entity->max_hp);
+        
+        ui_next_line(ui, &pos, 1);
+        defer_text(ui, "Damage: %u", pos.x, pos.y, entity->e.damage);
+        
+        ui_next_line(ui, &pos, 1);
+        defer_text(ui, "Defence: %u", pos.x, pos.y, entity->defence);
+        
+        char evasion_text[24] = {0};
+        if(entity->evasion <= 3)
+        {
+            strcpy(evasion_text, "Very Low");
+        }
+        else if(entity->evasion <= 7)
+        {
+            strcpy(evasion_text, "Low");
+        }
+        else if(entity->evasion <= 13)
+        {
+            strcpy(evasion_text, "Average");
+        }
+        else if(entity->evasion <= 17)
+        {
+            strcpy(evasion_text, "High");
+        }
+        else
+        {
+            strcpy(evasion_text, "Very High");
+        }
+        
+        ui_next_line(ui, &pos, 1);
+        defer_text(ui, "Evasion: %s (%u)", pos.x, pos.y, evasion_text, entity->evasion);
+        
+        ui_next_line(ui, &pos, 1);
+        defer_text(ui, "Speed: %.01f", pos.x, pos.y, entity->action_time);
+        
+        // Find out the longest damage type length and damage type resistance so that
+        // we can align text correctly.
+        u32 longest_damage_type_length = 0;
+        s32 highest_damage_type_resistance = 0;
+        for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
+        {
+            s32 resistance = entity->resistances[damage_type_index];
+            if(resistance != 0)
+            {
+                char *damage_type_text = get_damage_type_text(damage_type_index);
+                u32 current_damage_type_length = get_string_length(damage_type_text);
+                
+                if(longest_damage_type_length < current_damage_type_length)
+                {
+                    longest_damage_type_length = current_damage_type_length;
+                }
+                
+                u32 absolute_resistance = get_absolute(resistance);
+                if(highest_damage_type_resistance < absolute_resistance)
+                {
+                    highest_damage_type_resistance = absolute_resistance;
+                }
+            }
+        }
+        
+#if 0
+        printf("longest_damage_type_length: %u\n", longest_damage_type_length);
+        printf("highest_damage_type_resistance: %u\n", highest_damage_type_resistance);
+#endif
+        
+        // Render entity damage type resistances
+        b32 render_prefix_text = true;
+        for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
+        {
+            s32 resistance = entity->resistances[damage_type_index];
+            if(resistance != 0)
+            {
+                if(render_prefix_text)
+                {
+                    ui_next_line(ui, &pos, 2);
+                    defer_text(ui, "It has the following resistances:", pos.x, pos.y);
+                    
+                    render_prefix_text = false;
+                }
+                
+                // This sets the padding after the damage_type_text, we do this so that
+                // the resistance_text_value's start aligned.
+                char *damage_type_text = get_damage_type_text(damage_type_index);
+                
+                String32 damage_type_text_padding = {0};
+                u32 damage_type_text_padding_length = longest_damage_type_length - get_string_length(damage_type_text);
+                
+                for(u32 index = 0; index < damage_type_text_padding_length; ++index)
+                {
+                    damage_type_text_padding.s[index] = ' ';
+                }
+                
+                // Set the character we use based on if value is positive or negative.
+                b32 add_extra_resistance_space = false;
+                char resistance_char = '-';
+                
+                if(resistance > 0)
+                {
+                    add_extra_resistance_space = true;
+                    resistance_char = '+';
+                }
+                
+                u32 absolute_resistance = get_absolute(resistance);
+                
+                // Copy as many of the correct characters as we need into resistance_text_value.
+                String8 resistance_value_string = {0};
+                
+                for(u32 string_index = 0; string_index < absolute_resistance; ++string_index)
+                {
+                    resistance_value_string.s[string_index] = resistance_char;
+                }
+                
+                // This sets the padding at the end of resistance_text_value, we do this so that
+                // the rendered resistance values start aligned.
+                u32 length = highest_damage_type_resistance - absolute_resistance;
+                u32 padding_length = absolute_resistance + length;
+                for(u32 padding_index = absolute_resistance; padding_index < padding_length; ++padding_index)
+                {
+                    resistance_value_string.s[padding_index] = ' ';
+                }
+                
+                // Positive values need an extra space, hence the boolean for it.
+                if(add_extra_resistance_space)
+                {
+                    resistance_value_string.s[padding_length] = ' ';
+                }
+                
+                ui_next_line(ui, &pos, 1);
+                defer_text(ui, "%s: %s%s (%d)",
+                           pos.x, pos.y,
+                           damage_type_text,
+                           damage_type_text_padding.s,
+                           resistance_value_string.s,
+                           resistance);
+            }
+        }
+        
+        // Render entity status effects
+        if(entity_has_any_status_effect(entity))
+        {
+            ui_next_line(ui, &pos, 2);
+            defer_text(ui, "It is under the following status effects:", pos.x, pos.y);
+            
+            for(u32 index = StatusEffectType_None + 1; index < StatusEffectType_Count; ++index)
+            {
+                if(entity_has_status_effect(entity, index))
+                {
+                    ui_next_line(ui, &pos, 1);
+                    defer_text(ui, "%s", pos.x, pos.y, get_status_effect_name(index));
+                }
+            }
+        }
+        
+        // Render entity spells
+        char spell_letter = 'a';
+        if(is_set(entity->flags, EntityFlag_UsesMagicAttacks))
+        {
+            ui_next_line(ui, &pos, 2);
+            defer_text(ui, "It has the following spells:", pos.x, pos.y);
+            
+            for(u32 spell_index = 0; spell_index < MAX_ENTITY_SPELL_COUNT; ++spell_index)
+            {
+                Spell *spell = &entity->e.spells[spell_index];
+                if(spell->id)
+                {
+                    ui_next_line(ui, &pos, 1);
+                    defer_text(ui, "%c - %s", pos.x, pos.y, spell_letter, get_spell_name(spell->id));
+                    
+                    ++spell_letter;
+                }
+            }
+            
+            ui_next_line(ui, &pos, 2);
+            defer_text(ui, "Press the key shown to read a description.", pos.x, pos.y);
+        }
+        
+        ui_next_line(ui, &pos, 2);
+    }
+    
+    end_defer_rect(game, assets, ui, 0, pos);
+        }
+
+internal void
+render_entity_spell_examine_window(Game *game,
+                                   Entity *entity,
+                                   Spell *spell,
+                                   Assets *assets,
+                                   UI *ui,
+                                   v2u player_pos)
+{
+    assert(is_entity_valid_and_enemy(entity));
+    assert(spell->type);
+    
+    v2u pos = start_defer_rect(ui, 1);
+    
+    defer_text(ui, get_spell_name(spell->id), pos.x, pos.y);
+    ui_next_line(ui, &pos, 2);
+    
+    defer_text(ui, get_spell_description(spell->id), pos.x, pos.y);
+    ui_next_line(ui, &pos, 2);
+    
+    switch(spell->type)
+    {
+        case SpellType_Offensive:
+        {
+            defer_text(ui, "Damage Type: %s", pos.x, pos.y, get_damage_type_text(spell->damage_type));
+            ui_next_line(ui, &pos, 1);
+            
+            defer_text(ui, "Damage: %u", pos.x, pos.y, spell->value);
+            ui_next_line(ui, &pos, 1);
+        } break;
+        
+        case SpellType_Healing:
+        {
+            defer_text(ui, "Healing: %u", pos.x, pos.y, spell->value);
+            ui_next_line(ui, &pos, 1);
+        } break;
+        
+        case SpellType_Buff:
+        {
+            defer_text(ui, "Increase: %u", pos.x, pos.y, spell->value);
+            ui_next_line(ui, &pos, 1);
+            
+            defer_text(ui, "Duration: %u", pos.x, pos.y, spell->duration);
+            ui_next_line(ui, &pos, 1);
+        } break;
+        
+        invalid_default_case;
+    }
+    
+    char spell_range_text[24] = {0};
+    if(spell->range)
+    {
+        sprintf(spell_range_text, "Range: %u", spell->range);
+    }
+    else
+    {
+        sprintf(spell_range_text, "Range: Line of sight");
+    }
+    
+    char in_spell_range_text[24] = {0};
+    if(in_spell_range(spell->range, entity->pos, player_pos))
+    {
+        sprintf(in_spell_range_text, "(You are in range)");
+    }
+    
+    defer_text(ui, "%s %s", pos.x, pos.y, spell_range_text, in_spell_range_text);
+    ui_next_line(ui, &pos, 2);
+    
+    end_defer_rect(game, assets, ui, 0, pos);
+}
+
+internal void
+render_tile_examine_window(Game *game, DungeonTileID tile, Assets *assets, UI *ui)
+{
+    assert(tile);
+    
+    v2u pos = start_defer_rect(ui, 1);
+    
+    defer_texture(ui, pos, get_dungeon_tileset_rect(tile));
+    
+    v2u header = get_examine_window_header_pos(ui, pos);
+    defer_text(ui, "%s", header.x, header.y, get_dungeon_tile_name(tile));
+    ui_next_line(ui, &pos, 3);
+    
+    char *text = get_dungeon_tile_info_text(tile);
+    if(text)
+    {
+        defer_text(ui, text, pos.x, pos.y);
+        ui_next_line(ui, &pos, 2);
+    }
+    
+    end_defer_rect(game, assets, ui, 0, pos);
+    }
+
+internal void
+render_trap_examine_window(Game *game, DungeonTrap *trap, Assets *assets, UI *ui)
+{
+    assert(trap);
+    
+    v2u pos = start_defer_rect(ui, 1);
+    
+    defer_texture(ui, pos, trap->tile_src);
+    
+    v2u header = get_examine_window_header_pos(ui, pos);
+    defer_text(ui, trap->name.s, header.x, header.y);
+    ui_next_line(ui, &pos, 3);
+    
+    defer_text(ui, trap->description.s, pos.x, pos.y);
+    ui_next_line(ui, &pos, 2);
+    
+    end_defer_rect(game, assets, ui, 0, pos);
+}
+
+internal void
+render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 show_inventory_options)
+{
+    assert(item);
+    
+    v2u pos = start_defer_rect(ui, 1);
+    
+    // Render item picture and name
+    defer_texture(ui, pos, item->tile_src);
+    
+    v2u header = get_examine_window_header_pos(ui, pos);
     defer_text(ui, "%s%s%s%s%s%s",
                header.x, header.y,
                get_item_status_color(item),
-                   get_item_letter_string(item).str,
+                   get_item_letter_string(item).s,
                get_item_status_prefix(item),
-                   get_full_item_name(item).str,
-                   get_item_stack_string(item).str,
-               get_item_mark_string(item).str);
+                   get_full_item_name(item).s,
+                   get_item_stack_string(item).s,
+               get_item_mark_string(item).s);
     
-    ui_next_line(ui, pos, 2);
+    ui_next_line(ui, &pos, 2);
     
     if(is_set(item->flags, ItemFlag_IsIdentified))
     {
         if(item->type == ItemType_Weapon)
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Damage: %d", pos->x, pos->y, item->w.damage + item->enchantment_level);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Damage: %d", pos.x, pos.y, item->w.damage + item->enchantment_level);
             
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Accuracy: %d", pos->x, pos->y, item->w.accuracy + item->enchantment_level);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Accuracy: %d", pos.x, pos.y, item->w.accuracy + item->enchantment_level);
             
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Attack Speed: %.1f", pos->x, pos->y, item->w.speed);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Attack Speed: %.1f", pos.x, pos.y, item->w.speed);
         }
         else if(item->type == ItemType_Armor)
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Defence: %d", pos->x, pos->y, item->a.defence + item->enchantment_level);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Defence: %d", pos.x, pos.y, item->a.defence + item->enchantment_level);
             
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Weight: %d", pos->x, pos->y, item->a.weight);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Weight: %d", pos.x, pos.y, item->a.weight);
         }
         else if(is_item_consumable(item->type))
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "%s", pos->x, pos->y, item->description);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "%s", pos.x, pos.y, item->description.s);
         }
     }
     else
     {
         if(item->type == ItemType_Weapon)
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Base Damage: %u", pos->x, pos->y, item->w.damage);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Base Damage: %u", pos.x, pos.y, item->w.damage);
             
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Base Accuracy: %d", pos->x, pos->y, item->w.accuracy);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Base Accuracy: %d", pos.x, pos.y, item->w.accuracy);
             
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Base Attack Speed: %.1f", pos->x, pos->y, item->w.speed);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Base Attack Speed: %.1f", pos.x, pos.y, item->w.speed);
         }
         else if(item->type == ItemType_Armor)
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Base Defence: %d", pos->x, pos->y, item->a.defence);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Base Defence: %d", pos.x, pos.y, item->a.defence);
             
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Base Weight: %d", pos->x, pos->y, item->a.weight);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Base Weight: %d", pos.x, pos.y, item->a.weight);
         }
         else if(item->type == ItemType_Potion)
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Consuming potions will bestow you with different effects.", pos->x, pos->y);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Consuming potions will bestow you with different effects.", pos.x, pos.y);
             
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Some of these effects will be helpful, while others harmful.", pos->x, pos->y);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Some of these effects will be helpful, while others harmful.", pos.x, pos.y);
         }
         else if(item->type == ItemType_Scroll)
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "Reading scrolls will bring out different magical effects.", pos->x, pos->y);
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "Reading scrolls will bring out different magical effects.", pos.x, pos.y);
         }
     }
     
-    ui_next_line(ui, pos, 2);
+    ui_next_line(ui, &pos, 2);
     
     if(is_set(item->flags, ItemFlag_IsIdentified | ItemFlag_IsCursed))
     {
-        defer_text(ui, "It is a cursed item.", pos->x, pos->y);
-        ui_next_line(ui, pos, 1);
+        defer_text(ui, "It is a cursed item.", pos.x, pos.y);
+        ui_next_line(ui, &pos, 1);
     }
     
     if(is_item_equipment(item->type))
     {
-        defer_text(ui, "It is of %s rarity.", pos->x, pos->y, get_item_rarity_text(item->rarity));
+        defer_text(ui, "It is of %s rarity.", pos.x, pos.y, get_item_rarity_text(item->rarity));
         
             if(item->type == ItemType_Weapon)
         {
-            ui_next_line(ui, pos, 1);
-            defer_text(ui, "It is a %s weapon.", pos->x, pos->y, get_item_handedness_text(item->w.handedness));
+            ui_next_line(ui, &pos, 1);
+            defer_text(ui, "It is a %s weapon.", pos.x, pos.y, get_item_handedness_text(item->w.handedness));
         }
         
-        ui_next_line(ui, pos, 2);
+        ui_next_line(ui, &pos, 2);
     }
     
-    if(came_from == CameFrom_Inventory)
+    if(show_inventory_options)
     {
         u32 padding = get_ui_padding();
-        render_window_option(ui, "(a)djust", pos);
+        render_window_option(ui, "(a)djust", &pos);
         
         if(is_item_equipment(item->type))
         {
             if(is_set(item->flags, ItemFlag_IsEquipped))
             {
-                render_window_option(ui, "(u)nequip", pos);
+                render_window_option(ui, "(u)nequip", &pos);
             }
             else
             {
-                render_window_option(ui, "(e)quip", pos);
+                render_window_option(ui, "(e)quip", &pos);
             }
         }
         else if(item->type == ItemType_Potion ||
                 item->type == ItemType_Ration)
         {
-            render_window_option(ui, "(c)onsume", pos);
+            render_window_option(ui, "(c)onsume", &pos);
         }
         else if(item->type == ItemType_Scroll)
         {
-            render_window_option(ui, "(r)ead", pos);
+            render_window_option(ui, "(r)ead", &pos);
         }
         
-        render_window_option(ui, "(d)rop", pos);
-        render_window_option(ui, "(m)ark", pos);
+        render_window_option(ui, "(d)rop", &pos);
+        render_window_option(ui, "(m)ark", &pos);
         
-        ui_next_line(ui, pos, 2);
+        ui_next_line(ui, &pos, 2);
     }
+    
+    end_defer_rect(game, assets, ui, 0, pos);
 }
 
 internal b32
@@ -476,11 +966,11 @@ update_log_view(View *view, u32 index)
 internal void
 log_add(UI *ui, char *text, ...)
 {
-    String128 formatted = {0};
+    String128 text_format = {0};
     
     va_list arg_list;
     va_start(arg_list, text);
-    vsnprintf(formatted.str, sizeof(formatted), text, arg_list);
+    vsnprintf(text_format.s, sizeof(text_format), text, arg_list);
     va_end(arg_list);
     
     // Set the new log message to an unused index if possible
@@ -489,11 +979,12 @@ log_add(UI *ui, char *text, ...)
         update_log_view(&ui->full_log_view, index);
         update_log_view(&ui->short_log_view, index);
         
-        char *log_message = ui->log_messages[index].str;
-        
-        if(!log_message[0])
+        LogMessage *message = &ui->log_messages[index];
+        if(!message->is_set)
         {
-            strcpy(log_message, formatted.str);
+            message->is_set = true;
+            strcpy(message->string, text_format.s);
+            
             return;
         }
     }
@@ -501,69 +992,37 @@ log_add(UI *ui, char *text, ...)
     // Move all log messages up by one
     for(u32 index = 1; index < MAX_LOG_MESSAGE_COUNT; ++index)
     {
-        strcpy(ui->log_messages[index - 1].str, ui->log_messages[index].str);
+        LogMessage *current_message = &ui->log_messages[index];
+        LogMessage *last_message = &ui->log_messages[index - 1];
+        
+        assert(current_message->is_set);
+        assert(last_message->is_set);
+        
+        strcpy(last_message->string, current_message->string);
     }
     
     // Set the new log message to the bottom
-    strcpy(ui->log_messages[MAX_LOG_MESSAGE_COUNT - 1].str, formatted.str);
+    LogMessage *new_message = &ui->log_messages[MAX_LOG_MESSAGE_COUNT - 1];
+    strcpy(new_message->string, text_format.s);
 }
 
+// TODO(rami): The ability to move one inventory entry up or down with arrow keys
 internal void
-render_multiple_examine_window(Game *game, Dungeon *dungeon, UI *ui, Assets *assets)
-{
-    printf("Render Multiple Examine Window\n");
-    
-    Examine *examine = &game->examine;
-    
-    // TODO(rami): We want to list all the things we can imagine that are on the examine
-    // pos. Listing will be done one type at a time like we did with rendering inventory
-    // items.
-    
-    v2u pos = reset_defer_rect_and_get_header_pos(ui, 2);
-    
-    for(ExamineType examine_type = ExamineType_None;
-            examine_type < ExamineType_Count;
-            ++examine_type)
-    {
-        if(examine_type == ExamineType_EntitySpell) continue;
-        
-        if(examine_type == ExamineType_Trap)
-        {
-            DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, pos);
-                if(trap)
-            {
-                printf("TRAP\n");
-            }
-        }
-        }
-    
-    ui_next_line(ui, &pos, 1);
-    process_window_end(game, assets, ui, 0, pos);
-}
-
-internal void
-render_inventory_items(Game *game,
+render_inventory_window(Game *game,
                    ItemState *items,
-                   Inventory *inventory,
-                   View *view,
-                   UI *ui,
-                   Assets *assets,
-                   v2u player_pos,
-                   u32 dungeon_level,
-                   CameFrom came_from)
+                       Inventory *inventory,
+                       u32 dungeon_level,
+                        Assets *assets,
+                        UI *ui)
 {
-    assert(came_from);
+    Examine *examine = &game->examine;
+    View *view = &inventory->view;
+    
     assert(view);
     assert(view->start);
     
-    // We set the defer rect start width because we don't want the window to expand and
-    // retract depending on the count of items selected.
-    v2u pos = reset_defer_rect_and_get_header_pos(ui, 2);
-    ui->defer_rect.w = 416;
-    
-    // This sets the view->end value which tells us how many items the view can show.
-    // We go through the items and see when they would go past screen_bottom_y and set
-    // view->end based on that.
+    // Set the end value of the inventory view by seeing how many items we can fit on the
+    // screen before going over screen_bottom_y.
     if(!view->end)
     {
         v2u test_pos = {0};
@@ -577,34 +1036,15 @@ render_inventory_items(Game *game,
             {
                 Item *item = &items->array[index];
                 
-                b32 can_render = false;
-                
-                if(came_from == CameFrom_Inventory &&
-                   is_item_valid_and_in_inventory(item, dungeon_level))
-                {
-                    can_render = true;
-                }
-                else if(came_from == CameFrom_Examine &&
-                        is_item_valid_and_not_in_inventory(item, dungeon_level))
-                {
-                    can_render = true;
-                }
-                else if(came_from == CameFrom_Pickup &&
-                        is_item_valid_and_not_in_inventory(item, dungeon_level))
-                {
-                    can_render = true;
-                }
-                
-                if(can_render)
-                {
-                    if(item->type == type)
+                    if(is_item_valid_and_in_inventory(item, dungeon_level) &&
+                       item->type == type)
                     {
                         if(needs_item_type_header)
                         {
                             needs_item_type_header = false;
                             ++test_entry_count;
                             
-                            if(entry_has_space(test_pos, inventory->entry_size, ui->screen_bottom_window_y))
+                        if(entry_has_space(test_pos, inventory->entry_size, ui->window_scroll_start_y))
                             {
                                 test_pos.y += inventory->entry_size;
                             }
@@ -614,7 +1054,7 @@ render_inventory_items(Game *game,
                             }
                         }
                         
-                        if(entry_has_space(test_pos, inventory->entry_size, ui->screen_bottom_window_y))
+                    if(entry_has_space(test_pos, inventory->entry_size, ui->window_scroll_start_y))
                         {
                             test_pos.y += inventory->entry_size;
                         }
@@ -626,15 +1066,15 @@ render_inventory_items(Game *game,
                         ++test_entry_count;
                     }
             }
-            }
         }
     }
     
     u32 entry_count = 0;
     
-    // Render window header
-    if(came_from == CameFrom_Inventory)
-    {
+    v2u pos = start_defer_rect(ui, 2);
+    ui->defer_rect.w = 512; // Looks better with a bigger width
+    
+    // Render inventory header
         if(inventory->item_use_type)
         {
             switch(inventory->item_use_type)
@@ -651,478 +1091,113 @@ render_inventory_items(Game *game,
         {
             defer_text(ui, "Inventory: %u/%u slots", pos.x, pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
         }
-    }
-    else if(came_from == CameFrom_Examine)
-    {
-        defer_text(ui, "Examine what?", pos.x, pos.y);
-    }
-    else if(came_from == CameFrom_Pickup)
-    {
-        u32 select_item_count = 0;
-        
-        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-        {
-            Item *item = &items->array[index];
-            if(is_item_valid_and_selected(item, dungeon_level))
-            {
-                ++select_item_count;
-            }
-        }
-        
-        char select_text[32] = {0};
-        
-        if(select_item_count > 1)
-        {
-            sprintf(select_text, " (%u items)", select_item_count);
-        }
-        else if(select_item_count)
-        {
-            sprintf(select_text, " (%u item)", select_item_count);
-        }
-        
-        //printf("select_text: %s\n", select_text);
-        defer_text(ui, "Pick up which items? %u/%u slots%s", pos.x, pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, select_text);
-    }
     
     ui_next_line(ui, &pos, 1);
     
-    // Render window items
-    for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
-    {
-        b32 needs_item_type_header = true;
-        
-        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-        {
-            Item *item = &items->array[index];
-            
-            b32 can_render = false;
-            
-            if(came_from == CameFrom_Inventory &&
-                   is_item_valid_and_in_inventory(item, dungeon_level) &&
-               item->type == type &&
-                   (!inventory->item_use_type || item_fits_using_item_type(inventory->item_use_type, item)))
+    // Render inventory items
+            for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
             {
-                can_render = true;
-            }
-            else if(came_from == CameFrom_Examine &&
-                        can_render_window_item(item, type, dungeon_level, game->examine.pos))
-            {
-                can_render = true;
-            }
-            else if(came_from == CameFrom_Pickup &&
-                        can_render_window_item(item, type, dungeon_level, player_pos))
-            {
-                can_render = true;
-            }
-            
-            if(can_render)
-            {
-                if(needs_item_type_header)
-                {
-                    needs_item_type_header = false;
-                    ++entry_count;
-                    
-                    if(is_entry_in_view(*view, entry_count))
-                    {
-                        render_item_type_header(ui, ui->defer_rect, pos, type);
-                        pos.y += inventory->entry_size;
-                    }
-                }
+                b32 needs_item_type_header = true;
                 
-                ++entry_count;
-                
-                if(is_entry_in_view(*view, entry_count))
+                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
-                    v2u picture_pos = {pos.x + 8, pos.y};
-                    defer_texture(ui, picture_pos, item->tile_src);
+                    Item *item = &items->array[index];
                     
-                    v2u name_pos =
+            if(is_item_valid_and_in_inventory(item, dungeon_level) && item->type == type &&
+               (!inventory->item_use_type || item_fits_using_item_type(inventory->item_use_type, item)))
                     {
-                        picture_pos.x + (ui->font_newline * 3),
-                        picture_pos.y + (ui->font->size / 2)
-                    };
-                    
-                    if((came_from == CameFrom_Examine || came_from == CameFrom_Pickup) &&
-                           !item->select_letter)
-                    {
-                        item->select_letter = get_free_item_letter(items, dungeon_level, LetterType_SelectLetter);
-                    }
-                    
-                    String128 letter = get_item_letter_string(item);
-                    String128 mark_text = get_item_mark_string(item);
-                    
-                    if(is_item_consumable(item->type))
-                    {
-                        if(is_set(item->flags, ItemFlag_IsIdentified))
+                        if(needs_item_type_header)
                         {
-                            defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->name, get_item_stack_string(item).str, mark_text.str);
-                        }
-                        else
-                        {
-                            defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.str, item->c.depiction, get_item_id_text(item->id), get_item_stack_string(item).str, mark_text.str);
-                        }
-                    }
-                    else
-                    {
-                        if(is_set(item->flags, ItemFlag_IsIdentified))
-                        {
-                            char equipped_text[16] = {0};
-                            if(is_set(item->flags, ItemFlag_IsEquipped))
+                            needs_item_type_header = false;
+                            ++entry_count;
+                            
+                            if(is_entry_in_view(*view, entry_count))
                             {
-                                sprintf(equipped_text, " (equipped)");
+                        render_item_type_header(ui, ui->defer_rect, pos, type);
+                                pos.y += inventory->entry_size;
+                            }
+                        }
+                        
+                        ++entry_count;
+                        
+                        if(is_entry_in_view(*view, entry_count))
+                        {
+                    v2u picture_pos = render_window_tile(item->tile_src, pos, ui);
+                    
+                    v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+                            String8 letter = get_item_letter_string(item);
+                            String128 mark = get_item_mark_string(item);
+                            
+                            if(is_item_consumable(item->type))
+                            {
+                                if(is_set(item->flags, ItemFlag_IsIdentified))
+                                {
+                                    defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->name.s, get_item_stack_string(item).s, mark.s);
+                                }
+                                else
+                                {
+                                    defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->c.depiction.s, get_item_id_text(item->id), get_item_stack_string(item).s, mark.s);
+                                }
+                            }
+                            else
+                            {
+                                if(is_set(item->flags, ItemFlag_IsIdentified))
+                                {
+                                    String16 equipped_string = {0};
+                                    
+                                    if(is_set(item->flags, ItemFlag_IsEquipped))
+                                    {
+                                        sprintf(equipped_string.s, " (equipped)");
+                                    }
+                                    
+                                    defer_text(ui, "%s%s%s%s%s%s",
+                                               name_pos.x, name_pos.y,
+                                               get_item_status_color(item),
+                                               letter.s,
+                                               get_item_status_prefix(item),
+                                               get_full_item_name(item).s,
+                                                   equipped_string.s,
+                                                   mark.s);
+                                }
+                                else
+                                {
+                                    defer_text(ui, "%s%s%s", name_pos.x, name_pos.y, letter.s, get_item_id_text(item->id), mark.s);
+                                }
                             }
                             
-                            defer_text(ui, "%s%s%s%s%s%s",
-                                       name_pos.x, name_pos.y,
-                                       get_item_status_color(item),
-                                       letter.str,
-                                       get_item_status_prefix(item),
-                                       get_full_item_name(item).str,
-                                       equipped_text,
-                                       mark_text.str);
-                        }
-                        else
-                        {
-                            defer_text(ui, "%s%s%s", name_pos.x, name_pos.y, letter.str, get_item_id_text(item->id), mark_text.str);
+                            pos.y += inventory->entry_size;
                         }
                     }
-                    
-                    pos.y += inventory->entry_size;
                 }
             }
-        }
-    }
     
     view->count = entry_count;
     ui_next_line(ui, &pos, 1);
-    process_window_end(game, assets, ui, view, pos);
+    end_defer_rect(game, assets, ui, view, pos);
     
 #if 0
-    printf("view.count: %u\n", view->count);
-    printf("view.start: %u\n", view->start);
-    printf("view.end: %u\n\n", view->end);
+    ui_print_view("Inventory View", *view);
 #endif
     
 }
 
 internal void
-render_examine_window(Game *game, UI *ui, Assets *assets, v2u player_pos)
+render_examine_window(Game *game, Assets *assets, UI *ui, v2u player_pos)
 {
     Examine *examine = &game->examine;
     
     if(examine->type)
     {
-        v2u pos = reset_defer_rect_and_get_header_pos(ui, 1);
-        
         switch(examine->type)
         {
-            case ExamineType_Item:
-            {
-                render_item_examine(game, examine->item, ui, &pos, CameFrom_Examine);
-            } break;
-            
-            case ExamineType_Entity:
-            {
-                Entity *entity = examine->entity;
-                assert(entity->type == EntityType_Enemy);
-                
-                // Render entity stats
-                v2u name = get_header_text_pos(ui, pos);
-                
-                if(is_set(entity->flags, EntityFlag_IsInvisible))
-                {
-                    defer_texture(ui, pos, get_dungeon_tileset_rect(DungeonTileID_EntityUnknown));
-                    
-                    defer_text(ui, "Something", name.x, name.y);
-                    ui_next_line(ui, &pos, 2);
-                    
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "An unknown being.", pos.x, pos.y);
-                    
-                    ui_next_line(ui, &pos, 2);
-                }
-                else
-                {
-                    defer_texture(ui, pos, entity->tile_src);
-                    
-                    defer_text(ui, "%s", name.x, name.y, entity->name);
-                    ui_next_line(ui, &pos, 2);
-                    
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "Max HP: %u", pos.x, pos.y, entity->max_hp);
-                    
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "Damage: %u", pos.x, pos.y, entity->e.damage);
-                    
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "Defence: %u", pos.x, pos.y, entity->defence);
-                    
-                    char evasion_text[24] = {0};
-                    if(entity->evasion <= 3)
-                    {
-                        strcpy(evasion_text, "Very Low");
-                    }
-                    else if(entity->evasion <= 7)
-                    {
-                        strcpy(evasion_text, "Low");
-                    }
-                    else if(entity->evasion <= 13)
-                    {
-                        strcpy(evasion_text, "Average");
-                    }
-                    else if(entity->evasion <= 17)
-                    {
-                        strcpy(evasion_text, "High");
-                    }
-                    else
-                    {
-                        strcpy(evasion_text, "Very High");
-                    }
-                    
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "Evasion: %s (%u)", pos.x, pos.y, evasion_text, entity->evasion);
-                    
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "Speed: %.01f", pos.x, pos.y, entity->action_time);
-                    
-                    // Find out the longest damage type length and damage type resistance so that
-                    // we can align text correctly.
-                    u32 longest_damage_type_length = 0;
-                    s32 highest_damage_type_resistance = 0;
-                    for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
-                    {
-                        s32 resistance = entity->resistances[damage_type_index];
-                        if(resistance != 0)
-                        {
-                            char *damage_type_text = get_damage_type_text(damage_type_index);
-                            u32 current_damage_type_length = get_string_length(damage_type_text);
-                            
-                            if(longest_damage_type_length < current_damage_type_length)
-                            {
-                                longest_damage_type_length = current_damage_type_length;
-                            }
-                            
-                            u32 absolute_resistance = get_absolute(resistance);
-                            if(highest_damage_type_resistance < absolute_resistance)
-                            {
-                                highest_damage_type_resistance = absolute_resistance;
-                            }
-                        }
-                    }
-                    
-#if 0
-                    printf("longest_damage_type_length: %u\n", longest_damage_type_length);
-                    printf("highest_damage_type_resistance: %u\n", highest_damage_type_resistance);
-#endif
-                    
-                    // Render entity damage type resistances
-                    b32 render_prefix_text = true;
-                    for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
-                    {
-                        s32 resistance = entity->resistances[damage_type_index];
-                        if(resistance != 0)
-                        {
-                            if(render_prefix_text)
-                            {
-                                ui_next_line(ui, &pos, 2);
-                                defer_text(ui, "It has the following resistances:", pos.x, pos.y);
-                                
-                                render_prefix_text = false;
-                            }
-                            
-                            // This sets the padding after the damage_type_text, we do this so that
-                            // the resistance_text_value's start aligned.
-                            char *damage_type_text = get_damage_type_text(damage_type_index);
-                            char damage_type_text_padding[32] = {0};
-                            u32 damage_type_text_padding_length = longest_damage_type_length - get_string_length(damage_type_text);
-                            
-                            for(u32 index = 0; index < damage_type_text_padding_length; ++index)
-                            {
-                                damage_type_text_padding[index] = ' ';
-                            }
-                            
-                            // Set the character we use based on if value is positive or negative.
-                            b32 add_extra_resistance_space = false;
-                            char resistance_char = '-';
-                            
-                            if(resistance > 0)
-                            {
-                                add_extra_resistance_space = true;
-                                resistance_char = '+';
-                            }
-                            
-                            u32 absolute_resistance = get_absolute(resistance);
-                            
-                            // Copy as many of the correct characters as we need into resistance_text_value.
-                            char resistance_text_value[8] = {0};
-                            for(u32 string_index = 0; string_index < absolute_resistance; ++string_index)
-                            {
-                                resistance_text_value[string_index] = resistance_char;
-                            }
-                            
-                            // This sets the padding at the end of resistance_text_value, we do this so that
-                            // the rendered resistance values start aligned.
-                            u32 length = highest_damage_type_resistance - absolute_resistance;
-                            u32 padding_length = absolute_resistance + length;
-                            for(u32 padding_index = absolute_resistance; padding_index < padding_length; ++padding_index)
-                            {
-                                resistance_text_value[padding_index] = ' ';
-                            }
-                            
-                            // Positive values need an extra space, hence the boolean for it.
-                            if(add_extra_resistance_space)
-                            {
-                                resistance_text_value[padding_length] = ' ';
-                            }
-                            
-                            ui_next_line(ui, &pos, 1);
-                            defer_text(ui, "%s: %s%s (%d)",
-                                       pos.x, pos.y,
-                                       damage_type_text,
-                                       damage_type_text_padding,
-                                       resistance_text_value,
-                                       resistance);
-                        }
-                    }
-                    
-                    // Render entity status effects
-                    if(entity_has_any_status_effect(entity))
-                    {
-                        ui_next_line(ui, &pos, 2);
-                        defer_text(ui, "It is under the following status effects:", pos.x, pos.y);
-                        
-                        for(u32 index = StatusEffectType_None + 1; index < StatusEffectType_Count; ++index)
-                        {
-                            if(entity_has_status_effect(entity, index))
-                            {
-                                ui_next_line(ui, &pos, 1);
-                                defer_text(ui, "%s", pos.x, pos.y, get_status_effect_name(index));
-                            }
-                        }
-                    }
-                    
-                    // Render entity spells
-                    char spell_letter = 'a';
-                    if(is_set(entity->flags, EntityFlag_UsesMagicAttacks))
-                    {
-                        ui_next_line(ui, &pos, 2);
-                        defer_text(ui, "It has the following spells:", pos.x, pos.y);
-                        
-                        for(u32 spell_index = 0; spell_index < MAX_ENTITY_SPELL_COUNT; ++spell_index)
-                        {
-                            Spell *spell = &entity->e.spells[spell_index];
-                            if(spell->id)
-                            {
-                                ui_next_line(ui, &pos, 1);
-                                defer_text(ui, "%c - %s", pos.x, pos.y, spell_letter, get_spell_name(spell->id));
-                                
-                                ++spell_letter;
-                            }
-                        }
-                        
-                        ui_next_line(ui, &pos, 2);
-                        defer_text(ui, "Press the key shown to read a description.", pos.x, pos.y);
-                    }
-                    
-                    ui_next_line(ui, &pos, 2);
-                }
-            } break;
-            
-            case ExamineType_EntitySpell:
-            {
-                Entity *enemy = examine->entity;
-                Spell *spell = examine->spell;
-                assert(spell->type);
-                
-                defer_text(ui, get_spell_name(spell->id), pos.x, pos.y);
-                ui_next_line(ui, &pos, 2);
-                
-                defer_text(ui, get_spell_description(spell->id), pos.x, pos.y);
-                ui_next_line(ui, &pos, 2);
-                
-                switch(spell->type)
-                {
-                    case SpellType_Offensive:
-                    {
-                        defer_text(ui, "Damage Type: %s", pos.x, pos.y, get_damage_type_text(spell->damage_type));
-                        ui_next_line(ui, &pos, 1);
-                        
-                        defer_text(ui, "Damage: %u", pos.x, pos.y, spell->value);
-                        ui_next_line(ui, &pos, 1);
-                    } break;
-                    
-                    case SpellType_Healing:
-                    {
-                        defer_text(ui, "Healing: %u", pos.x, pos.y, spell->value);
-                        ui_next_line(ui, &pos, 1);
-                    } break;
-                    
-                    case SpellType_Buff:
-                    {
-                        defer_text(ui, "Increase: %u", pos.x, pos.y, spell->value);
-                        ui_next_line(ui, &pos, 1);
-                        
-                        defer_text(ui, "Duration: %u", pos.x, pos.y, spell->duration);
-                        ui_next_line(ui, &pos, 1);
-                    } break;
-                    
-                    invalid_default_case;
-                }
-                
-                char spell_range_text[24] = {0};
-                if(spell->range)
-                {
-                    sprintf(spell_range_text, "Range: %u", spell->range);
-                }
-                else
-                {
-                    sprintf(spell_range_text, "Range: Line of sight");
-                }
-                
-                char in_spell_range_text[24] = {0};
-                if(in_spell_range(spell->range, enemy->pos, player_pos))
-                {
-                    sprintf(in_spell_range_text, "(You are in range)");
-                }
-                
-                defer_text(ui, "%s %s", pos.x, pos.y, spell_range_text, in_spell_range_text);
-                ui_next_line(ui, &pos, 2);
-            } break;
-            
-            case ExamineType_Trap:
-            {
-                DungeonTrap *trap = examine->trap;
-                defer_texture(ui, pos, trap->tile_src);
-                
-                v2u header = get_header_text_pos(ui, pos);
-                defer_text(ui, trap->name, header.x, header.y);
-                ui_next_line(ui, &pos, 3);
-                
-                defer_text(ui, trap->description, pos.x, pos.y);
-                ui_next_line(ui, &pos, 2);
-            } break;
-            
-            case ExamineType_Tile:
-            {
-                DungeonTileID tile = examine->tile;
-                defer_texture(ui, pos, get_dungeon_tileset_rect(tile));
-                
-                v2u header = get_header_text_pos(ui, pos);
-                defer_text(ui, "%s", header.x, header.y, get_dungeon_tile_name(tile));
-                ui_next_line(ui, &pos, 3);
-                
-                char *text = get_dungeon_tile_info_text(tile);
-                if(text)
-                {
-                    defer_text(ui, text, pos.x, pos.y);
-                    ui_next_line(ui, &pos, 2);
-                }
-            } break;
+            case ExamineType_Item: render_item_examine_window(game, examine->item, assets, ui, false); break;
+            case ExamineType_Entity: render_entity_examine_window(game, examine->entity, assets, ui); break;
+            case ExamineType_Spell: render_entity_spell_examine_window(game, examine->entity, examine->spell, assets, ui, player_pos); break;
+            case ExamineType_Trap: render_trap_examine_window(game, examine->trap, assets, ui); break;
+            case ExamineType_Tile: render_tile_examine_window(game, examine->tile, assets, ui); break;
             
             invalid_default_case;
         }
-        
-        process_window_end(game, assets, ui, 0, pos);
     }
     else
     {
@@ -1132,10 +1207,172 @@ render_examine_window(Game *game, UI *ui, Assets *assets, v2u player_pos)
 }
 
 internal void
-render_item_mark_window(Game *game, Item *item, UI *ui, Assets *assets)
+render_multiple_examine_window(Game *game,
+                               EntityState *entities,
+                               ItemState *items,
+                               Inventory *inventory,
+                               Dungeon *dungeon,
+                               Assets *assets,
+                               UI *ui)
+{
+    Examine *examine = &game->examine;
+    
+    v2u pos = start_defer_rect(ui, 2);
+    
+    // TODO(rami): set view.count, init view.end
+    //View view = {0};
+    //set_view_at_start(&view);
+    
+    defer_text(ui, "Examine what?", pos.x, pos.y);
+    ui_next_line(ui, &pos, 1);
+    
+    for(ExamineType examine_type = ExamineType_None + 1;
+        examine_type < ExamineType_Count;
+        ++examine_type)
+    {
+        if(examine_type == ExamineType_Entity)
+        {
+            Entity *enemy = get_dungeon_pos_entity(entities, dungeon->level, examine->pos, true);
+            if(enemy)
+            {
+                v2u header_pos = render_window_separator(ui->defer_rect, pos, ui);
+                defer_text(ui, "Enemies", header_pos.x, header_pos.y);
+                
+                pos.y += inventory->entry_size; // TODO(rami): Entry size might become a UI thing
+                
+                v2u picture_pos = render_window_tile(enemy->tile_src, pos, ui);
+                v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+                defer_text(ui, "%s%s", name_pos.x, name_pos.y, "? - ", enemy->name.s);
+                
+                pos.y += inventory->entry_size;
+            }
+        }
+        else if(examine_type == ExamineType_Item)
+        {
+            for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+            {
+                b32 needs_item_type_header = true;
+                
+                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+                {
+                    Item *item = &items->array[index];
+                    
+                    if(is_item_valid_and_not_in_inventory(item, dungeon->level) &&
+                           item->type == type &&
+                           is_v2u_equal(item->pos, examine->pos))
+                    {
+                        if(needs_item_type_header)
+                        {
+                            needs_item_type_header = false;
+                            //++entry_count; // TODO(rami):
+                            
+                            //if(is_entry_in_view(*view, entry_count)) // TODO(rami):
+                            {
+                                render_item_type_header(ui, ui->defer_rect, pos, type);
+                                pos.y += inventory->entry_size;
+                            }
+                        }
+                        
+                        //++entry_count; // TODO(rami):
+                        
+                        //if(is_entry_in_view(*view, entry_count)) // TODO(rami):
+                        {
+                            v2u picture_pos = render_window_tile(item->tile_src, pos, ui);
+                            
+                            v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+                            String128 mark = get_item_mark_string(item);
+                            
+                            String8 select_letter = {0};
+                            if(!item->select_letter)
+                            {
+                                set_letter(ui->letters, item, LetterParentType_Item);
+                            }
+                            sprintf(select_letter.s, "%c - ", item->select_letter);
+                            
+                            if(is_item_consumable(item->type))
+                            {
+                                if(is_set(item->flags, ItemFlag_IsIdentified))
+                                {
+                                    defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, select_letter.s, item->name.s, get_item_stack_string(item).s, mark.s);
+                                }
+                                else
+                                {
+                                    defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, select_letter.s, item->c.depiction.s, get_item_id_text(item->id), get_item_stack_string(item).s, mark.s);
+                                }
+                            }
+                            else
+                            {
+                                if(is_set(item->flags, ItemFlag_IsIdentified))
+                                {
+                                    String16 equipped_string = {0};
+                                    
+                                    if(is_set(item->flags, ItemFlag_IsEquipped))
+                                    {
+                                        sprintf(equipped_string.s, " (equipped)");
+                                    }
+                                    
+                                    defer_text(ui, "%s%s%s%s%s%s",
+                                               name_pos.x, name_pos.y,
+                                               get_item_status_color(item),
+                                                   select_letter.s,
+                                               get_item_status_prefix(item),
+                                               get_full_item_name(item).s,
+                                               equipped_string.s,
+                                               mark.s);
+                                }
+                                else
+                                {
+                                    defer_text(ui, "%s%s%s", name_pos.x, name_pos.y, select_letter.s, get_item_id_text(item->id), mark.s);
+                                }
+                            }
+                            
+                            pos.y += inventory->entry_size;
+                        }
+                    }
+                }
+            }
+        }
+        else if(examine_type == ExamineType_Trap)
+        {
+            DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
+            if(trap)
+            {
+                v2u header_pos = render_window_separator(ui->defer_rect, pos, ui);
+                defer_text(ui, "Traps", header_pos.x, header_pos.y);
+                
+                pos.y += inventory->entry_size; // TODO(rami): Entry size might become a UI thing
+                
+                v2u picture_pos = render_window_tile(trap->tile_src, pos, ui);
+                v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+                
+                // TODO(rami): We need selection letters for these too.
+                // DungeonTrap has to have a selection letter and we need to add some code to get
+                // letters for traps like we do for items.
+                // Also if we back away from MultipleExamine, we need to reset the selections
+                // for all types.
+                
+                if(!trap->select_letter)
+                {
+                    set_letter(ui->letters, trap, LetterParentType_Trap);
+                }
+                
+                // TODO(rami): A function to get the "%c - "
+                defer_text(ui, "%c - %s", name_pos.x, name_pos.y, trap->select_letter, trap->name.s);
+                
+                pos.y += inventory->entry_size;
+            }
+            }
+            }
+    
+    ui_next_line(ui, &pos, 1);
+    end_defer_rect(game, assets, ui, 0, pos);
+    }
+
+internal void
+render_item_mark_window(Game *game, Item *item, Assets *assets, UI *ui)
 {
     v4u mark_rect = {0, 0, 250, 100};
-    center_and_render_window_to_available_screen(game, assets, &mark_rect);
+    render_centered_rect(game, assets, &mark_rect);
     
     { // Render header
         char *header_text = "Mark with what?";
@@ -1166,15 +1403,15 @@ render_item_mark_window(Game *game, Item *item, UI *ui, Assets *assets)
     // Update cursor
     Mark *mark = &ui->mark;
     
-    if(!mark->render_start)
+    if(!mark->cursor_render_start)
     {
-        mark->render_start = SDL_GetTicks();
+        mark->cursor_render_start = SDL_GetTicks();
     }
     
-    if(get_sdl_ticks_difference(mark->render_start) >= mark->cursor_blink_duration)
+    if(get_sdl_ticks_difference(mark->cursor_render_start) >= mark->cursor_blink_duration)
     {
-        mark->render_start = 0;
-        mark->should_render = !mark->should_render;
+        mark->cursor_render_start = 0;
+        mark->render_cursor = !mark->render_cursor;
     }
     
     // Render input
@@ -1193,14 +1430,14 @@ render_item_mark_window(Game *game, Item *item, UI *ui, Assets *assets)
         render_text(game, "%c", character_pos.x, character_pos.y, ui->font, 0, mark->array[mark_index]);
         character_pos.x += get_glyph_width(ui->font, mark->array[mark_index]);
         
-        if(mark->should_render && (index == mark->cursor_index))
+        if(mark->render_cursor && (index == mark->cursor_index))
         {
             cursor_x = character_pos.x;
         }
     }
     
     // Render cursor
-    if(mark->should_render)
+    if(mark->render_cursor)
     {
         v4u cursor_rect =
         {
@@ -1214,35 +1451,24 @@ render_item_mark_window(Game *game, Item *item, UI *ui, Assets *assets)
     }
     
 #if 0
-    printf("mark->view.count: %u\n", mark->view.count);
-    printf("mark->view.start: %u\n", mark->view.start);
-    printf("mark->view.end: %u\n\n", mark->view.end);
+    ui_print_view("Mark View", mark->view);
 #endif
     
 }
 
 internal void
-render_inventory_item_window(Game *game, Item *item, UI *ui, Assets *assets)
-{
-    v2u pos = reset_defer_rect_and_get_header_pos(ui, 1);
-    render_item_examine(game, item, ui, &pos, CameFrom_Inventory);
-    
-    process_window_end(game, assets, ui, 0, pos);
-}
-
-internal void
-render_inventory_window(Game *game,
-                 Entity *player,
+update_and_render_inventory_window(Game *game,
                  ItemState *items,
-                 Inventory *inventory,
-                 Dungeon *dungeon,
-                 UI *ui,
-                 Assets *assets)
+                                   Inventory *inventory,
+                                   u32 dungeon_level,
+                                   Assets *assets,
+                 UI *ui)
 {
-    { // Update view based on used inventory item
+     // Update view based on used inventory item
         if(inventory->view_update_item_type)
         {
             b32 item_with_same_type_exists = false;
+            
             for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
             {
                 Item *inventory_item = inventory->slots[index];
@@ -1260,7 +1486,7 @@ render_inventory_window(Game *game,
             }
             else
             {
-                // Take away the item and the item header from view count.
+                // Take away the item and the item header from view count
                 inventory->view.count -= 2;
             }
             
@@ -1269,7 +1495,7 @@ render_inventory_window(Game *game,
         
         if(is_view_scrolling(inventory->view, inventory->view.count))
         {
-            // Adjust view if view was at bottom and something was deleted.
+            // Set the view at end if something was removed from the bottom of the inventory
             if(get_view_range(inventory->view) > inventory->view.count)
             {
                 set_view_at_end(&inventory->view);
@@ -1279,15 +1505,14 @@ render_inventory_window(Game *game,
         {
             set_view_at_start(&inventory->view);
         }
-    }
     
-    render_inventory_items(game, items, inventory, &inventory->view, ui, assets, player->pos, dungeon->level, CameFrom_Inventory);
+    render_inventory_window(game, items, inventory, dungeon_level, assets, ui);
 }
 
 internal void
 render_ui(Game *game,
           Input *input,
-          Entity *player,
+          EntityState *entities,
           ItemState *items,
           Inventory *inventory,
            Dungeon *dungeon,
@@ -1295,25 +1520,27 @@ render_ui(Game *game,
           UI *ui)
 {
     Examine *examine = &game->examine;
-    ui->screen_bottom_window_y = game->window_size.h - assets->stat_and_log_window_h;
+    Entity *player = get_player_entity(entities);
+    
+    ui->window_scroll_start_y = game->window_size.h - assets->stat_and_log_window_h;
     
     v4u stat_rect =
     {
         0,
-        ui->screen_bottom_window_y,
+        ui->window_scroll_start_y,
         388,
         assets->stat_and_log_window_h
     };
-    render_window(game, stat_rect, 2);
+    render_rect(game, stat_rect, 2);
     
     v4u short_log_rect =
     {
         stat_rect.w + 4,
-        ui->screen_bottom_window_y,
+        ui->window_scroll_start_y,
         game->window_size.w - short_log_rect.x,
         assets->stat_and_log_window_h
     };
-    render_window(game, short_log_rect, 2);
+    render_rect(game, short_log_rect, 2);
     
     // Render stats
     v2u left =
@@ -1329,7 +1556,7 @@ render_ui(Game *game,
     };
     
     { // Left side
-        render_text(game, player->name, left.x, left.y, ui->font, 0);
+        render_text(game, player->name.s, left.x, left.y, ui->font, 0);
         
         ui_next_line(ui, &left, 1);
         render_text(game, "Health:    %u/%u", left.x, left.y, ui->font, 0, player->hp, player->max_hp);
@@ -1396,17 +1623,16 @@ render_ui(Game *game,
             index < get_view_range(ui->short_log_view);
             ++index)
     {
-        char *log_message = ui->log_messages[index].str;
-        
-        if(log_message[0])
+        LogMessage *message = &ui->log_messages[index];
+        if(message->is_set)
         {
-            render_text(game, log_message, short_log_pos.x, short_log_pos.y, ui->font, 0);
+            render_text(game, message->string, short_log_pos.x, short_log_pos.y, ui->font, 0);
             ui_next_line(ui, &short_log_pos, 1);
         }
     }
     
     // Render Full Log
-    if(ui->is_full_log_open)
+    if(ui->full_log_open)
     {
         ui->full_log_view.count = 0;
         zero_struct(ui->defer_rect);
@@ -1422,11 +1648,13 @@ render_ui(Game *game,
         
         for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
         {
-            if(ui->log_messages[index].str[0])
+            LogMessage *message = &ui->log_messages[index];
+            
+            if(message->is_set)
             {
                 ++ui->full_log_view.count;
                 
-                if(entry_has_space(test_message_pos, ui->font_newline * 2, ui->screen_bottom_window_y))
+                if(entry_has_space(test_message_pos, ui->font_newline * 2, ui->window_scroll_start_y))
                 {
                     ui_next_line(ui, &test_message_pos, 1);
                 }
@@ -1439,67 +1667,68 @@ render_ui(Game *game,
         
         // Make it so we see the bottom of the log view by default
         if(is_view_scrolling(ui->full_log_view, ui->full_log_view.count) &&
-               !ui->is_full_log_at_end)
+               !ui->full_log_at_end)
         {
-            ui->is_full_log_at_end = true;
+            ui->full_log_at_end = true;
             set_view_at_end(&ui->full_log_view);
         }
         
         // Render log messages
         for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
         {
-            char *log_message = ui->log_messages[index].str;
+            LogMessage *message = &ui->log_messages[index];
             
-            if(log_message[0])
+            if(message->is_set)
             {
                 if(is_entry_in_view(ui->full_log_view, index + 1))
                 {
-                    defer_text(ui, log_message, full_log_pos.x, full_log_pos.y);
+                    defer_text(ui, message->string, full_log_pos.x, full_log_pos.y);
                     ui_next_line(ui, &full_log_pos, 1);
                 }
                 else
                 {
                     // Even if the entry is not in view, update the ui defer rect so that the
                     // full log width is the same as the longest log message.
-                    update_defer_rect_width(full_log_pos.x, log_message, ui);
+                    update_defer_rect_width(full_log_pos.x, message->string, ui);
                 }
             }
         }
         
         full_log_pos.y += (ui->font_newline / 2);
-        process_window_end(game, assets, ui, &ui->full_log_view, full_log_pos);
+        end_defer_rect(game, assets, ui, &ui->full_log_view, full_log_pos);
         
-#if 0
-        printf("full_log.count: %u\n", ui->full_log_view.count);
-        printf("full_log.start: %u\n", ui->full_log_view.start);
-        printf("full_log.end: %u\n\n", ui->full_log_view.end);
+        #if 0
+        ui_print_view("Full Log View", ui->full_log_view);
 #endif
         
     }
-    else if(is_set(examine->flags, ExamineFlag_Open))
-    {
-        render_examine_window(game, ui, assets, player->pos);
-    }
     else if(is_set(inventory->flags, InventoryFlag_Mark))
     {
-        render_item_mark_window(game, inventory->examine_item, ui, assets);
+        render_item_mark_window(game, inventory->examine_item, assets, ui);
+    }
+    else if(is_set(examine->flags, ExamineFlag_Open))
+    {
+        //printf("ui 2\n");
+        render_examine_window(game, assets, ui, player->pos);
         }
     else if(is_set(inventory->flags, InventoryFlag_Examine))
     {
-        render_inventory_item_window(game, inventory->examine_item, ui, assets);
+        render_item_examine_window(game, inventory->examine_item, assets, ui, true);
         }
+    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
+        {
+        // TODO(rami): Window with "Examine what?" should be same starting width
+        // as inventory.
+        
+        //printf("ui 4\n");
+        render_multiple_examine_window(game, entities, items, inventory, dungeon, assets, ui);
+    }
     else if(is_set(inventory->flags, InventoryFlag_Open))
     {
-        render_inventory_window(game, player, items, inventory, dungeon, ui, assets);
+        update_and_render_inventory_window(game, items, inventory, dungeon->level, assets, ui);
     }
     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
     {
-        render_inventory_items(game, items, inventory, &inventory->pickup_view, ui, assets, player->pos, dungeon->level, CameFrom_Pickup);
-    }
-    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
-    {
-        // TODO(rami): Do the thing
-        //render_inventory_items(game, items, inventory, &inventory->examine_view, ui, assets, player->pos, dungeon->level, CameFrom_Examine);
-        render_multiple_examine_window(game, dungeon, ui, assets);
+        //render_inventory_items(game, entities, items, inventory, dungeon, &inventory->pickup_view, assets, ui, player->pos, CameFrom_Pickup);
     }
 }

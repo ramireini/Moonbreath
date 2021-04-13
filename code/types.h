@@ -163,11 +163,6 @@ typedef enum
     Direction_Count
 } Direction;
 
-typedef struct
-{
-    char str[128];
-} String128;
-
 typedef enum
 {
     Button_Left,
@@ -280,6 +275,36 @@ typedef enum
     
     Key_Count
 } Key;
+
+typedef struct
+{
+    char s[8];
+} String8;
+
+typedef struct
+{
+    char s[16];
+} String16;
+
+typedef struct
+{
+    char s[32];
+} String32;
+
+typedef struct
+{
+    char s[64];
+} String64;
+
+typedef struct
+{
+    char s[128];
+} String128;
+
+typedef struct
+{
+    char s[256];
+} String256;
 
 typedef struct
 {
@@ -424,6 +449,19 @@ typedef struct
 
 typedef enum
 {
+    ExamineType_None,
+    
+    ExamineType_Spell,
+    ExamineType_Entity,
+    ExamineType_Item,
+    ExamineType_Trap,
+    ExamineType_Tile,
+    
+    ExamineType_Count
+} ExamineType;
+
+typedef enum
+{
     StatusEffectType_None,
     
     StatusEffectType_Might,
@@ -450,6 +488,12 @@ typedef struct
     u32 duration;
 } StatusEffect;
 
+#define MAX_INVENTORY_SLOT_COUNT 52
+
+typedef struct Entity Entity;
+typedef struct Item Item;
+typedef struct DungeonTrap DungeonTrap;
+
 #include "assets.h"
 #include "ui.h"
 #include "random.c"
@@ -460,13 +504,13 @@ typedef struct
 #include "moonbreath.h"
 
 internal void log_add_okay(UI *ui);
-internal void log_add_item_cursed_unequip(UI *ui, Item *item);
-internal void log_add_item_action_text(UI *ui, Item *item, ItemActionType action);
+internal void log_add_item_cursed_unequip(Item *item, UI *ui);
+internal void log_add_item_action_text(Item *item, UI *ui, ItemActionType action);
 internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, u32 dungeon_level, ItemID item_id, u32 x, u32 y);
 internal void set_render_color(Game *game, Color color);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
-internal u32 get_dungeon_pos_item_count(ItemState *items, v2u pos, u32 dungeon_level);
+internal u32 get_dungeon_pos_item_count(ItemState *items, u32 dungeon_level, v2u pos);
 internal b32 is_item_equipment(ItemType type);
 internal ItemID random_leather_armor(Random *random);
 internal ItemID random_steel_armor(Random *random);
