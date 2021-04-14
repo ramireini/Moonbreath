@@ -460,6 +460,7 @@ internal void
 add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v2u pos)
 {
     assert(type);
+    assert(!is_dungeon_pos_trap(traps, pos));
     
     // TODO(rami): Dungeon trap ideas
     // Summoning traps summoning more than one enemy?
@@ -2692,7 +2693,7 @@ create_dungeon(Game *game,
     }
 #endif
     
-#if 0
+#if 1
     printf("Spec Torch Count: %u\n", spec->torch_count);
     printf("Spec Door Count: %u\n\n", spec->door_count);
     

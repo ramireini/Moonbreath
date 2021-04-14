@@ -99,20 +99,6 @@ update_examine_mode(Examine *examine,
             
             if(was_pressed(&input->GameKey_IteratePassages))
             {
-                
-                #if 0
-                for(u32 index = 0; index < passages->count; ++index)
-                {
-                    Passage *passage = &passages->array[index];
-                    if(passage->type)
-                    {
-                        printf("Passage[%u]: %s\n", index, passage->type == PassageType_Up ? "Up" : "Down");
-                        printf("Pos: %u, %u\n\n", passage->pos.x, passage->pos.y);
-                    }
-                }
-#endif
-                
-                // Set which passage type we want to find
                 DungeonPassageType passage_search_type = DungeonPassageType_None;
                 
                 if(input->Key_Shift.is_down)
@@ -124,7 +110,7 @@ update_examine_mode(Examine *examine,
                     passage_search_type = DungeonPassageType_Down;
                 }
                 
-                //printf("\nExamine Mode: Searching for a passage going %s.\n", passage_search_type == PassageType_Up ? "Up" : "Down");
+                //printf("\nExamine Mode: Searching for a passage going %s.\n", passage_search_type == DungeonPassageType_Up ? "Up" : "Down");
 
                 // Attempt to find the passage
                 for(u32 passage_index = 0; passage_index < MAX_DUNGEON_PASSAGE_COUNT; ++passage_index)
@@ -138,7 +124,7 @@ update_examine_mode(Examine *examine,
                             if((passage_index > examine->selected_passage) ||
                                    is_dungeon_passage_last(&dungeon->passages, passage_search_type, examine->selected_passage))
                             {
-                                //printf("Examine Mode: Selected %s passage[%u].\n", passage_search_type == PassageType_Up ? "Up" : "Down", passage_index);
+                                //printf("Examine Mode: Selected %s passage[%u].\n", passage_search_type == DungeonPassageType_Up ? "Up" : "Down", passage_index);
                                 
                                 examine->selected_passage = passage_index;
                                 examine->pos = passage->pos;
@@ -149,7 +135,7 @@ update_examine_mode(Examine *examine,
                     }
                 }
             }
-            else if(can_player_pathfind(examine, input, inventory, ui))
+            else if(was_pressed(&input->GameKey_AutoExplore))
             {
                     // Pathfind to passage
                     for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
@@ -180,7 +166,7 @@ update_examine_mode(Examine *examine,
                     // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
                     set(inventory->flags, InventoryFlag_MultipleExamine);
-                    set_view_at_start(&inventory->examine_view);
+                    set_view_at_start(&inventory->examine_window.view);
                     
                     return;
                 }
@@ -900,17 +886,13 @@ render_fill_rect(Game *game, v4u rect, Color color)
 }
 
 internal char
-get_char(char c, b32 is_shift_down)
+get_char(char c, b32 is_upper)
 {
-    char result = 0;
+    char result = c;
     
-    if(is_shift_down)
+    if(is_upper)
     {
-        result = c - 32;
-    }
-    else
-    {
-        result = c;
+        result = make_uppercase(c);
     }
     
     assert(result);
@@ -1574,10 +1556,7 @@ int main(int argc, char *argv[])
         }
         
         ItemState *items = push_memory_struct(&game->memory_arena, ItemState);
-        
         Inventory *inventory = push_memory_struct(&game->memory_arena, Inventory);
-        inventory->entry_size = 32;
-        
         Assets *assets = push_memory_struct(&game->memory_arena, Assets);
         
         UI *ui = push_memory_struct(&game->memory_arena, UI);
@@ -1585,6 +1564,7 @@ int main(int argc, char *argv[])
         ui->short_log_view.end = 9;
         ui->mark.cursor_blink_duration = 800;
         ui->mark.view.end = 24;
+        ui->window_entry_size = 32;
         
 #if 0
         // Config Example

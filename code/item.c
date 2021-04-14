@@ -801,7 +801,7 @@ use_inventory_item(Random *random,
             
             end_consumable_use(item, items, inventory, dungeon_level);
             inventory->item_use_type = UsingItemType_None;
-            set_view_at_start(&inventory->view);
+            set_view_at_start(&inventory->window.view);
         }
     }
 }
@@ -970,8 +970,7 @@ drop_item_from_inventory(Game *game,
                          ItemState *items,
                          Inventory *inventory,
                          Dungeon *dungeon,
-                         UI *ui,
-                         u32 dungeon_level)
+                         UI *ui)
 {
     // Drop item from inventory
     if(is_set(item->flags, ItemFlag_IsEquipped | ItemFlag_IsCursed))
@@ -1014,7 +1013,7 @@ drop_item_from_inventory(Game *game,
                 
                 // Stacks have been combined, remove the original item
                 removed_from_game = true;
-                remove_item_from_inventory_and_game(item, items, inventory, dungeon_level);
+                remove_item_from_inventory_and_game(item, items, inventory, dungeon->level);
                 }
             }
         
@@ -1024,7 +1023,7 @@ drop_item_from_inventory(Game *game,
         {
             item->pos = player->pos;
             item->dungeon_level = dungeon->level;
-            remove_item_from_inventory(item, items, inventory, dungeon_level);
+            remove_item_from_inventory(item, items, inventory, dungeon->level);
         }
         }
 }

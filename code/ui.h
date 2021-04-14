@@ -85,6 +85,7 @@ typedef struct
     v4u defer_rect;
     Defer defer[MAX_DEFER_COUNT];
     
+    u32 window_entry_size;
     u32 window_scroll_start_y;
 } UI;
 
@@ -94,5 +95,6 @@ internal void log_add(UI *ui, char *text, ...);
 internal void update_view_scrolling(View *view, Input *input);
 internal void reset_letters(Letter *letters);
 internal b32 is_view_scrolling(View view, u32 count);
+internal b32 is_entry_in_view(View view, u32 entry);
 internal u32 get_view_range(View view);
 internal LetterParent get_letter_parent(Letter *letters, char c);

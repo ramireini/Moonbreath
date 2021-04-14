@@ -261,18 +261,23 @@ typedef struct
 
 typedef struct
 {
+    u32 entry_count;
+    v2u pos;
+    View view;
+} DeferRectWindow;
+
+typedef struct
+{
     u32 flags;
     
     ItemUseType item_use_type;
     ItemType view_update_item_type;
     
-    u32 entry_size;
-    View examine_view;
-    View pickup_view;
-    View view;
+    View multiple_pickup_view;
+    DeferRectWindow examine_window;
+    DeferRectWindow window;
     
     Item *examine_item;
-    
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
 } Inventory;
 

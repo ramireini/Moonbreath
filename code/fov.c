@@ -145,7 +145,14 @@ update_fov(Entity *player, Dungeon *dungeon)
         {
             for(u32 x = 0; x < dungeon->size.w; ++x)
             {
-                set_tile_is_seen(dungeon->tiles, make_v2u(x, y), true);
+                v2u pos = {x, y};
+                
+#if 1
+                set_tile_is_seen(dungeon->tiles, pos, true);
+#else
+                set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, true);
+#endif
+                
             }
         }
         

@@ -520,15 +520,6 @@ other_windows_are_closed(Examine *examine, Inventory *inventory, UI *ui)
     return(result);
 }
 
-internal b32
-can_player_pathfind(Examine *examine, Input *input, Inventory *inventory, UI *ui)
-{
-    b32 result = (was_pressed(&input->GameKey_AutoExplore) &&
-                  other_windows_are_closed(examine, inventory, ui));
-    
-    return(result);
-}
-
 internal void
 make_entity_pathfind(Entity *entity,
                      ItemState *items,
@@ -1602,10 +1593,11 @@ update_player_input(Game *game,
 #if MOONBREATH_SLOW
         if(was_pressed_core(&input->fkeys[1]))
         {
+            // Toggle debug state visibility
             DebugState *debug = &game->debug;
             debug->is_shown = !debug->is_shown;
             
-            // If we toggle debug state then stop hot interactions
+            // Stop the active hot interaction
             if(debug->hot_interaction.type)
             {
                 debug->hot_interaction.tree->is_moving = false;
@@ -1616,6 +1608,21 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[2]))
         {
+            // Drop all inventory items
+            
+            if(is_set(inventory->flags, InventoryFlag_Open))
+            {
+            for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+            {
+                Item *item = inventory->slots[index];
+                
+                if(item)
+                {
+                    drop_item_from_inventory(game, player, item, items, inventory, dungeon, ui);
+                }
+            }
+            }
+            
             return;
         }
         else if(was_pressed(&input->fkeys[3]))
@@ -1694,7 +1701,7 @@ update_player_input(Game *game,
             {
                 if(other_windows_are_closed(examine, inventory, ui))
                     {
-                        set_view_at_start(&inventory->view);
+                    set_view_at_start(&inventory->window.view);
                         
                         set(inventory->flags, InventoryFlag_Open);
                     unset(inventory->flags, InventoryFlag_AskingPlayer);
@@ -1762,7 +1769,7 @@ update_player_input(Game *game,
                     if(get_dungeon_pos_item_count(items, dungeon->level, player->pos) > 1)
                     {
                         set(inventory->flags, InventoryFlag_MultiplePickup);
-                        set_view_at_start(&inventory->pickup_view);
+                        set_view_at_start(&inventory->multiple_pickup_view);
                         }
                     else
                     {
@@ -1799,16 +1806,17 @@ update_player_input(Game *game,
                     }
                     }
                 }
-            else if(can_player_pathfind(examine, input, inventory, ui))
+            else if(was_pressed(&input->GameKey_AutoExplore) &&
+                    other_windows_are_closed(examine, inventory, ui))
             {
-                // Attempt to start player pathfinding
+                // Start player pathfinding
                 
                     if(update_visibility_for_new_enemies(entities, dungeon))
                     {
                         log_add(ui, "There are enemies near!");
                     }
                     else
-                    {
+                {
                         if(entity_can_move(player, ui, true))
                         {
                             assert(!is_set(player->flags, EntityFlag_IsPathfinding));
@@ -1868,16 +1876,20 @@ update_player_input(Game *game,
                 }
                 else if(input->Button_ScrollUp.is_down ||
                         input->Button_ScrollDown.is_down ||
-                        input->Key_PageUp.is_down ||
-                        input->Key_PageDown.is_down)
+                        input->Key_Home.is_down ||
+                        input->Key_End.is_down)
             {
                     if(is_set(inventory->flags, InventoryFlag_Open))
                     {
-                        update_view_scrolling(&inventory->view, input);
+                    update_view_scrolling(&inventory->window.view, input);
                 }
                 else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                 {
-                    update_view_scrolling(&inventory->pickup_view, input);
+                    update_view_scrolling(&inventory->multiple_pickup_view, input);
+                }
+                else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
+                {
+                    update_view_scrolling(&inventory->examine_window.view, input);
                 }
                     else if(ui->full_log_open)
                     {
@@ -1937,7 +1949,7 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_D))
                             {
-                                drop_item_from_inventory(game, player, examine_item, items, inventory, dungeon, ui, dungeon->level);
+                                drop_item_from_inventory(game, player, examine_item, items, inventory, dungeon, ui);
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {

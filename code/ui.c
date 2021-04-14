@@ -1,3 +1,166 @@
+internal v2u
+get_header_pos(UI *ui, u32 y_multiplier)
+{
+    v2u result =
+    {
+        ui->defer_rect.x + (ui->window_offset * 2),
+        ui->defer_rect.y + (ui->window_offset * y_multiplier)
+    };
+    
+    return(result);
+}
+
+internal v2u
+start_defer_rect(UI *ui, u32 y_multiplier)
+{
+    v2u result = get_header_pos(ui, y_multiplier);
+    zero_struct(ui->defer_rect);
+    
+    return(result);
+}
+
+internal void
+init_defer_rect_window(DeferRectWindow *window, UI *ui)
+{
+    window->entry_count = 0;
+    window->pos = start_defer_rect(ui, 2);
+}
+
+internal v2u
+get_window_entry_name_pos(v2u pos, UI *ui)
+{
+    v2u result =
+    {
+        pos.x + (ui->font_newline * 3),
+        pos.y + (ui->font->size / 2)
+    };
+    
+    return(result);
+}
+
+internal v2u
+render_window_tile(v4u tile_src, v2u pos, UI *ui)
+{
+    v2u result =
+    {
+        pos.x + 8,
+        pos.y
+    };
+    
+    defer_texture(ui, result, tile_src);
+    
+    return(result);
+}
+
+internal v2u
+render_window_separator(v4u rect, v2u pos, UI *ui)
+{
+    v2u result =
+    {
+        pos.x,
+        pos.y + (ui->font_newline / 2)
+    };
+    
+    defer_fill_rect(ui,
+                    result.x,
+                    result.y - 4,
+                    rect.w - (result.x * 2),
+                    1,
+                    Color_WindowAccent);
+    
+    return(result);
+}
+
+internal void
+render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
+{
+    v2u header_pos = render_window_separator(rect, pos, ui);
+    
+    switch(type)
+    {
+        case ItemType_Weapon: defer_text(ui, "Weapons", header_pos.x, header_pos.y); break;
+        case ItemType_Armor: defer_text(ui, "Armors", header_pos.x, header_pos.y); break;
+        case ItemType_Potion: defer_text(ui, "Potions", header_pos.x, header_pos.y); break;
+        case ItemType_Scroll: defer_text(ui, "Scrolls", header_pos.x, header_pos.y); break;
+        case ItemType_Ration: defer_text(ui, "Rations", header_pos.x, header_pos.y); break;
+        
+        invalid_default_case;
+    }
+}
+
+internal void
+render_defer_rect_item(UI *ui, DeferRectWindow *window, Item *item, ItemType type, b32 *needs_header)
+                       {
+    if(*needs_header)
+    {
+        *needs_header = false;
+        ++window->entry_count;
+        
+        if(is_entry_in_view(window->view, window->entry_count))
+        {
+            render_item_type_header(ui, ui->defer_rect, window->pos, type);
+            window->pos.y += ui->window_entry_size;
+        }
+    }
+    
+    ++window->entry_count;
+    
+    if(is_entry_in_view(window->view, window->entry_count))
+    {
+        v2u picture_pos = render_window_tile(item->tile_src, window->pos, ui);
+        
+        v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+        String8 letter = get_item_letter_string(item);
+        String128 mark = get_item_mark_string(item);
+        
+        if(is_item_consumable(item->type))
+        {
+            if(is_set(item->flags, ItemFlag_IsIdentified))
+            {
+                defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->name.s, get_item_stack_string(item).s, mark.s);
+            }
+            else
+            {
+                defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->c.depiction.s, get_item_id_text(item->id), get_item_stack_string(item).s, mark.s);
+            }
+        }
+        else
+        {
+            if(is_set(item->flags, ItemFlag_IsIdentified))
+            {
+                String16 equipped_string = {0};
+                
+                if(is_set(item->flags, ItemFlag_IsEquipped))
+                {
+                    sprintf(equipped_string.s, " (equipped)");
+                }
+                
+                defer_text(ui, "%s%s%s%s%s%s",
+                           name_pos.x, name_pos.y,
+                           get_item_status_color(item),
+                           letter.s,
+                           get_item_status_prefix(item),
+                           get_full_item_name(item).s,
+                           equipped_string.s,
+                           mark.s);
+            }
+            else
+            {
+                defer_text(ui, "%s%s%s", name_pos.x, name_pos.y, letter.s, get_item_id_text(item->id), mark.s);
+            }
+        }
+        
+        window->pos.y += ui->window_entry_size;
+    }
+                       }
+
+internal u32
+get_defer_rect_set_width()
+{
+    u32 result = 512;
+    return(result);
+}
+
 internal LetterParent
 get_letter_parent(Letter *letters, char c)
 {
@@ -94,13 +257,18 @@ set_letter(Letter *letters, void *parent, LetterParentType parent_type)
         {
             if(!letter->c)
             {
-                if(i + 97 <= 'z')
+                u32 alphabet_size = 26;
+                
+                for(u32 i = 0; i < alphabet_size * 2; ++i)
                 {
-                    letter->c = i + 97;
-                }
-                else
-                {
-                    letter->c = i + 65;
+                    if(i < alphabet_size)
+                    {
+                        letter->c = 97 + i;
+                    }
+                    else
+                    {
+                        letter->c = 65 + (i - alphabet_size);
+                    }
                 }
             }
             assert(is_alpha(letter->c));
@@ -253,68 +421,6 @@ item_fits_using_item_type(ItemUseType type, Item *item)
 }
 
 internal v2u
-get_window_entry_name_pos(v2u pos, UI *ui)
-{
-    v2u result =
-    {
-        pos.x + (ui->font_newline * 3),
-        pos.y + (ui->font->size / 2)
-    };
-    
-    return(result);
-}
-
-internal v2u
-render_window_tile(v4u tile_src, v2u pos, UI *ui)
-{
-    v2u result =
-    {
-        pos.x + 8,
-        pos.y
-    };
-    
-    defer_texture(ui, result, tile_src);
-    
-    return(result);
-}
-
-internal v2u
-render_window_separator(v4u rect, v2u pos, UI *ui)
-{
-    v2u result =
-    {
-        pos.x,
-        pos.y + (ui->font_newline / 2)
-    };
-    
-    defer_fill_rect(ui,
-                        result.x,
-                        result.y - 4,
-                        rect.w - (result.x * 2),
-                    1,
-                        Color_WindowAccent);
-    
-    return(result);
-    }
-
-internal void
-render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
-{
-    v2u header_pos = render_window_separator(rect, pos, ui);
-    
-    switch(type)
-    {
-        case ItemType_Weapon: defer_text(ui, "Weapons", header_pos.x, header_pos.y); break;
-        case ItemType_Armor: defer_text(ui, "Armors", header_pos.x, header_pos.y); break;
-        case ItemType_Potion: defer_text(ui, "Potions", header_pos.x, header_pos.y); break;
-        case ItemType_Scroll: defer_text(ui, "Scrolls", header_pos.x, header_pos.y); break;
-        case ItemType_Ration: defer_text(ui, "Rations", header_pos.x, header_pos.y); break;
-        
-        invalid_default_case;
-    }
-}
-
-internal v2u
 get_examine_window_header_pos(UI *ui, v2u pos)
 {
     v2u result = pos;
@@ -323,27 +429,6 @@ get_examine_window_header_pos(UI *ui, v2u pos)
     result.y += ui->font->size / 2;
     
     return(result);
-}
-
-internal v2u
-get_header_pos(UI *ui, u32 y_multiplier)
-{
-    v2u result =
-    {
-        ui->defer_rect.x + (ui->window_offset * 2),
-        ui->defer_rect.y + (ui->window_offset * y_multiplier)
-    };
-    
-    return(result);
-}
-
-internal v2u
-start_defer_rect(UI *ui, u32 y_multiplier)
-{
-    zero_struct(ui->defer_rect);
-    v2u result = get_header_pos(ui, y_multiplier);
-    
-        return(result);
 }
 
 internal void
@@ -369,32 +454,59 @@ update_view_scrolling(View *view, Input *input)
             ++view->start;
         }
     }
-    else if(was_pressed(&input->Key_PageUp))
+    else if(was_pressed(&input->Key_Home))
     {
         if(is_view_scrolling(*view, view->count))
         {
-            view->start -= view->end;
-            if(is_zero(view->start - 1))
-            {
-                set_view_at_start(view);
-            }
+        set_view_at_start(view);
         }
     }
-    else if(was_pressed(&input->Key_PageDown))
+    else if(was_pressed(&input->Key_End))
     {
-        view->start += view->end;
-        if(get_view_range(*view) > view->count)
+        if(is_view_scrolling(*view, view->count))
         {
-            set_view_at_end(view);
+        set_view_at_end(view);
         }
     }
 }
 
 internal b32
-entry_has_space(v2u pos, u32 entry_size, u32 window_asset_y)
+can_render_multiple_examine_item(Item *item, ItemType type, v2u examine_pos, u32 dungeon_level)
 {
-    b32 result = (pos.y + (entry_size * 2) < window_asset_y);
+    b32 result = (is_item_valid_and_not_in_inventory(item, dungeon_level) &&
+     item->type == type &&
+                      is_v2u_equal(item->pos, examine_pos));
+    
     return(result);
+}
+
+internal b32
+can_render_inventory_item(Item *item, ItemType type, u32 dungeon_level)
+{
+    b32 result = (is_item_valid_and_in_inventory(item, dungeon_level) && item->type == type);
+    return(result);
+}
+
+internal b32
+can_add_defer_rect_entry(v2u pos, u32 window_entry_size, u32 window_scroll_start_y)
+{
+    b32 result = (pos.y + (window_entry_size * 2) < window_scroll_start_y);
+    return(result);
+}
+
+internal void
+add_defer_rect_window_entry(DeferRectWindow *window, UI *ui)
+{
+    if(can_add_defer_rect_entry(window->pos, ui->window_entry_size, ui->window_scroll_start_y))
+    {
+        window->pos.y += ui->window_entry_size;
+    }
+    else
+    {
+        init_view_end(&window->view, window->entry_count);
+    }
+    
+    ++window->entry_count;
 }
 
 internal void
@@ -451,8 +563,14 @@ center_rect_to_window(v2u window_size, Assets *assets, v4u *rect)
     if(rect->w && rect->w)
     {
     rect->x = (window_size.w / 2) - (rect->w / 2);
-    rect->y = get_centering_offset(window_size.h - assets->stat_and_log_window_h, rect->h);
-           }
+        rect->y = get_centering_offset(window_size.h - assets->stat_and_log_window_h, rect->h);
+        
+        // This is so the rectangle can still be seen even if its wrong
+        if(rect->y > window_size.h)
+        {
+            rect->y = 0;
+        }
+    }
 }
 
 internal void
@@ -471,6 +589,14 @@ end_defer_rect(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
     render_scrollbar_on_rect(game, ui, ui->defer_rect, view);
     
     render_defer(game, ui, assets->tileset);
+}
+
+internal void
+end_defer_rect_window(Game *game, Assets *assets, UI *ui, DeferRectWindow *window)
+{
+    window->view.count = window->entry_count;
+    ui_next_line(ui, &window->pos, 1);
+    end_defer_rect(game, assets, ui, &window->view, window->pos);
 }
 
 internal void
@@ -1006,7 +1132,6 @@ log_add(UI *ui, char *text, ...)
     strcpy(new_message->string, text_format.s);
 }
 
-// TODO(rami): The ability to move one inventory entry up or down with arrow keys
 internal void
 render_inventory_window(Game *game,
                    ItemState *items,
@@ -1016,164 +1141,122 @@ render_inventory_window(Game *game,
                         UI *ui)
 {
     Examine *examine = &game->examine;
-    View *view = &inventory->view;
+    DeferRectWindow *window = &inventory->window;
     
-    assert(view);
-    assert(view->start);
+    assert(window->view.start);
     
-    // Set the end value of the inventory view by seeing how many items we can fit on the
-    // screen before going over screen_bottom_y.
-    if(!view->end)
+    { // Update inventory view if an item was used
+        if(inventory->view_update_item_type)
+        {
+            b32 item_with_same_type_exists = false;
+            
+            for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+            {
+                Item *inventory_item = inventory->slots[index];
+                if(inventory_item &&
+                   inventory_item->type == inventory->view_update_item_type)
+                {
+                    item_with_same_type_exists = true;
+                    break;
+                }
+            }
+            
+            if(item_with_same_type_exists)
+            {
+                --window->view.count;
+            }
+            else
+            {
+                // Take away the item and the item header from view count
+                window->view.count -= 2;
+            }
+            
+            inventory->view_update_item_type = ItemType_None;
+        }
+        
+        if(is_view_scrolling(window->view, window->view.count))
+        {
+            // Set the view at end if something was removed from the bottom of the inventory
+            if(get_view_range(window->view) > window->view.count)
+            {
+                set_view_at_end(&window->view);
+            }
+        }
+        else
+        {
+            set_view_at_start(&window->view);
+        }
+    }
+    
+    // Find and set the end for the inventory view
+    if(!window->view.end)
     {
         v2u test_pos = {0};
         u32 test_entry_count = 0;
         
         for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
         {
-            b32 needs_item_type_header = true;
+            b32 needs_header = true;
             
-            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+            for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
             {
-                Item *item = &items->array[index];
+                Item *item = inventory->slots[index];
                 
-                    if(is_item_valid_and_in_inventory(item, dungeon_level) &&
-                       item->type == type)
+                    if(can_render_inventory_item(item, type, dungeon_level))
                     {
-                        if(needs_item_type_header)
+                    if(needs_header)
                         {
-                            needs_item_type_header = false;
-                            ++test_entry_count;
-                            
-                        if(entry_has_space(test_pos, inventory->entry_size, ui->window_scroll_start_y))
-                            {
-                                test_pos.y += inventory->entry_size;
-                            }
-                            else
-                            {
-                                init_view_end(view, test_entry_count);
-                            }
-                        }
-                        
-                    if(entry_has_space(test_pos, inventory->entry_size, ui->window_scroll_start_y))
-                        {
-                            test_pos.y += inventory->entry_size;
-                        }
-                        else
-                        {
-                            init_view_end(view, test_entry_count);
-                        }
-                        
-                        ++test_entry_count;
+                        needs_header = false;
+                        add_defer_rect_window_entry(window, ui);
+                    }
+                    
+                    add_defer_rect_window_entry(window, ui);
                     }
             }
         }
     }
     
-    u32 entry_count = 0;
-    
-    v2u pos = start_defer_rect(ui, 2);
-    ui->defer_rect.w = 512; // Looks better with a bigger width
+    init_defer_rect_window(window, ui);
+    ui->defer_rect.w = get_defer_rect_set_width();
     
     // Render inventory header
         if(inventory->item_use_type)
         {
             switch(inventory->item_use_type)
             {
-                case UsingItemType_Identify: defer_text(ui, "Identify which item?", pos.x, pos.y); break;
-                case UsingItemType_EnchantWeapon: defer_text(ui, "Enchant which weapon?", pos.x, pos.y); break;
-                case UsingItemType_EnchantArmor: defer_text(ui, "Enchant which armor?", pos.x, pos.y); break;
-                case UsingItemType_Uncurse: defer_text(ui, "Uncurse which item?", pos.x, pos.y); break;
+            case UsingItemType_Identify: defer_text(ui, "Identify which item?", window->pos.x, window->pos.y); break;
+            case UsingItemType_EnchantWeapon: defer_text(ui, "Enchant which weapon?", window->pos.x, window->pos.y); break;
+            case UsingItemType_EnchantArmor: defer_text(ui, "Enchant which armor?", window->pos.x, window->pos.y); break;
+            case UsingItemType_Uncurse: defer_text(ui, "Uncurse which item?", window->pos.x, window->pos.y); break;
                 
                 invalid_default_case;
             }
         }
         else
         {
-            defer_text(ui, "Inventory: %u/%u slots", pos.x, pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
+        defer_text(ui, "Inventory: %u/%u slots", window->pos.x, window->pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
         }
     
-    ui_next_line(ui, &pos, 1);
+    ui_next_line(ui, &window->pos, 1);
     
     // Render inventory items
             for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
             {
-                b32 needs_item_type_header = true;
-                
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                {
-                    Item *item = &items->array[index];
-                    
-            if(is_item_valid_and_in_inventory(item, dungeon_level) && item->type == type &&
-               (!inventory->item_use_type || item_fits_using_item_type(inventory->item_use_type, item)))
-                    {
-                        if(needs_item_type_header)
-                        {
-                            needs_item_type_header = false;
-                            ++entry_count;
-                            
-                            if(is_entry_in_view(*view, entry_count))
-                            {
-                        render_item_type_header(ui, ui->defer_rect, pos, type);
-                                pos.y += inventory->entry_size;
-                            }
-                        }
-                        
-                        ++entry_count;
-                        
-                        if(is_entry_in_view(*view, entry_count))
-                        {
-                    v2u picture_pos = render_window_tile(item->tile_src, pos, ui);
-                    
-                    v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
-                            String8 letter = get_item_letter_string(item);
-                            String128 mark = get_item_mark_string(item);
-                            
-                            if(is_item_consumable(item->type))
-                            {
-                                if(is_set(item->flags, ItemFlag_IsIdentified))
-                                {
-                                    defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->name.s, get_item_stack_string(item).s, mark.s);
-                                }
-                                else
-                                {
-                                    defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->c.depiction.s, get_item_id_text(item->id), get_item_stack_string(item).s, mark.s);
-                                }
-                            }
-                            else
-                            {
-                                if(is_set(item->flags, ItemFlag_IsIdentified))
-                                {
-                                    String16 equipped_string = {0};
-                                    
-                                    if(is_set(item->flags, ItemFlag_IsEquipped))
-                                    {
-                                        sprintf(equipped_string.s, " (equipped)");
-                                    }
-                                    
-                                    defer_text(ui, "%s%s%s%s%s%s",
-                                               name_pos.x, name_pos.y,
-                                               get_item_status_color(item),
-                                               letter.s,
-                                               get_item_status_prefix(item),
-                                               get_full_item_name(item).s,
-                                                   equipped_string.s,
-                                                   mark.s);
-                                }
-                                else
-                                {
-                                    defer_text(ui, "%s%s%s", name_pos.x, name_pos.y, letter.s, get_item_id_text(item->id), mark.s);
-                                }
-                            }
-                            
-                            pos.y += inventory->entry_size;
-                        }
-                    }
+        b32 needs_header = true;
+        
+        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+        {
+            Item *item = inventory->slots[index];
+            
+                   if(can_render_inventory_item(item, type, dungeon_level) &&
+                   (!inventory->item_use_type || item_fits_using_item_type(inventory->item_use_type, item)))
+            {
+                render_defer_rect_item(ui, window, item, type, &needs_header);
+                }
                 }
             }
     
-    view->count = entry_count;
-    ui_next_line(ui, &pos, 1);
-    end_defer_rect(game, assets, ui, view, pos);
+    end_defer_rect_window(game, assets, ui, window);
     
 #if 0
     ui_print_view("Inventory View", *view);
@@ -1216,15 +1299,62 @@ render_multiple_examine_window(Game *game,
                                UI *ui)
 {
     Examine *examine = &game->examine;
+    DeferRectWindow *window = &inventory->examine_window;
     
-    v2u pos = start_defer_rect(ui, 2);
+    // Find and set the end for the multiple examine view
+    if(!window->view.end)
+    {
+        v2u test_pos = {0};
+        u32 test_entry_count = 0;
+        
+        for(ExamineType examine_type = ExamineType_None + 1;
+            examine_type < ExamineType_Count;
+            ++examine_type)
+        {
+            if(examine_type == ExamineType_Entity)
+            {
+                // TODO(rami): Probably same as trap branch
+            }
+            else if(examine_type == ExamineType_Item)
+            {
+                for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+                {
+                    b32 needs_header = true;
+                    
+                    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+                    {
+                        Item *item = &items->array[index];
+                        
+                            if(can_render_multiple_examine_item(item, type, examine->pos, dungeon->level))
+                        {
+                            if(needs_header)
+                            {
+                                needs_header = false;
+                                add_defer_rect_window_entry(window, ui);
+                            }
+                            
+                            add_defer_rect_window_entry(window, ui);
+                        }
+                    }
+                }
+            }
+                else if(examine_type == ExamineType_Trap)
+            {
+                DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
+                if(trap)
+                {
+                    add_defer_rect_window_entry(window, ui);
+                    add_defer_rect_window_entry(window, ui);
+                }
+            }
+        }
+    }
     
-    // TODO(rami): set view.count, init view.end
-    //View view = {0};
-    //set_view_at_start(&view);
+    init_defer_rect_window(window, ui);
+    ui->defer_rect.w = get_defer_rect_set_width();
     
-    defer_text(ui, "Examine what?", pos.x, pos.y);
-    ui_next_line(ui, &pos, 1);
+    defer_text(ui, "Examine what?", window->pos.x, window->pos.y);
+    ui_next_line(ui, &window->pos, 1);
     
     for(ExamineType examine_type = ExamineType_None + 1;
         examine_type < ExamineType_Count;
@@ -1232,102 +1362,36 @@ render_multiple_examine_window(Game *game,
     {
         if(examine_type == ExamineType_Entity)
         {
+            // TODO(rami): Needs to check for view and increase entry_count
+            
             Entity *enemy = get_dungeon_pos_entity(entities, dungeon->level, examine->pos, true);
             if(enemy)
             {
-                v2u header_pos = render_window_separator(ui->defer_rect, pos, ui);
+                v2u header_pos = render_window_separator(ui->defer_rect, window->pos, ui);
                 defer_text(ui, "Enemies", header_pos.x, header_pos.y);
                 
-                pos.y += inventory->entry_size; // TODO(rami): Entry size might become a UI thing
+                window->pos.y += ui->window_entry_size;
                 
-                v2u picture_pos = render_window_tile(enemy->tile_src, pos, ui);
+                v2u picture_pos = render_window_tile(enemy->tile_src, window->pos, ui);
                 v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
                 defer_text(ui, "%s%s", name_pos.x, name_pos.y, "? - ", enemy->name.s);
                 
-                pos.y += inventory->entry_size;
+                window->pos.y += ui->window_entry_size;
             }
         }
         else if(examine_type == ExamineType_Item)
         {
             for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
             {
-                b32 needs_item_type_header = true;
+                b32 needs_header = true;
                 
                 for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
                 {
                     Item *item = &items->array[index];
                     
-                    if(is_item_valid_and_not_in_inventory(item, dungeon->level) &&
-                           item->type == type &&
-                           is_v2u_equal(item->pos, examine->pos))
+                        if(can_render_multiple_examine_item(item, type, examine->pos, dungeon->level))
                     {
-                        if(needs_item_type_header)
-                        {
-                            needs_item_type_header = false;
-                            //++entry_count; // TODO(rami):
-                            
-                            //if(is_entry_in_view(*view, entry_count)) // TODO(rami):
-                            {
-                                render_item_type_header(ui, ui->defer_rect, pos, type);
-                                pos.y += inventory->entry_size;
-                            }
-                        }
-                        
-                        //++entry_count; // TODO(rami):
-                        
-                        //if(is_entry_in_view(*view, entry_count)) // TODO(rami):
-                        {
-                            v2u picture_pos = render_window_tile(item->tile_src, pos, ui);
-                            
-                            v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
-                            String128 mark = get_item_mark_string(item);
-                            
-                            String8 select_letter = {0};
-                            if(!item->select_letter)
-                            {
-                                set_letter(ui->letters, item, LetterParentType_Item);
-                            }
-                            sprintf(select_letter.s, "%c - ", item->select_letter);
-                            
-                            if(is_item_consumable(item->type))
-                            {
-                                if(is_set(item->flags, ItemFlag_IsIdentified))
-                                {
-                                    defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, select_letter.s, item->name.s, get_item_stack_string(item).s, mark.s);
-                                }
-                                else
-                                {
-                                    defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, select_letter.s, item->c.depiction.s, get_item_id_text(item->id), get_item_stack_string(item).s, mark.s);
-                                }
-                            }
-                            else
-                            {
-                                if(is_set(item->flags, ItemFlag_IsIdentified))
-                                {
-                                    String16 equipped_string = {0};
-                                    
-                                    if(is_set(item->flags, ItemFlag_IsEquipped))
-                                    {
-                                        sprintf(equipped_string.s, " (equipped)");
-                                    }
-                                    
-                                    defer_text(ui, "%s%s%s%s%s%s",
-                                               name_pos.x, name_pos.y,
-                                               get_item_status_color(item),
-                                                   select_letter.s,
-                                               get_item_status_prefix(item),
-                                               get_full_item_name(item).s,
-                                               equipped_string.s,
-                                               mark.s);
-                                }
-                                else
-                                {
-                                    defer_text(ui, "%s%s%s", name_pos.x, name_pos.y, select_letter.s, get_item_id_text(item->id), mark.s);
-                                }
-                            }
-                            
-                            pos.y += inventory->entry_size;
-                        }
+                        render_defer_rect_item(ui, window, item, type, &needs_header);
                     }
                 }
             }
@@ -1337,35 +1401,42 @@ render_multiple_examine_window(Game *game,
             DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
             if(trap)
             {
-                v2u header_pos = render_window_separator(ui->defer_rect, pos, ui);
-                defer_text(ui, "Traps", header_pos.x, header_pos.y);
+                ++window->entry_count;
                 
-                pos.y += inventory->entry_size; // TODO(rami): Entry size might become a UI thing
-                
-                v2u picture_pos = render_window_tile(trap->tile_src, pos, ui);
-                v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
-                
-                // TODO(rami): We need selection letters for these too.
-                // DungeonTrap has to have a selection letter and we need to add some code to get
-                // letters for traps like we do for items.
-                // Also if we back away from MultipleExamine, we need to reset the selections
-                // for all types.
-                
-                if(!trap->select_letter)
+                if(is_entry_in_view(window->view, window->entry_count))
                 {
-                    set_letter(ui->letters, trap, LetterParentType_Trap);
+                    v2u header_pos = render_window_separator(ui->defer_rect, window->pos, ui);
+                    defer_text(ui, "Traps", header_pos.x, header_pos.y);
+                    window->pos.y += ui->window_entry_size;
                 }
                 
-                // TODO(rami): A function to get the "%c - "
-                defer_text(ui, "%c - %s", name_pos.x, name_pos.y, trap->select_letter, trap->name.s);
+                ++window->entry_count;
                 
-                pos.y += inventory->entry_size;
+                if(is_entry_in_view(window->view, window->entry_count))
+                {
+                    v2u picture_pos = render_window_tile(trap->tile_src, window->pos, ui);
+                    v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+                    
+                    if(!trap->select_letter)
+                    {
+                        set_letter(ui->letters, trap, LetterParentType_Trap);
+                    }
+                    
+                    // TODO(rami): A function to get the "%c - "
+                    defer_text(ui, "%c - %s", name_pos.x, name_pos.y, trap->select_letter, trap->name.s);
+                    
+                    window->pos.y += ui->window_entry_size;
+                }
             }
             }
             }
     
-    ui_next_line(ui, &pos, 1);
-    end_defer_rect(game, assets, ui, 0, pos);
+    end_defer_rect_window(game, assets, ui, window);
+    
+    #if 0
+    ui_print_view("Multiple Examine", *view);
+#endif
+    
     }
 
 internal void
@@ -1454,59 +1525,6 @@ render_item_mark_window(Game *game, Item *item, Assets *assets, UI *ui)
     ui_print_view("Mark View", mark->view);
 #endif
     
-}
-
-internal void
-update_and_render_inventory_window(Game *game,
-                 ItemState *items,
-                                   Inventory *inventory,
-                                   u32 dungeon_level,
-                                   Assets *assets,
-                 UI *ui)
-{
-     // Update view based on used inventory item
-        if(inventory->view_update_item_type)
-        {
-            b32 item_with_same_type_exists = false;
-            
-            for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
-            {
-                Item *inventory_item = inventory->slots[index];
-                if(inventory_item &&
-                   inventory_item->type == inventory->view_update_item_type)
-                {
-                    item_with_same_type_exists = true;
-                    break;
-                }
-            }
-            
-            if(item_with_same_type_exists)
-            {
-                --inventory->view.count;
-            }
-            else
-            {
-                // Take away the item and the item header from view count
-                inventory->view.count -= 2;
-            }
-            
-            inventory->view_update_item_type = ItemType_None;
-        }
-        
-        if(is_view_scrolling(inventory->view, inventory->view.count))
-        {
-            // Set the view at end if something was removed from the bottom of the inventory
-            if(get_view_range(inventory->view) > inventory->view.count)
-            {
-                set_view_at_end(&inventory->view);
-            }
-        }
-        else
-        {
-            set_view_at_start(&inventory->view);
-        }
-    
-    render_inventory_window(game, items, inventory, dungeon_level, assets, ui);
 }
 
 internal void
@@ -1654,7 +1672,7 @@ render_ui(Game *game,
             {
                 ++ui->full_log_view.count;
                 
-                if(entry_has_space(test_message_pos, ui->font_newline * 2, ui->window_scroll_start_y))
+                if(can_add_defer_rect_entry(test_message_pos, ui->font_newline * 2, ui->window_scroll_start_y))
                 {
                     ui_next_line(ui, &test_message_pos, 1);
                 }
@@ -1665,7 +1683,7 @@ render_ui(Game *game,
             }
         }
         
-        // Make it so we see the bottom of the log view by default
+        // Always set the log view at end if we're scrolling
         if(is_view_scrolling(ui->full_log_view, ui->full_log_view.count) &&
                !ui->full_log_at_end)
         {
@@ -1708,7 +1726,6 @@ render_ui(Game *game,
     }
     else if(is_set(examine->flags, ExamineFlag_Open))
     {
-        //printf("ui 2\n");
         render_examine_window(game, assets, ui, player->pos);
         }
     else if(is_set(inventory->flags, InventoryFlag_Examine))
@@ -1717,15 +1734,11 @@ render_ui(Game *game,
         }
     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
         {
-        // TODO(rami): Window with "Examine what?" should be same starting width
-        // as inventory.
-        
-        //printf("ui 4\n");
         render_multiple_examine_window(game, entities, items, inventory, dungeon, assets, ui);
     }
     else if(is_set(inventory->flags, InventoryFlag_Open))
     {
-        update_and_render_inventory_window(game, items, inventory, dungeon->level, assets, ui);
+        render_inventory_window(game, items, inventory, dungeon->level, assets, ui);
     }
     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
     {
