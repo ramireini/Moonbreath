@@ -154,7 +154,7 @@ get_item_from_letter(ItemState *items,
             }
             
             if(letter_type == LetterType_Letter &&
-               item->letter == letter)
+                   item->inventory_letter == letter)
             {
                 result = item;
                 break;
@@ -204,30 +204,6 @@ get_free_item_letter(ItemState *items, u32 dungeon_level, LetterType letter_type
     }
     
     assert(result);
-    return(result);
-}
-
-internal String8
-get_item_letter_string(Item *item)
-{
-    String8 result = {0};
-    
-    if(item->select_letter)
-    {
-        if(is_set(item->flags, ItemFlag_IsSelected))
-        {
-            sprintf(result.s, "%c + ", item->select_letter);
-        }
-        else
-        {
-            sprintf(result.s, "%c - ", item->select_letter);
-        }
-    }
-    else
-    {
-        sprintf(result.s, "%c - ", item->letter);
-    }
-    
     return(result);
 }
 
@@ -371,14 +347,14 @@ update_item_adjusting(Input *input,
         // item letter instead.
         if(get_item_from_letter(items, dungeon_level, pressed, LetterType_Letter, false))
         {
-            item->letter = get_free_item_letter(items, dungeon_level, LetterType_Letter);
+            item->inventory_letter = get_free_item_letter(items, dungeon_level, LetterType_Letter);
         }
         
-        item->letter = pressed;
+        item->inventory_letter = pressed;
         unset(inventory->flags, InventoryFlag_Adjust);
         
         log_add(ui, "%s%s%s",
-                get_item_letter_string(item).s,
+                    get_item_letter_string(item).s,
                 get_item_status_prefix(item),
                 get_full_item_name(item).s);
     }
@@ -461,7 +437,7 @@ add_item_to_inventory(Game *game,
                       Inventory *inventory,
                       UI *ui,
                       u32 dungeon_level,
-                      b32 add_pickup_to_log)
+                      b32 add_to_log)
 {
     b32 added_to_stack = false;
     b32 added_to_inventory = false;
@@ -491,9 +467,9 @@ add_item_to_inventory(Game *game,
         {
             if(!inventory->slots[index])
             {
-                if(!item->letter)
+                if(!item->inventory_letter)
                 {
-                    item->letter = get_free_item_letter(items, dungeon_level, LetterType_Letter);
+                    item->inventory_letter = get_new_letter(ui->item_inventory_letters, item, LetterParentType_Item);
                 }
                 
                 unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
@@ -510,7 +486,7 @@ add_item_to_inventory(Game *game,
     {
         zero_struct(item->pos);
         
-        if(add_pickup_to_log)
+        if(add_to_log)
         {
         log_add_item_action_text(item, ui, ItemActionType_PickUp);
         }
@@ -545,7 +521,7 @@ remove_item_from_inventory(Item *item,
             Item *inventory_item = inventory->slots[index];
             
         if(is_item_valid(inventory_item, dungeon_level) &&
-               inventory_item->letter == item->letter)
+               inventory_item->inventory_letter == item->inventory_letter)
             {
                 found_inventory_index = true;
                 inventory->slots[index] = 0;
@@ -691,19 +667,19 @@ read_scroll(Game *game,
         case ItemID_IdentifyScroll:
         {
             log_add(ui, "You read the scroll, choose an item to identify.");
-            inventory->item_use_type = UsingItemType_Identify;
+            inventory->item_use_type = ItemUseType_Identify;
         } break;
         
         case ItemID_EnchantWeaponScroll:
         {
             log_add(ui, "You read the scroll, choose a weapon to enchant.");
-            inventory->item_use_type = UsingItemType_EnchantWeapon;
+            inventory->item_use_type = ItemUseType_EnchantWeapon;
         } break;
         
         case ItemID_EnchantArmorScroll:
         {
             log_add(ui, "You read the scroll, choose an armor to enchant.");
-            inventory->item_use_type = UsingItemType_EnchantArmor;
+            inventory->item_use_type = ItemUseType_EnchantArmor;
         } break;
         
         case ItemID_MagicMappingScroll:
@@ -732,7 +708,7 @@ read_scroll(Game *game,
         case ItemID_UncurseScroll:
         {
             log_add(ui, "You read the scroll, choose an item to uncurse.");
-            inventory->item_use_type = UsingItemType_Uncurse;
+            inventory->item_use_type = ItemUseType_Uncurse;
         } break;
         
         invalid_default_case;
@@ -755,17 +731,17 @@ use_inventory_item(Random *random,
     {
         Item *item = inventory->slots[index];
         if(item &&
-           item->letter == pressed &&
+               item->inventory_letter == pressed &&
                item_fits_using_item_type(inventory->item_use_type, item))
         {
             assert(inventory->item_use_type);
             
-            if(inventory->item_use_type == UsingItemType_Identify)
+            if(inventory->item_use_type == ItemUseType_Identify)
             {
                 set(item->flags, ItemFlag_IsIdentified);
                 log_add(ui, "You identify the %s.", get_full_item_name(item).s);
             }
-            else if(inventory->item_use_type == UsingItemType_EnchantWeapon)
+            else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
             {
                 switch(get_random_number(random, 1, 4))
                 {
@@ -779,7 +755,7 @@ use_inventory_item(Random *random,
                 
                 ++item->enchantment_level;
             }
-            else if(inventory->item_use_type == UsingItemType_EnchantArmor)
+            else if(inventory->item_use_type == ItemUseType_EnchantArmor)
             {
                 switch(get_random_number(random, 1, 4))
                 {
@@ -793,14 +769,14 @@ use_inventory_item(Random *random,
                 
                 ++item->enchantment_level;
             }
-            else if(inventory->item_use_type == UsingItemType_Uncurse)
+            else if(inventory->item_use_type == ItemUseType_Uncurse)
             {
                 unset(item->flags, ItemFlag_IsCursed);
                 log_add(ui, "The %s seems slightly different now..", get_item_id_text(item->id));
             }
             
             end_consumable_use(item, items, inventory, dungeon_level);
-            inventory->item_use_type = UsingItemType_None;
+            inventory->item_use_type = ItemUseType_None;
             set_view_at_start(&inventory->window.view);
         }
     }

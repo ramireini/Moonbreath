@@ -1513,7 +1513,7 @@ handle_asking_player(Game *game,
         if(inventory->item_use_type)
         {
             log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
-            inventory->item_use_type = UsingItemType_None;
+            inventory->item_use_type = ItemUseType_None;
         }
         
         end_consumable_use(inventory->examine_item, items, inventory, dungeon_level);
@@ -1749,7 +1749,7 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
-                        reset_letters(ui->letters);
+                        reset_letters(ui->item_select_letters);
                         unset(inventory->flags, InventoryFlag_MultipleExamine);
                     }
                         else if(ui->full_log_open)
@@ -1769,7 +1769,7 @@ update_player_input(Game *game,
                     if(get_dungeon_pos_item_count(items, dungeon->level, player->pos) > 1)
                     {
                         set(inventory->flags, InventoryFlag_MultiplePickup);
-                        set_view_at_start(&inventory->multiple_pickup_view);
+                        set_view_at_start(&inventory->multiple_pickup_window);
                         }
                     else
                     {
@@ -1885,7 +1885,7 @@ update_player_input(Game *game,
                 }
                 else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                 {
-                    update_view_scrolling(&inventory->multiple_pickup_view, input);
+                    update_view_scrolling(&inventory->multiple_pickup_window, input);
                 }
                 else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                 {
@@ -2041,7 +2041,7 @@ update_player_input(Game *game,
                     {
                         if(pressed && !examine->type)
                         {
-                            LetterParent parent = get_letter_parent(ui->letters, pressed);
+                            LetterParent parent = get_letter_parent(ui->item_select_letters, pressed);
                             if(parent.type)
                             {
                                 set(examine->flags, ExamineFlag_Open);

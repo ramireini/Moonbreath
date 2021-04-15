@@ -590,7 +590,7 @@ update_and_render_debug_state(Game *game,
                     add_debug_variable(new_tree, "Description", item->description.s, DebugVariableType_String);
                     add_debug_newline(debug, new_tree);
                     
-                    add_debug_variable(new_tree, "Letter", item->letter, DebugVariableType_String);
+                        add_debug_variable(new_tree, "Inventory Letter", item->inventory_letter, DebugVariableType_String);
                         add_debug_variable(new_tree, "Selection Letter", item->select_letter, DebugVariableType_String);
                     add_debug_variable(new_tree, "Mark", item->mark.array, DebugVariableType_String);
                     add_debug_newline(debug, new_tree);

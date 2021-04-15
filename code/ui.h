@@ -50,9 +50,8 @@ typedef struct
     u32 cursor_render_start;
     u32 cursor_index;
     
-    // If this value is less than 650 it means that the cursor gets to blink an extra time
-    // before we start to force render it when we hold down a key. Because of that we keep
-    // it at a value higher than 650.
+    // If cursor_blink_duration is less than 650 when we hold down a key, the cursor will
+    // blink one extra time which looks bad.
     u32 cursor_blink_duration;
     
     View view;
@@ -80,7 +79,8 @@ typedef struct
     View short_log_view;
     
     Mark mark;
-    Letter letters[MAX_SELECT_LETTER_COUNT];
+    Letter item_select_letters[MAX_SELECT_LETTER_COUNT];
+    Letter item_inventory_letters[MAX_SELECT_LETTER_COUNT];
     
     v4u defer_rect;
     Defer defer[MAX_DEFER_COUNT];
@@ -94,7 +94,9 @@ internal void set_view_at_start(View *view);
 internal void log_add(UI *ui, char *text, ...);
 internal void update_view_scrolling(View *view, Input *input);
 internal void reset_letters(Letter *letters);
+internal char get_new_letter(Letter *letters, void *parent, LetterParentType parent_type);
 internal b32 is_view_scrolling(View view, u32 count);
 internal b32 is_entry_in_view(View view, u32 entry);
 internal u32 get_view_range(View view);
 internal LetterParent get_letter_parent(Letter *letters, char c);
+internal String8 get_item_letter_string(Item *item);

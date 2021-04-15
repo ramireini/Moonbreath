@@ -143,12 +143,12 @@ typedef enum
 
 typedef enum
 {
-    UsingItemType_None,
+    ItemUseType_None,
     
-    UsingItemType_Identify,
-    UsingItemType_EnchantWeapon,
-    UsingItemType_EnchantArmor,
-    UsingItemType_Uncurse
+    ItemUseType_Identify,
+    ItemUseType_EnchantWeapon,
+    ItemUseType_EnchantArmor,
+    ItemUseType_Uncurse
 } ItemUseType;
 
 typedef enum
@@ -216,7 +216,7 @@ struct Item
     String32 name;
     String256 description;
     
-    char letter;
+    char inventory_letter;
     char select_letter;
      Mark mark;
     
@@ -266,6 +266,12 @@ typedef struct
     View view;
 } DeferRectWindow;
 
+// TODO(rami): Might want to give this a spin to see how it works
+// SDL_RenderSetClipRect(SDL_Renderer *renderer, SDL_Rect *rect);
+
+// TODO(rami): Figure out if certain things from the UI/Inventory struct should be
+// moved elsewhere.
+
 typedef struct
 {
     u32 flags;
@@ -273,7 +279,7 @@ typedef struct
     ItemUseType item_use_type;
     ItemType view_update_item_type;
     
-    View multiple_pickup_view;
+    View multiple_pickup_window;
     DeferRectWindow examine_window;
     DeferRectWindow window;
     
