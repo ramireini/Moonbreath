@@ -252,25 +252,22 @@ typedef struct
 {
     Item array[MAX_ITEM_COUNT];
     
-    ConsumableInfo potion_info[Potion_Count];
-    ConsumableInfo scroll_info[Scroll_Count];
+    Mark temp_mark;
+    
+    DeferWindow pickup_window;
+    DeferWindow examine_window;
+    Entity *examine_window_entity;
+     DungeonTrap *examine_window_trap;
     
     v2u potion_healing_range;
     v2u ration_healing_range;
-} ItemState;
-
-typedef struct
-{
-    u32 entry_count;
-    v2u pos;
-    View view;
-} DeferRectWindow;
+    
+    ConsumableInfo potion_info[Potion_Count];
+    ConsumableInfo scroll_info[Scroll_Count];
+    } ItemState;
 
 // TODO(rami): Might want to give this a spin to see how it works
 // SDL_RenderSetClipRect(SDL_Renderer *renderer, SDL_Rect *rect);
-
-// TODO(rami): Figure out if certain things from the UI/Inventory struct should be
-// moved elsewhere.
 
 typedef struct
 {
@@ -278,13 +275,11 @@ typedef struct
     
     ItemUseType item_use_type;
     ItemType view_update_item_type;
-    
-    View multiple_pickup_window;
-    DeferRectWindow examine_window;
-    DeferRectWindow window;
+    DeferWindow window;
     
     Item *examine_item;
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
+    Letter item_letters[MAX_SELECT_LETTER_COUNT];
 } Inventory;
 
 internal void remove_item_from_game(Item *item);

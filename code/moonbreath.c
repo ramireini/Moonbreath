@@ -39,25 +39,29 @@ update_examine_mode(Examine *examine,
     {
         if(examine->type == ExamineType_Entity)
         {
-            char pressed = get_pressed_alphabet_char(input);
-            if(pressed)
+            Entity *entity = examine->entity;
+            if(is_set(entity->flags, EntityFlag_UsesMagicAttacks))
             {
-                if(is_set(examine->flags, ExamineFlag_ReadyForKeypress))
+                char pressed = get_pressed_alphabet_char(input);
+                if(pressed)
                 {
-                    Spell *spell = &examine->entity->e.spells[(pressed - 'a')];
-                    if(spell->id)
+                    if(is_set(examine->flags, ExamineFlag_ReadyForKeypress))
                     {
-                        examine->type = ExamineType_Spell;
-                        examine->spell = spell;
+                        Spell *spell = &entity->e.spells[(pressed - 'a')];
+                        if(spell->id)
+                        {
+                            examine->type = ExamineType_Spell;
+                            examine->spell = spell;
+                        }
                     }
-                }
-                else
-                {
-                    set(examine->flags, ExamineFlag_ReadyForKeypress);
+                    else
+                    {
+                        set(examine->flags, ExamineFlag_ReadyForKeypress);
+                    }
                 }
             }
         }
-        else
+        else if(!examine->type)
         {
             for(u32 index = GameKey_Up; index <= GameKey_DownRight; ++index)
             {
@@ -96,6 +100,10 @@ update_examine_mode(Examine *examine,
                     examine->key_pressed_start[index] = 0;
                 }
             }
+            
+            // The code below this line can only run if we don't have an examine type so that they're
+            // not executed when we have a multiple pickup/examine window open.
+            assert(!examine->type);
             
             if(was_pressed(&input->GameKey_IteratePassages))
             {
@@ -143,8 +151,9 @@ update_examine_mode(Examine *examine,
                         DungeonPassage *passage = &passages->array[index];
                         if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                         {
-                            unset(examine->flags, ExamineFlag_Open);
-                            make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
+                        unset(examine->flags, ExamineFlag_Open);
+                        make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
+                        
                             return;
                         }
                     }
@@ -153,20 +162,20 @@ update_examine_mode(Examine *examine,
                     if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, examine->pos) &&
                        has_tile_been_seen(dungeon->tiles, examine->pos))
                     {
-                        unset(examine->flags, ExamineFlag_Open);
-                        make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
-                        
+                    unset(examine->flags, ExamineFlag_Open);
+                    make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
+                    
                         return;
                     }
             }
-            else if(was_pressed(&input->GameKey_Yes) && !examine->type)
+            else if(was_pressed(&input->GameKey_Yes))
             {
                 if(get_dungeon_pos_examine_source_count(dungeon, entities, items, examine->pos) > 1)
                 {
                     // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
                     set(inventory->flags, InventoryFlag_MultipleExamine);
-                    set_view_at_start(&inventory->examine_window.view);
+                    set_view_at_start(&items->examine_window.view);
                     
                     return;
                 }
@@ -1556,15 +1565,19 @@ int main(int argc, char *argv[])
         }
         
         ItemState *items = push_memory_struct(&game->memory_arena, ItemState);
+        items->temp_mark.cursor_blink_duration = 800;
+        items->temp_mark.view.end = 24;
+        
         Inventory *inventory = push_memory_struct(&game->memory_arena, Inventory);
+        init_letters(inventory->item_letters);
+        
         Assets *assets = push_memory_struct(&game->memory_arena, Assets);
         
         UI *ui = push_memory_struct(&game->memory_arena, UI);
         ui->window_offset = 12;
         ui->short_log_view.end = 9;
-        ui->mark.cursor_blink_duration = 800;
-        ui->mark.view.end = 24;
         ui->window_entry_size = 32;
+        init_letters(ui->select_letters);
         
 #if 0
         // Config Example

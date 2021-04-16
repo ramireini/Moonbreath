@@ -1749,7 +1749,7 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
-                        reset_letters(ui->item_select_letters);
+                        reset_letters(ui->select_letters);
                         unset(inventory->flags, InventoryFlag_MultipleExamine);
                     }
                         else if(ui->full_log_open)
@@ -1769,7 +1769,7 @@ update_player_input(Game *game,
                     if(get_dungeon_pos_item_count(items, dungeon->level, player->pos) > 1)
                     {
                         set(inventory->flags, InventoryFlag_MultiplePickup);
-                        set_view_at_start(&inventory->multiple_pickup_window);
+                        set_view_at_start(&items->pickup_window.view);
                         }
                     else
                     {
@@ -1885,11 +1885,11 @@ update_player_input(Game *game,
                 }
                 else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                 {
-                    update_view_scrolling(&inventory->multiple_pickup_window, input);
+                    update_view_scrolling(&items->pickup_window.view, input);
                 }
                 else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                 {
-                    update_view_scrolling(&inventory->examine_window.view, input);
+                    update_view_scrolling(&items->examine_window.view, input);
                 }
                     else if(ui->full_log_open)
                     {
@@ -1906,7 +1906,7 @@ update_player_input(Game *game,
                     {
                         if(is_set(inventory->flags, InventoryFlag_Mark))
                         {
-                            update_item_marking(input, examine_item, inventory, ui);
+                        update_item_marking(input, &items->temp_mark, examine_item, &inventory->flags);
                         }
                         else
                         {
@@ -1955,7 +1955,7 @@ update_player_input(Game *game,
                                 {
                                 // Start examine item mark
                                 set(inventory->flags, InventoryFlag_Mark);
-                                Mark *mark = &ui->mark;
+                                Mark *temp_mark = &items->temp_mark;
                                 
                                 if(is_set(examine_item->flags, ItemFlag_IsMarked))
                                 {
@@ -1963,15 +1963,15 @@ update_player_input(Game *game,
                                     assert(!examine_item->mark.cursor_index);
                                     assert(!examine_item->mark.cursor_render_start);
                                     
-                                    ui->mark.view = examine_item->mark.view;
-                                    strcpy(ui->mark.array, examine_item->mark.array);
+                                    temp_mark->view = examine_item->mark.view;
+                                    strcpy(temp_mark->array, examine_item->mark.array);
                                     
-                                    set_mark_view_and_cursor_to_end(mark);
-                                    assert(mark->view.count);
+                                    set_mark_view_and_cursor_to_end(temp_mark);
+                                    assert(temp_mark->view.count);
                                 }
                                 else
                                 {
-                                    set_mark_view_and_cursor_to_start(mark);
+                                    set_mark_view_and_cursor_to_start(temp_mark);
                                 }
                                 }
                             }
@@ -1980,6 +1980,7 @@ update_player_input(Game *game,
                     else
                 {
                     char pressed = get_pressed_alphabet_char(input);
+                    
                     if(is_set(inventory->flags, InventoryFlag_Open))
                     {
                             if(is_set(inventory->flags, InventoryFlag_ReadyForKeypress))
@@ -1993,11 +1994,14 @@ update_player_input(Game *game,
                                     else
                                 {
                                     // Examine item
-                                    Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_Letter, true);
-                                    if(item)
+                                    Letter *letter = get_letter(inventory->item_letters, pressed);
+                                    
+                                    if(letter->parent_type)
                                     {
+                                        assert(letter->parent_type == LetterParentType_Item);
+                                        
                                         set(inventory->flags, InventoryFlag_Examine);
-                                        inventory->examine_item = item;
+                                        inventory->examine_item = letter->item;
                                     }
                                     }
                                 }
@@ -2029,47 +2033,47 @@ update_player_input(Game *game,
                             }
                             else if(pressed)
                         {
-                                // Select and unselect the item in the pickup window
-                            Item *item = get_item_from_letter(items, dungeon->level, pressed, LetterType_SelectLetter, false);
-                                if(item)
+                            // Select and unselect the item in the pickup window
+                            Letter *letter = get_letter(inventory->item_letters, pressed);
+                            
+                            if(letter->parent_type)
                             {
-                                toggle(item->flags, ItemFlag_IsSelected);
+                                assert(letter->parent_type == LetterParentType_Item);
+                                
+                                toggle(letter->item->flags, ItemFlag_IsSelected);
                                 }
                             }
                     }
-                    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
+                    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine) && pressed && !examine->type)
                     {
-                        if(pressed && !examine->type)
-                        {
-                            LetterParent parent = get_letter_parent(ui->item_select_letters, pressed);
-                            if(parent.type)
+                        Letter *letter = get_letter(ui->select_letters, pressed);
+                            if(letter->parent_type)
                             {
                                 set(examine->flags, ExamineFlag_Open);
                                 unset(examine->flags, ExamineFlag_CameraFollow);
                                 
-                                switch(parent.type)
+                                switch(letter->parent_type)
                                 {
                                     case LetterParentType_Entity:
                                     {
                                         examine->type = ExamineType_Entity;
-                                        examine->entity = parent.entity;
+                                        examine->entity = letter->entity;
                                     } break;
                                     
                                     case LetterParentType_Item:
                                     {
                                         examine->type = ExamineType_Item;
-                                        examine->item = parent.item;
+                                    examine->item = letter->item;
                                     } break;
                                     
                                     case LetterParentType_Trap:
                                     {
                                         examine->type = ExamineType_Trap;
-                                        examine->trap = parent.trap;
+                                    examine->trap = letter->trap;
                                     } break;
                                     
                                     invalid_default_case;
                                 }
-                            }
                         }
                     }
                     }

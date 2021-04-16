@@ -20,7 +20,7 @@ start_defer_rect(UI *ui, u32 y_multiplier)
 }
 
 internal void
-init_defer_rect_window(DeferRectWindow *window, UI *ui)
+init_defer_window(DeferWindow *window, UI *ui)
 {
     window->entry_count = 0;
     window->pos = start_defer_rect(ui, 2);
@@ -89,8 +89,14 @@ render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
 }
 
 internal void
+next_defer_rect_line(v2u *pos, UI *ui)
+{
+    pos->y += ui->window_entry_size;
+}
+
+internal void
 render_defer_rect_item(UI *ui,
-                       DeferRectWindow *window,
+                       DeferWindow *window,
                        Item *item,
                        ItemType type,
                        Inventory *inventory,
@@ -104,7 +110,7 @@ render_defer_rect_item(UI *ui,
         if(is_entry_in_view(window->view, window->entry_count))
         {
             render_item_type_header(ui, ui->defer_rect, window->pos, type);
-            window->pos.y += ui->window_entry_size;
+            next_defer_rect_line(&window->pos, ui);
         }
     }
     
@@ -113,8 +119,8 @@ render_defer_rect_item(UI *ui,
     if(is_entry_in_view(window->view, window->entry_count))
     {
         v2u picture_pos = render_window_tile(item->tile_src, window->pos, ui);
-        
         v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+        
         String8 letter = get_item_letter_string(item);
         String128 mark = get_item_mark_string(item);
         
@@ -155,12 +161,12 @@ render_defer_rect_item(UI *ui,
             }
         }
         
-        window->pos.y += ui->window_entry_size;
+        next_defer_rect_line(&window->pos, ui);
     }
                        }
 
 internal u32
-get_defer_rect_set_width()
+get_default_defer_window_width()
 {
     u32 result = 512;
     return(result);
@@ -198,38 +204,6 @@ get_item_letter_string(Item *item)
     
     return(result);
 }
-
-internal LetterParent
-get_letter_parent(Letter *letters, char c)
-{
-    assert(c);
-    
-    LetterParent result = {0};
-    
-    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
-    {
-        Letter *letter = &letters[i];
-        
-        if(letter->parent_type &&
-           letter->c == c)
-        {
-            result.type = letter->parent_type;
-            
-            switch(letter->parent_type)
-            {
-                case LetterParentType_Entity: result.entity = letter->entity; break;
-                case LetterParentType_Item: result.item = letter->item; break;
-                case LetterParentType_Trap: result.trap = letter->trap; break;
-                
-                invalid_default_case;
-            }
-            
-            break;
-        }
-    }
-    
-    return(result);
-    }
 
 internal void
 reset_letters(Letter *letters)
@@ -273,8 +247,89 @@ reset_letters(Letter *letters)
     }
 }
 
+internal void
+init_letters(Letter *letters)
+{
+    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    {
+        Letter *letter = &letters[i];
+        assert(!letter->parent_type);
+        assert(!letter->c);
+        
+        u32 alphabet_size = 26;
+        
+        if(i < alphabet_size)
+        {
+            letter->c = 97 + i;
+        }
+        else
+        {
+            letter->c = 65 + (i - alphabet_size);
+        }
+        
+        assert(is_alpha(letter->c));
+        }
+}
+
+internal void
+clear_letter(Letter *letters, char clear_c)
+{
+    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    {
+        Letter *letter = &letters[i];
+        if(letter->parent_type && letter->c == clear_c)
+        {
+            letter->parent_type = LetterParentType_None;
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal Letter *
+get_letter(Letter *letters, char search_c)
+{
+    Letter *result = 0;
+    
+    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    {
+        Letter *letter = &letters[i];
+        
+        if(letter->c == search_c)
+        {
+            result = letter;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
 internal char
-get_new_letter(Letter *letters, void *parent, LetterParentType parent_type)
+set_letter(Letter *letters, Letter *letter, void *parent, LetterParentType parent_type)
+{
+    assert(letters);
+    assert(letter);
+    assert(!letter->parent_type);
+    assert(letter->c);
+    
+    letter->parent_type = parent_type;
+    
+    switch(letter->parent_type)
+    {
+        case LetterParentType_Entity: letter->entity = parent; break;
+        case LetterParentType_Item: letter->item = parent; break;
+        case LetterParentType_Trap: letter->trap = parent; break;
+        
+        invalid_default_case;
+    }
+    
+    return(letter->c);
+    }
+
+internal char
+set_next_letter(Letter *letters, void *parent, LetterParentType parent_type)
 {
     for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
     {
@@ -282,35 +337,12 @@ get_new_letter(Letter *letters, void *parent, LetterParentType parent_type)
         
         if(!letter->parent_type)
         {
-            if(!letter->c)
-            {
-                u32 alphabet_size = 26;
-                
-                if(i < alphabet_size)
-                    {
-                        letter->c = 97 + i;
-                    }
-                    else
-                    {
-                        letter->c = 65 + (i - alphabet_size);
-                }
-                
-            assert(is_alpha(letter->c));
-            }
-            
-            letter->parent_type = parent_type;
-            switch(letter->parent_type)
-            {
-                case LetterParentType_Entity: letter->entity = parent; break;
-                case LetterParentType_Item: letter->item = parent; break;
-                case LetterParentType_Trap: letter->trap = parent; break;
-                
-                invalid_default_case;
-            }
-            
-            return(letter->c);
+            char result = set_letter(letters, letter, parent, parent_type);
+            return(result);
         }
-        }
+    }
+    
+    assert(0);
 }
 
 internal void
@@ -492,11 +524,11 @@ can_add_defer_rect_entry(v2u pos, u32 window_entry_size, u32 window_scroll_start
 }
 
 internal void
-add_defer_rect_window_entry(DeferRectWindow *window, UI *ui)
+add_defer_window_entry(DeferWindow *window, UI *ui)
 {
     if(can_add_defer_rect_entry(window->pos, ui->window_entry_size, ui->window_scroll_start_y))
     {
-        window->pos.y += ui->window_entry_size;
+        next_defer_rect_line(&window->pos, ui);
     }
     else
     {
@@ -504,6 +536,13 @@ add_defer_rect_window_entry(DeferRectWindow *window, UI *ui)
     }
     
     ++window->entry_count;
+}
+
+internal void
+add_defer_window_header_and_body_entry(DeferWindow *window, UI *ui)
+{
+    add_defer_window_entry(window, ui);
+    add_defer_window_entry(window, ui);
 }
 
 internal void
@@ -589,7 +628,7 @@ end_defer_rect(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
 }
 
 internal void
-end_defer_rect_window(Game *game, Assets *assets, UI *ui, DeferRectWindow *window)
+end_defer_rect_window(Game *game, Assets *assets, UI *ui, DeferWindow *window)
 {
     window->view.count = window->entry_count;
     ui_next_line(ui, &window->pos, 1);
@@ -1130,6 +1169,21 @@ log_add(UI *ui, char *text, ...)
 }
 
 internal void
+render_multiple_pickup_window(Game *game, ItemState *items, Assets *assets, UI *ui)
+{
+    Examine *examine = &game->examine;
+    DeferWindow *window = &items->pickup_window;
+    
+    init_defer_window(window, ui);
+    ui->defer_rect.w = get_default_defer_window_width();
+    
+    defer_text(ui, "Pickup what?", window->pos.x, window->pos.y);
+    ui_next_line(ui, &window->pos, 1);
+    
+    end_defer_rect_window(game, assets, ui, window);
+}
+
+internal void
 render_inventory_window(Game *game,
                    ItemState *items,
                        Inventory *inventory,
@@ -1138,7 +1192,7 @@ render_inventory_window(Game *game,
                         UI *ui)
 {
     Examine *examine = &game->examine;
-    DeferRectWindow *window = &inventory->window;
+    DeferWindow *window = &inventory->window;
     
     assert(window->view.start);
     
@@ -1204,17 +1258,17 @@ render_inventory_window(Game *game,
                     if(needs_header)
                         {
                         needs_header = false;
-                        add_defer_rect_window_entry(window, ui);
+                        add_defer_window_entry(window, ui);
                     }
                     
-                    add_defer_rect_window_entry(window, ui);
+                    add_defer_window_entry(window, ui);
                     }
             }
         }
     }
     
-    init_defer_rect_window(window, ui);
-    ui->defer_rect.w = get_defer_rect_set_width();
+    init_defer_window(window, ui);
+    ui->defer_rect.w = get_default_defer_window_width();
     
     // Render inventory header
         if(inventory->item_use_type)
@@ -1287,6 +1341,90 @@ render_examine_window(Game *game, Assets *assets, UI *ui, v2u player_pos)
 }
 
 internal void
+render_defer_window_header_and_body(char *header_name,
+                                    DeferWindow *window,
+                                    void *parent,
+                                    LetterParentType type,
+                                    UI *ui)
+{
+    assert(header_name);
+    assert(window);
+    assert(parent);
+    assert(type);
+    assert(ui);
+    
+    // Render header
+    ++window->entry_count;
+    
+    if(is_entry_in_view(window->view, window->entry_count))
+    {
+        v2u header_pos = render_window_separator(ui->defer_rect, window->pos, ui);
+        defer_text(ui, header_name, header_pos.x, header_pos.y);
+        next_defer_rect_line(&window->pos, ui);
+    }
+    
+    // Render body
+    Entity *entity = 0;
+    DungeonTrap *trap = 0;
+    
+    switch(type)
+    {
+        case LetterParentType_Entity: entity = parent; break;
+        case LetterParentType_Trap: trap = parent; break;
+        
+        invalid_default_case;
+    }
+    
+    ++window->entry_count;
+    
+    if(is_entry_in_view(window->view, window->entry_count))
+    {
+        v2u picture_pos = {0};
+        
+        switch(type)
+        {
+            case LetterParentType_Entity: picture_pos = render_window_tile(entity->tile_src, window->pos, ui); break;
+            case LetterParentType_Trap: picture_pos = render_window_tile(trap->tile_src, window->pos, ui); break;
+            
+            invalid_default_case;
+        }
+        
+        v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
+        
+        switch(type)
+        {
+            case LetterParentType_Entity:
+            {
+                if(!entity->select_letter)
+                {
+                    entity->select_letter = set_next_letter(ui->select_letters, parent, type);
+                }
+            } break;
+            
+            case LetterParentType_Trap:
+            {
+                if(!trap->select_letter)
+                {
+                    trap->select_letter = set_next_letter(ui->select_letters, parent, type);
+                }
+            } break;
+            
+            invalid_default_case;
+        }
+        
+        switch(type)
+        {
+            case LetterParentType_Entity: defer_text(ui, "%s%s", name_pos.x, name_pos.y, get_letter_string(entity->select_letter).s, entity->name.s); break;
+            case LetterParentType_Trap: defer_text(ui, "%s%s", name_pos.x, name_pos.y, get_letter_string(trap->select_letter).s, trap->name.s); break;
+            
+            invalid_default_case;
+        };
+        
+        next_defer_rect_line(&window->pos, ui);
+    }
+}
+
+internal void
 render_multiple_examine_window(Game *game,
                                EntityState *entities,
                                ItemState *items,
@@ -1296,11 +1434,7 @@ render_multiple_examine_window(Game *game,
                                UI *ui)
 {
     Examine *examine = &game->examine;
-    DeferRectWindow *window = &inventory->examine_window;
-    
-    // These are here so we don't have to get them twice
-    Entity *entity = 0;
-     DungeonTrap *trap = 0;
+    DeferWindow *window = &items->examine_window;
     
     // Find and set the end for the multiple examine view
     if(!window->view.end)
@@ -1314,11 +1448,10 @@ render_multiple_examine_window(Game *game,
         {
             if(examine_type == ExamineType_Entity)
             {
-                entity = get_dungeon_pos_entity(entities, dungeon->level, examine->pos, true);
-                if(entity)
+                items->examine_window_entity = get_dungeon_pos_entity(entities, dungeon->level, examine->pos, true);
+                if(items->examine_window_entity)
                 {
-                    add_defer_rect_window_entry(window, ui);
-                    add_defer_rect_window_entry(window, ui);
+                    add_defer_window_header_and_body_entry(window, ui);
                 }
                 }
             else if(examine_type == ExamineType_Item)
@@ -1336,65 +1469,41 @@ render_multiple_examine_window(Game *game,
                             if(needs_header)
                             {
                                 needs_header = false;
-                                add_defer_rect_window_entry(window, ui);
+                                add_defer_window_entry(window, ui);
                             }
                             
-                            add_defer_rect_window_entry(window, ui);
+                            add_defer_window_entry(window, ui);
                         }
                     }
                 }
             }
                 else if(examine_type == ExamineType_Trap)
             {
-                trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
-                if(trap)
+                items->examine_window_trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
+                if(items->examine_window_trap)
                 {
-                    add_defer_rect_window_entry(window, ui);
-                    add_defer_rect_window_entry(window, ui);
+                    add_defer_window_header_and_body_entry(window, ui);
                 }
             }
         }
     }
     
-    init_defer_rect_window(window, ui);
-    ui->defer_rect.w = get_defer_rect_set_width();
+    init_defer_window(window, ui);
+    ui->defer_rect.w = get_default_defer_window_width();
     
     defer_text(ui, "Examine what?", window->pos.x, window->pos.y);
     ui_next_line(ui, &window->pos, 1);
+    
+    Entity *entity = items->examine_window_entity;
+    DungeonTrap *trap = items->examine_window_trap;
     
     for(ExamineType examine_type = ExamineType_None + 1;
         examine_type < ExamineType_Count;
         ++examine_type)
     {
-        if(examine_type == ExamineType_Entity)
+        if(examine_type == ExamineType_Entity && entity)
         {
-            if(entity)
-            {
-                ++window->entry_count;
-                
-                if(is_entry_in_view(window->view, window->entry_count))
-                {
-                v2u header_pos = render_window_separator(ui->defer_rect, window->pos, ui);
-                defer_text(ui, "Enemies", header_pos.x, header_pos.y);
-                window->pos.y += ui->window_entry_size;
-                    }
-                
-                ++window->entry_count;
-                
-                if(is_entry_in_view(window->view, window->entry_count))
-                {
-                v2u picture_pos = render_window_tile(entity->tile_src, window->pos, ui);
-                    v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
-                    
-                    if(!entity->select_letter)
-                    {
-                        entity->select_letter = get_new_letter(ui->item_select_letters, entity, LetterParentType_Entity);
-                    }
-                    
-                    defer_text(ui, "%s%s", name_pos.x, name_pos.y, get_letter_string(entity->select_letter).s, entity->name.s);
-                window->pos.y += ui->window_entry_size;
-                }
-                }
+            render_defer_window_header_and_body("Enemies", window, entity, LetterParentType_Entity, ui);
         }
         else if(examine_type == ExamineType_Item)
         {
@@ -1410,7 +1519,7 @@ render_multiple_examine_window(Game *game,
                     {
                         if(!item->select_letter)
                         {
-                            item->select_letter = get_new_letter(ui->item_select_letters, item, LetterParentType_Item);
+                            item->select_letter = set_next_letter(ui->select_letters, item, LetterParentType_Item);
                         }
                         
                         render_defer_rect_item(ui, window, item, type, inventory, &needs_header);
@@ -1418,35 +1527,9 @@ render_multiple_examine_window(Game *game,
                 }
             }
         }
-        else if(examine_type == ExamineType_Trap)
+        else if(examine_type == ExamineType_Trap && trap)
         {
-            if(trap)
-            {
-                ++window->entry_count;
-                
-                if(is_entry_in_view(window->view, window->entry_count))
-                {
-                    v2u header_pos = render_window_separator(ui->defer_rect, window->pos, ui);
-                    defer_text(ui, "Traps", header_pos.x, header_pos.y);
-                    window->pos.y += ui->window_entry_size;
-                }
-                
-                ++window->entry_count;
-                
-                if(is_entry_in_view(window->view, window->entry_count))
-                {
-                    v2u picture_pos = render_window_tile(trap->tile_src, window->pos, ui);
-                    v2u name_pos = get_window_entry_name_pos(picture_pos, ui);
-                    
-                    if(!trap->select_letter)
-                    {
-                        trap->select_letter = get_new_letter(ui->item_select_letters, trap, LetterParentType_Trap);
-                    }
-                    
-                    defer_text(ui, "%s%s", name_pos.x, name_pos.y, get_letter_string(trap->select_letter).s, trap->name.s);
-                    window->pos.y += ui->window_entry_size;
-                }
-            }
+            render_defer_window_header_and_body("Traps", window, trap, LetterParentType_Trap, ui);
             }
             }
     
@@ -1459,7 +1542,7 @@ render_multiple_examine_window(Game *game,
     }
 
 internal void
-render_item_mark_window(Game *game, Item *item, Assets *assets, UI *ui)
+render_item_mark_window(Game *game, ItemState *items, Item *item, Assets *assets, UI *ui)
 {
     v4u mark_rect = {0, 0, 250, 100};
     render_centered_rect(game, assets, &mark_rect);
@@ -1491,17 +1574,17 @@ render_item_mark_window(Game *game, Item *item, Assets *assets, UI *ui)
     render_outline_rect(game, input_rect, Color_WindowBorder);
     
     // Update cursor
-    Mark *mark = &ui->mark;
+    Mark *temp_mark = &items->temp_mark;
     
-    if(!mark->cursor_render_start)
+    if(!temp_mark->cursor_render_start)
     {
-        mark->cursor_render_start = SDL_GetTicks();
+        temp_mark->cursor_render_start = SDL_GetTicks();
     }
     
-    if(get_sdl_ticks_difference(mark->cursor_render_start) >= mark->cursor_blink_duration)
+    if(get_sdl_ticks_difference(temp_mark->cursor_render_start) >= temp_mark->cursor_blink_duration)
     {
-        mark->cursor_render_start = 0;
-        mark->render_cursor = !mark->render_cursor;
+        temp_mark->cursor_render_start = 0;
+        temp_mark->render_cursor = !temp_mark->render_cursor;
     }
     
     // Render input
@@ -1513,21 +1596,21 @@ render_item_mark_window(Game *game, Item *item, Assets *assets, UI *ui)
     
     u32 cursor_x = text_pos.x;
     v2u character_pos = text_pos;
-    for(u32 index = mark->view.start; index < get_view_range(mark->view); ++index)
+    for(u32 index = temp_mark->view.start; index < get_view_range(temp_mark->view); ++index)
     {
         u32 mark_index = index - 1;
         
-        render_text(game, "%c", character_pos.x, character_pos.y, ui->font, 0, mark->array[mark_index]);
-        character_pos.x += get_glyph_width(ui->font, mark->array[mark_index]);
+        render_text(game, "%c", character_pos.x, character_pos.y, ui->font, 0, temp_mark->array[mark_index]);
+        character_pos.x += get_glyph_width(ui->font, temp_mark->array[mark_index]);
         
-        if(mark->render_cursor && (index == mark->cursor_index))
+        if(temp_mark->render_cursor && (index == temp_mark->cursor_index))
         {
             cursor_x = character_pos.x;
         }
     }
     
     // Render cursor
-    if(mark->render_cursor)
+    if(temp_mark->render_cursor)
     {
         v4u cursor_rect =
         {
@@ -1741,7 +1824,7 @@ render_ui(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlag_Mark))
     {
-        render_item_mark_window(game, inventory->examine_item, assets, ui);
+        render_item_mark_window(game, items, inventory->examine_item, assets, ui);
     }
     else if(is_set(examine->flags, ExamineFlag_Open))
     {
@@ -1752,7 +1835,7 @@ render_ui(Game *game,
         render_item_examine_window(game, inventory->examine_item, assets, ui, true);
         }
     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
-        {
+    {
         render_multiple_examine_window(game, entities, items, inventory, dungeon, assets, ui);
     }
     else if(is_set(inventory->flags, InventoryFlag_Open))
@@ -1761,7 +1844,6 @@ render_ui(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
     {
-        // TODO(rami): Make multiple pickup work again
-        //render_multiple_pickup_window();
+        render_multiple_pickup_window(game, items, assets, ui);
     }
 }

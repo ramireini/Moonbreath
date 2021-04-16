@@ -133,80 +133,6 @@ print_dungeon_items(ItemState *items, Dungeon *dungeon)
     }
 }
 
-internal Item *
-get_item_from_letter(ItemState *items,
-                     u32 dungeon_level,
-                     char letter,
-                     LetterType letter_type,
-                     b32 search_inventory)
-{
-    Item *result = 0;
-    
-    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-    {
-        Item *item = &items->array[index];
-        
-        if(is_item_valid(item, dungeon_level))
-        {
-            if(search_inventory && !is_set(item->flags, ItemFlag_InInventory))
-            {
-                continue;
-            }
-            
-            if(letter_type == LetterType_Letter &&
-                   item->inventory_letter == letter)
-            {
-                result = item;
-                break;
-            }
-            else if(letter_type == LetterType_SelectLetter &&
-                        item->select_letter == letter)
-            {
-                result = item;
-                break;
-            }
-        }
-    }
-    
-    return(result);
-}
-
-internal char
-get_free_item_letter_from_range(ItemState *items,
-                                u32 dungeon_level,
-                                char start,
-                                char end,
-                                LetterType letter_type)
-{
-    char result = 0;
-    
-    for(char letter = start; letter <= end; ++letter)
-    {
-        Item *item = get_item_from_letter(items, dungeon_level, letter, letter_type, false);
-        if(!item)
-        {
-            result = letter;
-            break;
-        }
-    }
-    
-    return(result);
-}
-
-internal char
-get_free_item_letter(ItemState *items, u32 dungeon_level, LetterType letter_type)
-{
-    char result = get_free_item_letter_from_range(items, dungeon_level, 'a', 'z', letter_type);
-    
-    if(!result)
-    {
-        result = get_free_item_letter_from_range(items, dungeon_level, 'A', 'Z', letter_type);
-    }
-    
-    assert(result);
-    return(result);
-}
-
 internal char *
 get_item_status_prefix(Item *item)
 {
@@ -343,16 +269,41 @@ update_item_adjusting(Input *input,
     char pressed = get_pressed_alphabet_char(input);
     if(pressed)
     {
-        // If the letter we want to adjust the item to is already taken, then get a free
-        // item letter instead.
-        if(get_item_from_letter(items, dungeon_level, pressed, LetterType_Letter, false))
+        if(pressed != item->inventory_letter)
         {
-            item->inventory_letter = get_free_item_letter(items, dungeon_level, LetterType_Letter);
+            Letter *new_letter = get_letter(inventory->item_letters, pressed);
+            if(new_letter->parent_type)
+            {
+                Letter *current_letter = get_letter(inventory->item_letters, item->inventory_letter);
+                
+                // Swap can only happen between two items
+                assert(current_letter->parent_type == LetterParentType_Item);
+                assert(new_letter->parent_type == LetterParentType_Item);
+                
+                // temp = current
+                char temp_char = current_letter->item->inventory_letter;
+                Item *temp_item = current_letter->item;
+                
+                // current = new
+                current_letter->item->inventory_letter = new_letter->item->inventory_letter;
+                current_letter->item = new_letter->item;
+                
+                // new = temp
+                new_letter->item->inventory_letter = temp_char;
+                new_letter->item = temp_item;
+            }
+            else
+            {
+                // Clear current letter
+                clear_letter(inventory->item_letters, item->inventory_letter);
+                
+                // Set new letter
+                Letter *new_letter = get_letter(inventory->item_letters, pressed);
+                item->inventory_letter = set_letter(inventory->item_letters, new_letter, item, LetterParentType_Item);
+            }
         }
         
-        item->inventory_letter = pressed;
         unset(inventory->flags, InventoryFlag_Adjust);
-        
         log_add(ui, "%s%s%s",
                     get_item_letter_string(item).s,
                 get_item_status_prefix(item),
@@ -469,7 +420,7 @@ add_item_to_inventory(Game *game,
             {
                 if(!item->inventory_letter)
                 {
-                    item->inventory_letter = get_new_letter(ui->item_inventory_letters, item, LetterParentType_Item);
+                    item->inventory_letter = set_next_letter(inventory->item_letters, item, LetterParentType_Item);
                 }
                 
                 unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
@@ -1074,32 +1025,31 @@ add_mark_character(Mark *mark, char c)
 }
 
 internal void
-update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
+update_item_marking(Input *input, Mark *temp_mark, Item *item, u32 *inventory_flags)
 {
-    Mark *mark = &ui->mark;
-    
-    assert(mark->view.end == 24);
-    mark->view.count = get_string_length(mark->array);
+    assert(temp_mark->view.end == 24);
+    temp_mark->view.count = get_string_length(temp_mark->array);
     
     if(was_pressed(&input->Key_Enter))
     {
         // The array is not valid if it is empty or consists of only spaces
-        b32 is_mark_valid = false;
+        b32 is_temp_mark_valid = false;
         
         for(u32 index = 0; index < MAX_MARK_SIZE; ++index)
         {
-            if(mark->array[index] &&
-               mark->array[index] != ' ')
+            if(temp_mark->array[index] &&
+                   temp_mark->array[index] != ' ')
             {
-                is_mark_valid = true;
+                is_temp_mark_valid = true;
                 break;
             }
         }
         
-        if(is_mark_valid)
+        if(is_temp_mark_valid)
         {
-            item->mark.view = ui->mark.view;
-            strcpy(item->mark.array, ui->mark.array);
+            // Copy the item mark to be the temp mark if it's valid
+            item->mark.view = temp_mark->view;
+            strcpy(item->mark.array, temp_mark->array);
             
             set(item->flags, ItemFlag_IsMarked);
         }
@@ -1109,107 +1059,107 @@ update_item_marking(Input *input, Item *item, Inventory *inventory, UI *ui)
         }
         
         // This data has to be reset so it doesn't appear in the mark of other items.
-        zero_array(mark->array, MAX_MARK_SIZE);
-        mark->view.count = 0;
-        mark->view.start = 0;
+        zero_array(temp_mark->array, MAX_MARK_SIZE);
+        temp_mark->view.count = 0;
+        temp_mark->view.start = 0;
         
-        unset(inventory->flags, InventoryFlag_Mark);
+        unset(*inventory_flags, InventoryFlag_Mark);
     }
     else if(was_pressed(&input->Key_Escape))
     {
-        zero_array(mark->array, MAX_MARK_SIZE);
-        unset(inventory->flags, InventoryFlag_Mark);
+        zero_array(temp_mark->array, MAX_MARK_SIZE);
+        unset(*inventory_flags, InventoryFlag_Mark);
     }
     else if(was_pressed(&input->Key_Del))
     {
         // Don't do this if we are at the end of the buffer.
-        if((mark->cursor_index < mark->view.count) && mark->view.count)
+        if((temp_mark->cursor_index < temp_mark->view.count) && temp_mark->view.count)
         {
             // Remove the character at mark->cursor_index and move the buffer.
-            for(u32 index = mark->cursor_index; index < MAX_MARK_SIZE; ++index)
+            for(u32 index = temp_mark->cursor_index; index < MAX_MARK_SIZE; ++index)
             {
-                mark->array[index] = mark->array[index + 1];
-                mark->array[index + 1] = 0;
+                temp_mark->array[index] = temp_mark->array[index + 1];
+                temp_mark->array[index + 1] = 0;
             }
             
-            force_render_mark_cursor(mark);
+            force_render_mark_cursor(temp_mark);
         }
     }
     else if(was_pressed(&input->Key_Backspace))
     {
-        if(mark->cursor_index && mark->view.count)
+        if(temp_mark->cursor_index && temp_mark->view.count)
         {
-            if(mark->cursor_index == mark->view.count)
+            if(temp_mark->cursor_index == temp_mark->view.count)
             {
-                --mark->cursor_index;
-                mark->array[mark->cursor_index] = 0;
+                --temp_mark->cursor_index;
+                temp_mark->array[temp_mark->cursor_index] = 0;
             }
             else
             {
                 // Remove the character before mark->cursor_index and move the buffer.
-                for(u32 index = mark->cursor_index; index < MAX_MARK_SIZE; ++index)
+                for(u32 index = temp_mark->cursor_index; index < MAX_MARK_SIZE; ++index)
                 {
-                    mark->array[index - 1] = mark->array[index];
-                    mark->array[index] = 0;
+                    temp_mark->array[index - 1] = temp_mark->array[index];
+                    temp_mark->array[index] = 0;
                 }
                 
-                --mark->cursor_index;
+                --temp_mark->cursor_index;
             }
             
-            if(is_view_scrolling(mark->view, mark->view.count) &&
-               get_view_range(mark->view) > mark->view.count)
+            if(is_view_scrolling(temp_mark->view, temp_mark->view.count) &&
+                   get_view_range(temp_mark->view) > temp_mark->view.count)
             {
-                --mark->view.start;
+                --temp_mark->view.start;
             }
             
-            force_render_mark_cursor(mark);
+            force_render_mark_cursor(temp_mark);
         }
     }
     else if(was_pressed(&input->Key_ArrowLeft))
     {
-        if(mark->cursor_index)
+        if(temp_mark->cursor_index)
         {
-            if(is_view_scrolling(mark->view, mark->view.count + 1) &&
-               mark->cursor_index == (mark->view.start - 1))
+            if(is_view_scrolling(temp_mark->view, temp_mark->view.count + 1) &&
+                   temp_mark->cursor_index == (temp_mark->view.start - 1))
             {
-                --mark->view.start;
+                --temp_mark->view.start;
             }
             
-            --mark->cursor_index;
-            force_render_mark_cursor(mark);
+            --temp_mark->cursor_index;
+            force_render_mark_cursor(temp_mark);
         }
     }
     else if(was_pressed(&input->Key_ArrowRight))
     {
-        if(mark->cursor_index < MAX_MARK_SIZE &&
-           mark->cursor_index < mark->view.count)
+        if(temp_mark->cursor_index < MAX_MARK_SIZE &&
+               temp_mark->cursor_index < temp_mark->view.count)
         {
-            if(is_view_scrolling(mark->view, mark->view.count + 1) &&
-               (mark->cursor_index == get_view_range(mark->view) - 1))
+            if(is_view_scrolling(temp_mark->view, temp_mark->view.count + 1) &&
+                   (temp_mark->cursor_index == get_view_range(temp_mark->view) - 1))
             {
-                ++mark->view.start;
+                ++temp_mark->view.start;
             }
             
-            ++mark->cursor_index;
-            force_render_mark_cursor(mark);
+            ++temp_mark->cursor_index;
+            force_render_mark_cursor(temp_mark);
         }
     }
     else if(was_pressed(&input->Key_Home))
     {
-        set_mark_view_and_cursor_to_start(mark);
-        force_render_mark_cursor(mark);
+        set_mark_view_and_cursor_to_start(temp_mark);
+        force_render_mark_cursor(temp_mark);
     }
     else if(was_pressed(&input->Key_End))
     {
-        set_mark_view_and_cursor_to_end(mark);
-        force_render_mark_cursor(mark);
+        set_mark_view_and_cursor_to_end(temp_mark);
+        force_render_mark_cursor(temp_mark);
     }
     else
     {
         char pressed = get_pressed_keyboard_char(input);
         if(pressed)
         {
-            add_mark_character(mark, pressed);
+            add_mark_character(temp_mark, pressed);
         }
     }
     

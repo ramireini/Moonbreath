@@ -2019,7 +2019,7 @@ create_dungeon(Game *game,
     move_entity(random, player, dungeon->tiles, ui, make_v2u(24, 2));
     //move_entity(random, player, dungeon->tiles, ui, make_v2u(11, 1));
     
-    add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 20, 25);
+    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 20, 2);
     //add_enemy_entity(entities, dungeon, EntityID_Rat, 12, 15);
     
     //add_enemy_entity(entities, dungeon, EntityID_Python, 7, 1);
