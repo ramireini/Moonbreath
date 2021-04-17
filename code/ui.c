@@ -172,11 +172,36 @@ get_default_defer_window_width()
     return(result);
 }
 
+#if MOONBREATH_SLOW
+internal void
+print_letters(Letter *letters)
+{
+    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    {
+        Letter *letter = &letters[i];
+        
+        if(letter->parent_type)
+        {
+            printf("Letters[%u]\n", i);
+            printf("Parent Type: %u\n", letter->parent_type);
+            printf("Parent Name: %s\n", letter->item->name.s);
+            printf("Letter: %c\n\n", letter->c);
+        }
+    }
+    
+    printf("\n");
+}
+#endif
+
 internal String8
 get_letter_string(char letter)
 {
     String8 result = {0};
+    
+    if(letter)
+    {
     sprintf(result.s, "%c - ", letter);
+    }
     
     return(result);
 }
@@ -272,14 +297,19 @@ init_letters(Letter *letters)
 }
 
 internal void
-clear_letter(Letter *letters, char clear_c)
+clear_letter(Letter *letters, char *clear_c)
 {
+    assert(is_alpha(*clear_c));
+    
     for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
     {
         Letter *letter = &letters[i];
-        if(letter->parent_type && letter->c == clear_c)
+        
+        if(letter->parent_type && letter->c == *clear_c)
         {
             letter->parent_type = LetterParentType_None;
+            *clear_c = 0;
+            
             return;
         }
     }
@@ -500,11 +530,11 @@ update_view_scrolling(View *view, Input *input)
 }
 
 internal b32
-can_render_multiple_examine_item(Item *item, ItemType type, v2u examine_pos, u32 dungeon_level)
+can_render_defer_window_item(Item *item, ItemType type, v2u pos, u32 dungeon_level)
 {
     b32 result = (is_item_valid_and_not_in_inventory(item, dungeon_level) &&
-     item->type == type &&
-                      is_v2u_equal(item->pos, examine_pos));
+                  item->type == type &&
+                      is_v2u_equal(item->pos, pos));
     
     return(result);
 }
@@ -947,11 +977,10 @@ render_trap_examine_window(Game *game, DungeonTrap *trap, Assets *assets, UI *ui
     assert(trap);
     
     v2u pos = start_defer_rect(ui, 1);
-    
     defer_texture(ui, pos, trap->tile_src);
     
     v2u header = get_examine_window_header_pos(ui, pos);
-    defer_text(ui, trap->name.s, header.x, header.y);
+        defer_text(ui, "%s%s", header.x, header.y, get_letter_string(trap->select_letter).s, trap->name.s);
     ui_next_line(ui, &pos, 3);
     
     defer_text(ui, trap->description.s, pos.x, pos.y);
@@ -1169,18 +1198,119 @@ log_add(UI *ui, char *text, ...)
 }
 
 internal void
-render_multiple_pickup_window(Game *game, ItemState *items, Assets *assets, UI *ui)
+render_defer_window_items(DeferWindow *window,
+                          ItemState *items,
+                          Inventory *inventory,
+                          v2u pos,
+                          u32 dungeon_level,
+                          UI *ui)
 {
-    Examine *examine = &game->examine;
+    for(ItemType type = ItemType_None + 1; type < ItemType_Count; ++type)
+    {
+        b32 needs_header = true;
+        
+        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        {
+            Item *item = &items->array[index];
+            
+            if(can_render_defer_window_item(item, type, pos, dungeon_level))
+            {
+                if(!item->select_letter)
+                {
+                    item->select_letter = set_next_letter(ui->select_letters, item, LetterParentType_Item);
+                }
+                
+                render_defer_rect_item(ui, window, item, type, inventory, &needs_header);
+            }
+        }
+    }
+}
+
+internal void
+update_defer_window_entry_items(DeferWindow *window,
+                             ItemState *items,
+                             v2u pos,
+                             u32 dungeon_level,
+                             UI *ui)
+{
+    v2u test_pos = {0};
+    u32 test_entry_count = 0;
+    
+    for(ItemType type = ItemType_None + 1; type < ItemType_Count; ++type)
+    {
+        b32 needs_header = true;
+        
+        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        {
+            Item *item = &items->array[index];
+            
+            if(can_render_defer_window_item(item, type, pos, dungeon_level))
+            {
+                if(needs_header)
+                {
+                    needs_header = false;
+                    add_defer_window_entry(window, ui);
+                }
+                
+                add_defer_window_entry(window, ui);
+            }
+        }
+    }
+}
+
+internal void
+render_multiple_pickup_window(Game *game,
+                              v2u player_pos,
+                              ItemState *items,
+                              Inventory *inventory,
+                              u32 dungeon_level,
+                              Assets *assets,
+                              UI *ui)
+{
     DeferWindow *window = &items->pickup_window;
+    assert(window->view.start);
+    
+    // Set view end
+    if(!window->view.end)
+    {
+        update_defer_window_entry_items(window, items, player_pos, dungeon_level, ui);
+    }
     
     init_defer_window(window, ui);
     ui->defer_rect.w = get_default_defer_window_width();
     
-    defer_text(ui, "Pickup what?", window->pos.x, window->pos.y);
+    // Get select count
+    u32 select_count = 0;
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+    {
+        Item *item = &items->array[index];
+        
+        if(is_item_valid_and_selected(item, dungeon_level))
+        {
+            ++select_count;
+        }
+    }
+    
+    String32 select_text = {0};
+    if(select_count > 1)
+    {
+        sprintf(select_text.s, "(%u items)", select_count);
+    }
+    else if(select_count)
+    {
+        sprintf(select_text.s, "(%u item)", select_count);
+    }
+    
+    defer_text(ui, "Pickup what? %u/%u slots %s", window->pos.x, window->pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, select_text.s);
     ui_next_line(ui, &window->pos, 1);
     
+    render_defer_window_items(window, items, inventory, player_pos, dungeon_level, ui);
     end_defer_rect_window(game, assets, ui, window);
+    
+#if 0
+    ui_print_view("Multiple Pickup", window->view);
+#endif
+    
 }
 
 internal void
@@ -1193,7 +1323,6 @@ render_inventory_window(Game *game,
 {
     Examine *examine = &game->examine;
     DeferWindow *window = &inventory->window;
-    
     assert(window->view.start);
     
     { // Update inventory view if an item was used
@@ -1239,13 +1368,13 @@ render_inventory_window(Game *game,
         }
     }
     
-    // Find and set the end for the inventory view
+    // Set view end
     if(!window->view.end)
     {
         v2u test_pos = {0};
         u32 test_entry_count = 0;
         
-        for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+        for(ItemType type = ItemType_None + 1; type < ItemType_Count; ++type)
         {
             b32 needs_header = true;
             
@@ -1287,11 +1416,10 @@ render_inventory_window(Game *game,
         {
         defer_text(ui, "Inventory: %u/%u slots", window->pos.x, window->pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
         }
-    
     ui_next_line(ui, &window->pos, 1);
     
     // Render inventory items
-            for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
+    for(ItemType type = ItemType_None + 1; type < ItemType_Count; ++type)
             {
         b32 needs_header = true;
         
@@ -1435,8 +1563,9 @@ render_multiple_examine_window(Game *game,
 {
     Examine *examine = &game->examine;
     DeferWindow *window = &items->examine_window;
+    assert(window->view.start);
     
-    // Find and set the end for the multiple examine view
+    // Set view end
     if(!window->view.end)
     {
         v2u test_pos = {0};
@@ -1456,26 +1585,7 @@ render_multiple_examine_window(Game *game,
                 }
             else if(examine_type == ExamineType_Item)
             {
-                for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
-                {
-                    b32 needs_header = true;
-                    
-                    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                    {
-                        Item *item = &items->array[index];
-                        
-                            if(can_render_multiple_examine_item(item, type, examine->pos, dungeon->level))
-                        {
-                            if(needs_header)
-                            {
-                                needs_header = false;
-                                add_defer_window_entry(window, ui);
-                            }
-                            
-                            add_defer_window_entry(window, ui);
-                        }
-                    }
-                }
+                update_defer_window_entry_items(window, items, examine->pos, dungeon->level, ui);
             }
                 else if(examine_type == ExamineType_Trap)
             {
@@ -1507,25 +1617,7 @@ render_multiple_examine_window(Game *game,
         }
         else if(examine_type == ExamineType_Item)
         {
-            for(u32 type = ItemType_Weapon; type < ItemType_Count; ++type)
-            {
-                b32 needs_header = true;
-                
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                {
-                    Item *item = &items->array[index];
-                    
-                        if(can_render_multiple_examine_item(item, type, examine->pos, dungeon->level))
-                    {
-                        if(!item->select_letter)
-                        {
-                            item->select_letter = set_next_letter(ui->select_letters, item, LetterParentType_Item);
-                        }
-                        
-                        render_defer_rect_item(ui, window, item, type, inventory, &needs_header);
-                    }
-                }
-            }
+            render_defer_window_items(window, items, inventory, examine->pos, dungeon->level, ui);
         }
         else if(examine_type == ExamineType_Trap && trap)
         {
@@ -1536,7 +1628,7 @@ render_multiple_examine_window(Game *game,
     end_defer_rect_window(game, assets, ui, window);
     
     #if 0
-    ui_print_view("Multiple Examine", *view);
+    ui_print_view("Multiple Examine", window->view);
 #endif
     
     }
@@ -1844,6 +1936,6 @@ render_ui(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
     {
-        render_multiple_pickup_window(game, items, assets, ui);
+        render_multiple_pickup_window(game, player->pos, items, inventory, dungeon->level, assets, ui);
     }
 }

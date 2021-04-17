@@ -80,7 +80,7 @@ typedef struct
     u32 window_scroll_start_y;
 } UI;
 
-internal void clear_letter(Letter *letters, char search_c);
+internal void clear_letter(Letter *letters, char *clear_c);
 internal void reset_letters(Letter *letters);
 internal void set_view_at_end(View *view);
 internal void set_view_at_start(View *view);

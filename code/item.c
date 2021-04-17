@@ -295,7 +295,7 @@ update_item_adjusting(Input *input,
             else
             {
                 // Clear current letter
-                clear_letter(inventory->item_letters, item->inventory_letter);
+                clear_letter(inventory->item_letters, &item->inventory_letter);
                 
                 // Set new letter
                 Letter *new_letter = get_letter(inventory->item_letters, pressed);
@@ -466,7 +466,8 @@ remove_item_from_inventory(Item *item,
     assert(!is_set(item->flags, ItemFlag_IsCursed));
         
         // Unset the inventory slot pointer for the item
-        b32 found_inventory_index = false;
+    b32 found_inventory_index = false;
+    
         for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
         {
             Item *inventory_item = inventory->slots[index];
@@ -480,7 +481,6 @@ remove_item_from_inventory(Item *item,
                 break;
             }
         }
-        
         assert(found_inventory_index);
         
     unset(item->flags, ItemFlag_IsEquipped | ItemFlag_InInventory);
@@ -926,8 +926,8 @@ drop_item_from_inventory(Game *game,
             if(is_item_consumable(item->type))
             {
             // If the same item exists on the drop position then combine their stacks
-            Item *item_on_pos = get_dungeon_pos_item(items, dungeon->level, player->pos, item->id);
-                if(item_on_pos)
+            Item *pos_item = get_dungeon_pos_item(items, dungeon->level, player->pos, item->id);
+            if(pos_item)
                 {
                     
 #if 0
@@ -935,8 +935,8 @@ drop_item_from_inventory(Game *game,
                     printf("item->c.stack_count: %u\n\n", item->c.stack_count);
 #endif
                 
-                    assert(is_item_consumable(item_on_pos->type));
-                item_on_pos->c.stack_count += item->c.stack_count;
+                assert(is_item_consumable(pos_item->type));
+                pos_item->c.stack_count += item->c.stack_count;
                 
                 // Stacks have been combined, remove the original item
                 removed_from_game = true;
@@ -950,6 +950,8 @@ drop_item_from_inventory(Game *game,
         {
             item->pos = player->pos;
             item->dungeon_level = dungeon->level;
+            clear_letter(inventory->item_letters, &item->inventory_letter);
+            
             remove_item_from_inventory(item, items, inventory, dungeon->level);
         }
         }
@@ -1189,15 +1191,15 @@ get_inventory_item_count(Inventory *inventory)
     }
 
 internal void
-reset_multiple_item_selections(ItemState *items, u32 dungeon_level)
+unset_item_selections(ItemState *items, u32 dungeon_level)
 {
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
+        
         if(is_item_valid(item, dungeon_level))
         {
             unset(item->flags, ItemFlag_IsSelected);
-            item->select_letter = 0;
         }
     }
 }

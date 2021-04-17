@@ -1701,12 +1701,11 @@ update_player_input(Game *game,
             {
                 if(other_windows_are_closed(examine, inventory, ui))
                     {
-                    set_view_at_start(&inventory->window.view);
-                        
-                        set(inventory->flags, InventoryFlag_Open);
                     unset(inventory->flags, InventoryFlag_AskingPlayer);
-                }
-                
+                    
+                        set(inventory->flags, InventoryFlag_Open);
+                    set_view_at_start(&inventory->window.view);
+                        }
                 }
             else if(was_pressed(&input->GameKey_Back))
                 {
@@ -1744,7 +1743,9 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                     {
-                        reset_multiple_item_selections(items, dungeon->level);
+                        unset_item_selections(items, dungeon->level);
+                        
+                        reset_letters(ui->select_letters);
                         unset(inventory->flags, InventoryFlag_MultiplePickup);
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
@@ -2028,20 +2029,20 @@ update_player_input(Game *game,
                                 }
                             }
                             
-                            reset_multiple_item_selections(items, dungeon->level);
+                            unset_item_selections(items, dungeon->level);
                             unset(inventory->flags, InventoryFlag_MultiplePickup);
                             }
                             else if(pressed)
                         {
                             // Select and unselect the item in the pickup window
-                            Letter *letter = get_letter(inventory->item_letters, pressed);
+                            Letter *letter = get_letter(ui->select_letters, pressed);
                             
                             if(letter->parent_type)
                             {
                                 assert(letter->parent_type == LetterParentType_Item);
                                 
                                 toggle(letter->item->flags, ItemFlag_IsSelected);
-                                }
+                            }
                             }
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine) && pressed && !examine->type)
