@@ -47,11 +47,20 @@ get_entity_remains_text(EntityRemains type)
     }
 
 internal void
-force_move_entity(Entity *entity, DungeonTiles tiles, v2u new_pos)
+force_move_entity(Entity *entity, Dungeon *dungeon, v2u pos, u32 dungeon_level)
 {
-    set_dungeon_pos_occupied(tiles, entity->pos, false);
-    entity->pos = entity->new_pos = new_pos;
-    set_dungeon_pos_occupied(tiles, entity->new_pos, true);
+    set_dungeon_pos_occupied(dungeon->tiles, entity->pos, false);
+    
+    entity->pos = pos;
+    entity->new_pos = pos;
+    entity->dungeon_level = dungeon_level;
+    
+    set_dungeon_pos_occupied(dungeon->tiles, entity->pos, true);
+    
+    if(entity->type == EntityType_Player)
+    {
+        update_fov(entity, dungeon);
+    }
 }
 
 internal b32
@@ -64,7 +73,7 @@ is_pos_seen_and_flag_not_set(DungeonTiles tiles, v2u pos, u32 flags, u32 flag)
 }
 
 internal b32
-update_visibility_for_new_items(ItemState *items, Dungeon *dungeon)
+are_new_items_in_player_view(ItemState *items, Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -87,7 +96,7 @@ update_visibility_for_new_items(ItemState *items, Dungeon *dungeon)
 }
 
 internal b32
-update_visibility_for_new_dungeon_traps(Dungeon *dungeon)
+are_new_dungeon_traps_in_player_view(Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -111,7 +120,7 @@ update_visibility_for_new_dungeon_traps(Dungeon *dungeon)
 }
 
 internal b32
-update_visibility_for_new_enemies(EntityState *entities, Dungeon *dungeon)
+are_new_enemies_in_player_view(EntityState *entities, Dungeon *dungeon)
 {
     b32 result = false;
     
@@ -130,34 +139,11 @@ update_visibility_for_new_enemies(EntityState *entities, Dungeon *dungeon)
     return(result);
 }
 
-internal b32
-update_visiblity_for_new_things(EntityState *entities, ItemState *items, Dungeon *dungeon)
-{
-    b32 result = (update_visibility_for_new_items(items, dungeon) ||
-                  update_visibility_for_new_dungeon_traps(dungeon) ||
-                  update_visibility_for_new_enemies(entities, dungeon));
-    
-    return(result);
-}
-
 internal void
 teleport_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
 {
-    for(;;)
-    {
-        v2u pos = get_random_dungeon_pos(random, dungeon->size);
-        
-        if(is_dungeon_pos_traversable_and_not_occupied(dungeon->tiles, pos))
-        {
-            force_move_entity(entity, dungeon->tiles, pos);
-            break;
-        }
-    }
-    
-    if(entity->type == EntityType_Player)
-    {
-    update_fov(entity, dungeon);
-    }
+    v2u pos = get_random_dungeon_traversable_unoccupied_pos(random, dungeon);
+    force_move_entity(entity, dungeon, pos, dungeon->level);
     }
 
 internal u32
@@ -305,13 +291,28 @@ update_player_pathfind(Game *game,
                        Entity *player,
                        EntityState *entities,
                        ItemState *items,
-                        Dungeon *dungeon)
+                       Dungeon *dungeon,
+                       UI *ui)
 {
-    if(update_visiblity_for_new_things(entities, items, dungeon))
+    b32 can_update = true;
+    
+    if(are_new_items_in_player_view(items, dungeon))
     {
-        unset(player->flags, EntityFlag_IsPathfinding);
+        can_update = false;
+        log_add(ui, "%sNew items come into view..", start_color(Color_LightGray));
     }
-    else
+    else if(are_new_dungeon_traps_in_player_view(dungeon))
+    {
+        can_update = false;
+        log_add(ui, "%sNew dungeon traps come into view..", start_color(Color_LightGray));
+    }
+    else if(are_new_enemies_in_player_view(entities, dungeon))
+    {
+        can_update = false;
+        log_add(ui, "%sNew enemies come into view..", start_color(Color_LightGray));
+    }
+    
+    if(can_update)
     {
         player->new_pos = get_pathfind_pos(&entities->player_pathfind_map, dungeon->tiles, player->pos, player->pathfind_target_pos);
         
@@ -349,7 +350,7 @@ update_player_pathfind(Game *game,
         game->should_update = true;
         
 #if 0
-        // Print out the player pathfind trail information
+        // Print player pathfind trail
         for(u32 trail_index = 0; trail_index < MAX_PATHFIND_TRAIL_COUNT; ++trail_index)
         {
             PathfindTrail *trail = &player->p.pathfind_trail[trail_index];
@@ -363,6 +364,10 @@ update_player_pathfind(Game *game,
         printf("\n\n");
 #endif
         
+    }
+    else
+    {
+        unset(player->flags, EntityFlag_IsPathfinding);
     }
     }
 
@@ -393,9 +398,15 @@ update_examine_pos(Examine *examine, Direction move_direction, Dungeon *dungeon)
 internal b32
 is_entity_valid(Entity *entity)
 {
-    b32 result = (entity &&
-                      entity->id &&
-                      entity->type);
+    b32 result = false;
+    
+    if(entity && entity->id)
+    {
+        assert(entity->type);
+        assert(is_dungeon_level_valid(entity->dungeon_level));
+        
+        result = true;
+    }
     
     return(result);
 }
@@ -938,66 +949,64 @@ entity_can_move(Entity *entity, UI *ui, b32 should_log_add)
 }
 
 internal void
-move_entity_between_dungeons(Entity *entity,
-                             v2u new_pos,
+move_entity_between_dungeons(Game *game,
+                             Entity *player,
+                             EntityState *entities,
                              Dungeons *dungeons,
-                             Dungeon *old_dungeon,
-                             Dungeon *new_dungeon)
+                             ItemState *items,
+                             Inventory *inventory,
+                             UI *ui,
+                             v2u pos,
+                             u32 new_dungeon_level)
 {
-    assert(entity);
-    assert(entity->type == EntityType_Player);
+    assert(is_entity_valid_and_player(player));
+    assert(dungeons && is_dungeon_level_valid(new_dungeon_level));
     
-    assert(old_dungeon);
-    assert(new_dungeon);
-    assert(old_dungeon->level != new_dungeon->level);
-    
-    dungeons->current_level = new_dungeon->level;
-    
-    force_move_entity(entity, new_dungeon->tiles, new_pos);
-    entity->dungeon_level = dungeons->current_level;
-    
-    if(entity->type == EntityType_Player)
+    Dungeon *new_dungeon = get_dungeon_from_level(dungeons, new_dungeon_level);
+    if(new_dungeon->level)
     {
-        update_fov(entity, new_dungeon);
-        reset_player_pathfind_trail(entity);
+        dungeons->current_level = new_dungeon_level;
+        force_move_entity(player, new_dungeon, pos, new_dungeon_level);
+        
+            reset_player_pathfind_trail(player);
+    }
+    else
+    {
+        create_dungeon(game, player, entities, dungeons, items, inventory, ui, new_dungeon_level);
     }
 }
 
 internal void
-entity_use_passage(Entity *entity,
+entity_use_passage(Game *game,
+                   Entity *player,
+                   EntityState *entities,
                    Dungeons *dungeons,
-                   Dungeon *dungeon,
-                   DungeonPassage *passage,
-                   UI *ui)
+                   ItemState *items,
+                   Inventory *inventory,
+                   UI *ui,
+                   DungeonPassage *passage)
 {
-    assert(entity->type == EntityType_Player);
+    assert(is_entity_valid_and_player(player));
     
-    u32 new_dungeon_level = dungeon->level;
+    u32 new_dungeon_level = dungeons->current_level;
     if(passage->type == DungeonPassageType_Up)
     {
         --new_dungeon_level;
         
-        log_add(ui, "You go up the passage..");
+        log_add(ui, "%sYou go up the passage..", start_color(Color_LightGray));
     }
     else if(passage->type == DungeonPassageType_Down)
     {
         ++new_dungeon_level;
         
-        log_add(ui, "You go down the passage..");
+        log_add(ui, "%sYou go down the passage..", start_color(Color_LightGray));
     }
     
-    assert(new_dungeon_level != dungeon->level);
-    
-    Dungeon *new_dungeon = get_dungeon_from_level(dungeons, new_dungeon_level);
-    move_entity_between_dungeons(entity, passage->dest_pos, dungeons, dungeon, new_dungeon);
+    move_entity_between_dungeons(game, player, entities, dungeons, items, inventory, ui, passage->dest_pos, new_dungeon_level);
     }
 
 internal b32
-move_entity(Random *random,
-            Entity *entity,
-            DungeonTiles tiles,
-            UI *ui,
-            v2u new_pos)
+move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u pos)
 {
     assert(entity->type == EntityType_Player || entity->type == EntityType_Enemy);
     
@@ -1018,7 +1027,7 @@ move_entity(Random *random,
             v2u confused_move_pos = get_direction_pos(entity->pos, confused_direction);
             
             if(confused_direction != entity->new_direction &&
-                       is_dungeon_pos_traversable_and_not_occupied(tiles, confused_move_pos))
+                       is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, confused_move_pos))
             {
                 
 #if 0
@@ -1026,7 +1035,7 @@ move_entity(Random *random,
                 printf("confused_move_pos: %u, %u\n", confused_move_pos.x, confused_move_pos.y);
 #endif
                 
-                new_pos = confused_move_pos;
+                pos = confused_move_pos;
                 
                 if(entity->type == EntityType_Player)
                 {
@@ -1040,8 +1049,8 @@ move_entity(Random *random,
         }
     }
     
-        //printf("Moved entity to pos: %u, %u\n", new_pos.x, new_pos.y);
-        force_move_entity(entity, tiles, new_pos);
+        //printf("Moved entity to pos: %u, %u\n", pos.x, pos.y);
+        force_move_entity(entity, dungeon, pos, dungeon->level);
         
         switch(entity->new_direction)
         {
@@ -1581,7 +1590,7 @@ update_player_input(Game *game,
     
     if(is_set(player->flags, EntityFlag_IsPathfinding))
     {
-        update_player_pathfind(game, player, entities, items, dungeon);
+        update_player_pathfind(game, player, entities, items, dungeon, ui);
     }
     else if(is_set(inventory->flags, InventoryFlag_AskingPlayer))
     {
@@ -1800,7 +1809,7 @@ update_player_input(Game *game,
                                 is_dungeon_pos_tile(dungeon->tiles, player->pos, DungeonTileID_StoneStaircaseDown))
                     {
                         DungeonPassage *used_passage = get_dungeon_pos_passage(&dungeon->passages, player->pos);
-                        entity_use_passage(player, dungeons, dungeon, used_passage, ui);
+                        entity_use_passage(game, player, entities, dungeons, items, inventory, ui, used_passage);
                         
                         game->should_update = true;
                         game->action_time = player->p.turn_action_time * 3.0f;
@@ -1812,7 +1821,7 @@ update_player_input(Game *game,
             {
                 // Start player pathfinding
                 
-                    if(update_visibility_for_new_enemies(entities, dungeon))
+                if(are_new_enemies_in_player_view(entities, dungeon))
                     {
                         log_add(ui, "There are enemies near!");
                     }
@@ -2146,8 +2155,7 @@ UI *ui)
 #if MOONBREATH_SLOW
         if(fkey_active[2])
         {
-            force_move_entity(player, dungeon->tiles, player->new_pos);
-            update_fov(player, dungeon);
+            force_move_entity(player, dungeon, player->new_pos, dungeon->level);
         }
         
         else
@@ -2218,13 +2226,14 @@ UI *ui)
                     if(is_dungeon_pos_water(dungeon->tiles, player->pos))
                     {
                         game->action_time = player->p.turn_action_time * 2.0f;
+                        log_add(ui, "%sYou wade through the water..", start_color(Color_LightGray));
                     }
                     else
                     {
                         game->action_time = player->p.turn_action_time;
                     }
                     
-                    if(move_entity(&game->random, player, dungeon->tiles, ui, player->new_pos))
+                    if(move_entity(&game->random, player, dungeon, ui, player->new_pos))
                     {
                     // TODO(rami): Maybe a specific color for trap trigger messages
                     
@@ -2295,24 +2304,15 @@ UI *ui)
                                 if(!trap->is_shaft_set)
                                 { 
                                     trap->shaft_depth = get_random_number_from_v2u(&game->random, dungeon->spec.shaft_trap_value);
-                                    
-                                    u32 trap_shaft_dungeon_level = dungeons->current_level + trap->shaft_depth;
-                                    assert(trap_shaft_dungeon_level <= MAX_DUNGEON_LEVELS);
-                                    
-                                    Dungeon *shaft_dungeon = get_dungeon_from_level(dungeons, trap_shaft_dungeon_level);
-                                    
-                                    for(;;)
-                                    {
-                                        trap->shaft_destination = get_random_dungeon_pos(&game->random, shaft_dungeon->size);
-                                        if(is_dungeon_pos_traversable_and_not_occupied(shaft_dungeon->tiles, trap->shaft_destination))
-                                        {
-                                            move_entity_between_dungeons(player, trap->shaft_destination, dungeons, dungeon, shaft_dungeon);
-                                            break;
-                                        }
-                                    }
-                                    
-                                    trap->is_shaft_set = true;
-                                    //printf("Set shaft data - Depth: %u - Destination: %u, %u.\n", trap->shaft_depth, trap->shaft_destination.x, trap->shaft_destination.y);
+                                    u32 shaft_dungeon_level = dungeons->current_level + trap->shaft_depth;
+                                        
+                                        Dungeon *shaft_dungeon = get_dungeon_from_level(dungeons, shaft_dungeon_level);
+                                        trap->shaft_dest = get_random_dungeon_traversable_unoccupied_pos(&game->random, shaft_dungeon);
+                                        move_entity_between_dungeons(game, player, entities, dungeons, items, inventory, ui, trap->shaft_dest, shaft_dungeon_level);
+                                        
+                                        trap->is_shaft_set = true;
+                                        
+                                        //printf("Set shaft data - Depth: %u - Destination: %u, %u.\n", trap->shaft_depth, trap->shaft_dest.x, trap->shaft_dest.y);
                                 }
                             } break;
                             
@@ -2320,21 +2320,9 @@ UI *ui)
                             {
                                 log_add(ui, "You hear an odd sound and something appears next to you.");
                                 
-                                // Find summon position
+                                EntityID enemy_id = get_random_enemy_suitable_for_dungeon_level(&game->random, entities->levels, dungeon->level);
                                 v4u summon_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, 2);
-                                v2u summon_pos = {0};
-                                for(;;)
-                                {
-                                    summon_pos = get_random_dungeon_rect_pos(&game->random, summon_rect);
-                                    if(is_dungeon_pos_traversable_and_not_occupied(dungeon->tiles, summon_pos))
-                                    {
-                                        break;
-                                    }
-                                }
-                                
-                                EntityID enemy_id = get_random_enemy_suitable_for_dungeon_level(&game->random,
-                                                                                                    entities->levels,
-                                                                                                    dungeon->level);
+                                    v2u summon_pos = get_random_dungeon_traversable_unoccupied_rect_pos(&game->random, dungeon, summon_rect);
                                 
                                 add_enemy_entity(entities, dungeon, enemy_id, summon_pos.x, summon_pos.y);
                                 
@@ -2390,8 +2378,6 @@ UI *ui)
     {
         Entity *enemy = &entities->array[enemy_index];
         
-        // TODO(rami): Update entity only if the level it is on has been generated (visited
-        // by player)
         if(is_entity_valid_and_enemy(enemy))
         {
             if(game->action_time)
@@ -2446,7 +2432,7 @@ UI *ui)
                                 break;
                             }
                             
-                            v2u pathfind_pos = get_pathfind_pos(&entities->enemy_pathfind_map, dungeon->tiles, enemy->pos, player->pos);
+                        v2u pathfind_pos = get_pathfind_pos(&entities->enemy_pathfind_map, dungeon->tiles, enemy->pos, player->pos);
                             enemy->hit_chance = 30;
                             assert(player->evasion < enemy->hit_chance);
                             
@@ -2528,7 +2514,7 @@ UI *ui)
                                     //printf("Enemy Pathfind: Target %u, %u\n", enemy->pathfind_target.x, enemy->pathfind_target.y);
                                 }
                                 
-                                enemy->new_pos = get_pathfind_pos(&entities->enemy_pathfind_map, dungeon->tiles, enemy->pos, enemy->pathfind_target_pos);
+                            enemy->new_pos = get_pathfind_pos(&entities->enemy_pathfind_map, dungeon->tiles, enemy->pos, enemy->pathfind_target_pos);
                                 //printf("Enemy Pathfind: New Pos %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
                                 
                                 if(is_v2u_equal(enemy->new_pos, enemy->pathfind_target_pos))
@@ -2577,9 +2563,9 @@ UI *ui)
                             enemy->e.saved_pos_for_ghost = enemy->pos;
                         }
                     
-                    if(is_dungeon_pos_traversable_and_not_occupied(dungeon->tiles, enemy->new_pos))
+                    if(is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, enemy->new_pos))
                     {
-                        move_entity(&game->random, enemy, dungeon->tiles, ui, enemy->new_pos);
+                        move_entity(&game->random, enemy, dungeon, ui, enemy->new_pos);
                         }
                         
                     update_entity_status_effects(game, enemy, dungeon, inventory, ui);
@@ -2802,7 +2788,7 @@ add_enemy_entity(EntityState *entities,
             enemy->fov = 8;
             enemy->e.level = entities->levels[id];
             
-            force_move_entity(enemy, dungeon->tiles, enemy->new_pos);
+            force_move_entity(enemy, dungeon, enemy->new_pos, dungeon->level);
             
             #if 0
             StatusEffect status_effect = {0};

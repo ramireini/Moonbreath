@@ -1,4 +1,4 @@
-#define MAX_DUNGEON_LEVELS 10
+#define MAX_DUNGEON_LEVEL 10
 #define MAX_DUNGEON_SIZE 256
 #define MAX_DUNGEON_SIZE_SQUARED (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE)
 
@@ -143,7 +143,9 @@ typedef enum
 typedef enum
 {
     DungeonRandomPosType_Traversable,
+    DungeonRandomPosType_TraversableUnoccupied,
     DungeonRandomPosType_TraversableRect,
+    DungeonRandomPosType_TraversableUnoccupiedRect,
         DungeonRandomPosType_Feature
 } DungeonRandomPosType;
 
@@ -263,7 +265,7 @@ struct DungeonTrap
     // position. The same data is used when you fall down the same shaft.
     b32 is_shaft_set;
     u32 shaft_depth;
-    v2u shaft_destination;
+    v2u shaft_dest;
 };
 
 typedef struct
@@ -376,7 +378,7 @@ typedef struct
 typedef struct
 {
     u32 current_level;
-    Dungeon levels[MAX_DUNGEON_LEVELS];
+    Dungeon levels[MAX_DUNGEON_LEVEL];
 } Dungeons;
 
 internal void dungeon_automaton_room_step(Random *random, DungeonTiles src_tiles, DungeonTiles dest_tiles, v4u rect);
@@ -393,6 +395,7 @@ internal b32 is_dungeon_pos_passage(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile);
 internal b32 is_pos_inside_dungeon(v2u dungeon_size, v2u pos);
 internal b32 is_dungeon_pos_water(DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_pos_traversable_and_unoccupied(DungeonTiles tiles, v2u pos);
 internal b32 can_place_dungeon_feature_on_pos(Dungeon *dungeon, ItemState *items, v2u pos);
 internal v2u get_random_dungeon_pos(Random *random, v2u dungeon_size);
 internal v2u get_random_dungeon_rect_pos(Random *random, v4u rect);

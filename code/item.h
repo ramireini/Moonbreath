@@ -266,8 +266,7 @@ typedef struct
     ConsumableInfo scroll_info[Scroll_Count];
     } ItemState;
 
-// TODO(rami): Might want to give this a spin to see how it works
-// SDL_RenderSetClipRect(SDL_Renderer *renderer, SDL_Rect *rect);
+// TODO(rami): Inventory mouse on entry highlight, mouse entry click
 
 typedef struct
 {

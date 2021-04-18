@@ -1436,34 +1436,7 @@ update_and_render_game(Game *game,
             entities->levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(player);
-            
-            // Create all dungeon levels
-            //for(u32 dungeon_level = 1; dungeon_level <= MAX_DUNGEON_LEVELS; ++dungeon_level)
-                for(u32 dungeon_level = 1; dungeon_level <= 1; ++dungeon_level)
-            {
-                Dungeon *created_dungeon = create_dungeon(game, player, entities, dungeons, items, inventory, ui, dungeon_level);
-                
-                if(dungeon_level == 1)
-                {
-                    dungeons->current_level = dungeon_level;
-                    
-                    // Place Player
-                    DungeonPassage *passage = get_dungeon_passage_from_type(&created_dungeon->passages, DungeonPassageType_Up);
-                    if(passage)
-                    {
-                        move_entity(&game->random, player, created_dungeon->tiles, ui, passage->pos);
-                    }
-                    
-                    player->dungeon_level = dungeon_level;
-                    add_player_starting_item(game, player, items, inventory, ui, dungeon_level, ItemID_Sword, player->pos.x, player->pos.y);
-                    add_player_starting_item(game, player, items, inventory, ui, dungeon_level, ItemID_MightPotion, player->pos.x, player->pos.y);
-                    
-                    update_fov(player, created_dungeon);
-                }
-            }
-            
-            ui->font = &assets->fonts[FontName_DosVga];
-            ui->font_newline = get_font_newline(ui->font->size);
+            create_dungeon(game, player, entities, dungeons, items, inventory, ui, 1);
             
             log_add(ui, "%sWelcome, %s!", start_color(Color_Yellow), player->name);
             log_add(ui, "%sFind and destroy the underworld portal, ", start_color(Color_Yellow));
@@ -1472,6 +1445,7 @@ update_and_render_game(Game *game,
             game->is_set = true;
         }
         
+        Examine *examine = &game->examine;
         Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
         
         #if 0
@@ -1484,7 +1458,7 @@ update_and_render_game(Game *game,
         printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
         #endif
         
-        update_examine_mode(&game->examine, input, player, entities, items, inventory, dungeon, ui);
+        update_examine_mode(examine, input, player, entities, items, inventory, dungeon, ui);
         update_entities(game, input, entities, items, inventory, dungeons, assets, ui);
         update_camera(game, player->pos, dungeon->size);
         
@@ -1495,7 +1469,7 @@ update_and_render_game(Game *game,
         
 #if MOONBREATH_SLOW
         // Render cursor rectangle
-        if(other_windows_are_closed(&game->examine, inventory, ui))
+        if(other_windows_are_closed(examine, inventory, ui))
         {
         // Render cursor rect on mouse tile
         v2u tile_pos =
@@ -1559,7 +1533,7 @@ int main(int argc, char *argv[])
         
         Dungeons *dungeons = push_memory_struct(&game->memory_arena, Dungeons);
         
-        for(u32 index = 0; index < MAX_DUNGEON_LEVELS; ++index)
+        for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
         {
             dungeons->levels[index].tiles.array = push_memory(&game->memory_arena, MAX_DUNGEON_SIZE_SQUARED * sizeof(DungeonTile));
         }
@@ -1725,12 +1699,11 @@ int main(int argc, char *argv[])
                         {
                             if(initialize_assets(game, assets))
                             {
+                                ui->font = &assets->fonts[FontName_DosVga];
+                                ui->font_newline = get_font_newline(ui->font->size);
                                 
-#if 0
-                                u64 seed = time(0);
-#else
+                                //u64 seed = time(0);
                                 u64 seed = 1602811425;
-#endif
                                 printf("Seed: %lu\n\n", seed);
                                 
                                 game->random = set_random_seed(seed);

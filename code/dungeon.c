@@ -38,8 +38,31 @@ get_random_dungeon_pos_with_type(Random *random,
                 {
                     break;
                 }
+        }
+        else if(type == DungeonRandomPosType_TraversableUnoccupied)
+        {
+            result = get_random_dungeon_pos(random, dungeon->size);
+            
+            if(is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, result))
+            {
+                break;
             }
-        else if(type == DungeonRandomPosType_TraversableRect)
+        }
+        else if(type == DungeonRandomPosType_TraversableUnoccupiedRect)
+        {
+            assert(rect.x);
+            assert(rect.y);
+            assert(rect.w);
+            assert(rect.h);
+            
+            result = get_random_dungeon_rect_pos(random, rect);
+            
+            if(is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, result))
+            {
+                break;
+            }
+        }
+            else if(type == DungeonRandomPosType_TraversableRect)
             {
                 assert(rect.x);
                 assert(rect.y);
@@ -75,6 +98,18 @@ get_random_dungeon_pos_with_type(Random *random,
 }
 
 internal v2u
+get_random_dungeon_traversable_unoccupied_pos(Random *random, Dungeon *dungeon)
+{
+    v2u result = get_random_dungeon_pos_with_type(random,
+                                                  dungeon,
+                                                  0,
+                                                  make_v4u(0, 0, 0, 0),
+                                                  DungeonRandomPosType_TraversableUnoccupied);
+    
+    return(result);
+}
+
+internal v2u
 get_random_dungeon_traversable_pos(Random *random, Dungeon *dungeon)
 {
     v2u result = get_random_dungeon_pos_with_type(random,
@@ -91,6 +126,15 @@ get_random_dungeon_traversable_rect_pos(Random *random, Dungeon *dungeon, v4u re
 {
     v2u result = get_random_dungeon_pos_with_type(random, dungeon, 0, rect,
                                                       DungeonRandomPosType_TraversableRect);
+    
+    return(result);
+}
+
+internal v2u
+get_random_dungeon_traversable_unoccupied_rect_pos(Random *random, Dungeon *dungeon, v4u rect)
+{
+    v2u result = get_random_dungeon_pos_with_type(random, dungeon, 0, rect,
+                                                  DungeonRandomPosType_TraversableUnoccupiedRect);
     
     return(result);
 }
@@ -295,7 +339,7 @@ get_dungeon_automaton_tiles(MemoryArena *memory,
 internal void
 print_all_dungeon_level_occupancies(Dungeons *dungeons)
 {
-    for(u32 index = 0; index < MAX_DUNGEON_LEVELS; ++index)
+    for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
     {
         Dungeon *dungeon = &dungeons->levels[index];
         
@@ -634,15 +678,6 @@ get_dungeon_pos_tile(DungeonTiles tiles, v2u pos)
     return(result);
 }
 
-internal Dungeon *
-get_dungeon_from_level(Dungeons *dungeons, u32 level)
-{
-    assert(level > 0);
-    
-    Dungeon *result = &dungeons->levels[level - 1];
-    return(result);
-}
-
 internal EntityID
 get_random_enemy_suitable_for_dungeon_level(Random *random,
                             u32 *entity_levels,
@@ -659,9 +694,9 @@ get_random_enemy_suitable_for_dungeon_level(Random *random,
         }
         
         u32 level_max = dungeon_level + 1;
-        if(level_max > MAX_DUNGEON_LEVELS)
+        if(level_max > MAX_DUNGEON_LEVEL)
         {
-            level_max = MAX_DUNGEON_LEVELS;
+            level_max = MAX_DUNGEON_LEVEL;
         }
         
         enemy_id = get_random_number(random, ENEMY_START_ID, ENEMY_END_ID);
@@ -969,7 +1004,7 @@ is_dungeon_pos_occupied(DungeonTiles tiles, v2u pos)
 }
 
 internal b32
-is_dungeon_pos_traversable_and_not_occupied(DungeonTiles tiles, v2u pos)
+is_dungeon_pos_traversable_and_unoccupied(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_dungeon_pos_traversable(tiles, pos) && !is_dungeon_pos_occupied(tiles, pos));
     return(result);
@@ -1820,6 +1855,22 @@ create_and_place_dungeon_room(MemoryArena *memory, Random *random, Dungeon *dung
     return(result);
 }
 
+internal b32
+is_dungeon_level_valid(u32 dungeon_level)
+{
+    b32 result = (dungeon_level > 0 && dungeon_level <= MAX_DUNGEON_LEVEL);
+    return(result);
+}
+
+internal Dungeon *
+get_dungeon_from_level(Dungeons *dungeons, u32 dungeon_level)
+{
+    is_dungeon_level_valid(dungeon_level);
+    
+    Dungeon *result = &dungeons->levels[dungeon_level - 1];
+    return(result);
+}
+
 internal Dungeon *
 create_dungeon(Game *game,
                Entity *player,
@@ -1835,11 +1886,13 @@ create_dungeon(Game *game,
     printf("Creating dungeon level %u (index %u)\n", dungeon_level, dungeon_level - 1);
     #endif
     
+    assert(dungeons->current_level != dungeon_level);
+    
     Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeon_level);
     dungeon->level = dungeon_level;
-    
-    assert(dungeon->level <= array_count(dungeons->levels));
     assert(dungeon->tiles.array);
+    
+    dungeons->current_level = dungeon_level;
     
     Random *random = &game->random;
     DungeonRooms *rooms = &dungeon->rooms;
@@ -1997,14 +2050,16 @@ create_dungeon(Game *game,
     {
         for(u32 x = 0; x < dungeon->size.w; ++x)
         {
-            if(!x || x == (dungeon->size.w - 1) ||
-                   !y || y == (dungeon->size.h - 1))
+            v2u pos = {x, y};
+            
+            if(!pos.x || pos.x == (dungeon->size.w - 1) ||
+                   !pos.y || pos.y == (dungeon->size.h - 1))
             {
-                set_dungeon_pos_wall(random, dungeon->tiles, make_v2u(x, y));
+                set_dungeon_pos_wall(random, dungeon->tiles, pos);
             }
             else
             {
-                set_dungeon_pos_floor(random, dungeon->tiles, make_v2u(x, y));
+                set_dungeon_pos_floor(random, dungeon->tiles, pos);
             }
         }
     }
@@ -2016,10 +2071,9 @@ create_dungeon(Game *game,
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(11, 16), DungeonTileID_Water1);
     #endif
     
-    move_entity(random, player, dungeon->tiles, ui, make_v2u(24, 2));
-    //move_entity(random, player, dungeon->tiles, ui, make_v2u(11, 1));
+    move_entity(random, player, dungeon, ui, make_v2u(20, 1));
     
-    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 20, 2);
+    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 25, 4);
     //add_enemy_entity(entities, dungeon, EntityID_Rat, 12, 15);
     
     //add_enemy_entity(entities, dungeon, EntityID_Python, 7, 1);
@@ -2544,6 +2598,18 @@ create_dungeon(Game *game,
                 set_dungeon_pos_tile(dungeon->tiles, down_passage.pos, DungeonTileID_StoneStaircaseDown);
                 add_dungeon_passage(&dungeon->passages, down_passage);
     }
+    #endif
+    
+#if 1
+    // Place Player
+    
+    DungeonPassage *passage = get_dungeon_passage_from_type(passages, DungeonPassageType_Up);
+    assert(passages);
+    
+    move_entity(&game->random, player, dungeon, ui, passage->pos);
+    
+    add_player_starting_item(game, player, items, inventory, ui, dungeon_level, ItemID_Sword, player->pos.x, player->pos.y);
+    add_player_starting_item(game, player, items, inventory, ui, dungeon_level, ItemID_MightPotion, player->pos.x, player->pos.y);
     #endif
     
 #if 0

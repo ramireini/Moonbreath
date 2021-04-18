@@ -318,7 +318,7 @@ update_and_render_debug_state(Game *game,
                 tree->move_rect.y,
                 get_text_width(font, text.s),
                 font->size
-            };
+                    };
                     
                     // This offsets text to the right of move_rect
             if(is_var_group(var->type) &&
@@ -327,6 +327,15 @@ update_and_render_debug_state(Game *game,
                 text_rect.x += 24;
                         text_rect.y -= (text_rect.h / 2) - (tree->rect_size / 2);
             }
+                    
+                    v2u text_background_offset = {6, 1};
+                    v4u background_rect =
+                    {
+                        text_rect.x - text_background_offset.x,
+                        text_rect.y - text_background_offset.y,
+                        text_rect.w + (text_background_offset.x * 1.5f),
+                        text_rect.h + (text_background_offset.y * 1.5f)
+                    };
                     
             // Set interaction
             if(is_pos_inside_rect(tree->move_rect, input->mouse_pos))
@@ -343,7 +352,7 @@ update_and_render_debug_state(Game *game,
                         
                         delete_color = tree->delete_color.active;
                     }
-            else if(is_pos_inside_rect(text_rect, input->mouse_pos))
+            else if(is_pos_inside_rect(background_rect, input->mouse_pos))
             {
                 debug->hot.var = var;
                 
@@ -361,14 +370,6 @@ update_and_render_debug_state(Game *game,
             if(is_var_group(var->type))
             {
                         // Render text background
-                        v2u text_background_offset = {6, 1};
-                        v4u background_rect =
-                        {
-                            text_rect.x - text_background_offset.x,
-                            text_rect.y - text_background_offset.y,
-                            text_rect.w + (text_background_offset.x * 1.5f),
-                            text_rect.h + (text_background_offset.y * 1.5f)
-                        };
                         render_fill_rect(game, background_rect, background_color);
                         
                         if(is_first_group)
@@ -509,7 +510,6 @@ update_and_render_debug_state(Game *game,
                     add_debug_variable(new_tree, "Dungeon Level", entity->dungeon_level, DebugVariableType_U32);
                     add_debug_variable(new_tree, "New Pos", entity->new_pos, DebugVariableType_V2U);
                     add_debug_variable(new_tree, "Pos", entity->pos, DebugVariableType_V2U);
-                    add_debug_enum(new_tree, "New Direction", entity->new_direction, get_direction_string);
                     
                     add_debug_newline(debug, new_tree);
                     
