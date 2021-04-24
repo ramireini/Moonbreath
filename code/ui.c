@@ -1,5 +1,145 @@
+internal void
+ui_next_line(v2u *pos, u32 multiplier, UI *ui)
+{
+    pos->y += (ui->font_newline * multiplier);
+}
+
+internal void
+update_defer_rect_width(u32 start_x, char *text, UI *ui)
+{
+    assert(text);
+    assert(ui);
+    
+    u32 width = start_x + get_text_width(ui->font, text);
+    if(width > ui->defer_rect.w)
+    {
+        ui->defer_rect.w = width + ui->font_newline;
+    }
+}
+
+internal void
+defer_text(char *text, v2u *pos, u32 next_line_multiplier, UI *ui, ...)
+{
+    assert(ui);
+    assert(text);
+    assert(pos);
+    
+    ui_next_line(pos, next_line_multiplier, ui);
+    
+    String256 text_format = {0};
+    
+    va_list arg_list;
+    va_start(arg_list, ui);
+    vsnprintf(text_format.s, sizeof(text_format), text, arg_list);
+    va_end(arg_list);
+    
+    update_defer_rect_width(pos->x, text_format.s, ui);
+    
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
+    {
+        Defer *defer = &ui->defers[index];
+        
+        if(!defer->type)
+        {
+            defer->type = DeferType_Text;
+            strcpy(defer->text.s, text_format.s);
+            defer->pos = *pos;
+            
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+defer_tile(v2u pos, v4u tile_src, UI *ui)
+{
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
+    {
+        Defer *defer = &ui->defers[index];
+        
+        if(!defer->type)
+        {
+            defer->type = DeferType_Tile;
+            defer->pos = pos;
+            defer->tile_src = tile_src;
+            
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+defer_fill_rect(u32 x, u32 y, u32 w, u32 h, Color color, UI *ui)
+{
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
+    {
+        Defer *defer = &ui->defers[index];
+        
+        if(!defer->type)
+        {
+            defer->type = DeferType_FillRect;
+            defer->fill_rect = make_v4u(x, y, w, h);
+            defer->fill_rect_color = color;
+            
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+render_defers(Game *game, Texture tileset, UI *ui)
+{
+    for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
+    {
+        Defer *defer = &ui->defers[index];
+        
+        v2u actual_defer_pos =
+        {
+            defer->pos.x + ui->defer_rect.x,
+            defer->pos.y + ui->defer_rect.y
+        };
+        
+        if(defer->type == DeferType_Text)
+        {
+            render_text(game, defer->text.s, actual_defer_pos.x, actual_defer_pos.y, ui->font, 0);
+        }
+        else if(defer->type == DeferType_Tile)
+        {
+            v4u tile_dest =
+            {
+                actual_defer_pos.x,
+                actual_defer_pos.y,
+                32,
+                32
+            };
+            
+            SDL_RenderCopy(game->renderer,
+                           tileset.tex,
+                           (SDL_Rect *)&defer->tile_src,
+                           (SDL_Rect *)&tile_dest);
+        }
+        else if(defer->type == DeferType_FillRect)
+        {
+            set_render_color(game, Color_DarkGray);
+            
+            defer->fill_rect.x + ui->defer_rect.x;
+            defer->fill_rect.y + ui->defer_rect.y;
+            render_fill_rect(game, defer->fill_rect, defer->fill_rect_color);
+        }
+    }
+    
+    zero_struct(ui->defer_rect);
+    zero_array(ui->defers, MAX_DEFER_COUNT);
+}
+
 internal v2u
-get_header_pos(UI *ui, u32 y_multiplier)
+get_header_pos(u32 y_multiplier, UI *ui)
 {
     v2u result =
     {
@@ -11,9 +151,9 @@ get_header_pos(UI *ui, u32 y_multiplier)
 }
 
 internal v2u
-start_defer_rect(UI *ui, u32 y_multiplier)
+start_defer_rect(u32 y_multiplier, UI *ui)
 {
-    v2u result = get_header_pos(ui, y_multiplier);
+    v2u result = get_header_pos(y_multiplier, ui);
     zero_struct(ui->defer_rect);
     
     return(result);
@@ -23,7 +163,7 @@ internal void
 init_defer_window(DeferWindow *window, UI *ui)
 {
     window->entry_count = 0;
-    window->pos = start_defer_rect(ui, 2);
+    window->pos = start_defer_rect(2, ui);
 }
 
 internal v2u
@@ -47,7 +187,7 @@ render_window_tile(v4u tile_src, v2u pos, UI *ui)
         pos.y
     };
     
-    defer_texture(ui, result, tile_src);
+    defer_tile(result, tile_src, ui);
     
     return(result);
 }
@@ -61,28 +201,28 @@ render_window_separator(v4u rect, v2u pos, UI *ui)
         pos.y + (ui->font_newline / 2)
     };
     
-    defer_fill_rect(ui,
-                    result.x,
+    defer_fill_rect(result.x,
                     result.y - 4,
                     rect.w - (result.x * 2),
                     1,
-                    Color_WindowAccent);
+                        Color_WindowAccent,
+                        ui);
     
     return(result);
 }
 
 internal void
-render_item_type_header(UI *ui, v4u rect, v2u pos, ItemType type)
+render_item_type_header(v4u rect, v2u pos, ItemType type, UI *ui)
 {
     v2u header_pos = render_window_separator(rect, pos, ui);
     
     switch(type)
     {
-        case ItemType_Weapon: defer_text(ui, "Weapons", header_pos.x, header_pos.y); break;
-        case ItemType_Armor: defer_text(ui, "Armors", header_pos.x, header_pos.y); break;
-        case ItemType_Potion: defer_text(ui, "Potions", header_pos.x, header_pos.y); break;
-        case ItemType_Scroll: defer_text(ui, "Scrolls", header_pos.x, header_pos.y); break;
-        case ItemType_Ration: defer_text(ui, "Rations", header_pos.x, header_pos.y); break;
+        case ItemType_Weapon: defer_text("Weapons", &header_pos, 0, ui); break;
+        case ItemType_Armor: defer_text("Armors", &header_pos, 0, ui); break;
+        case ItemType_Potion: defer_text("Potions", &header_pos, 0, ui); break;
+        case ItemType_Scroll: defer_text("Scrolls", &header_pos, 0, ui); break;
+        case ItemType_Ration: defer_text("Rations", &header_pos, 0, ui); break;
         
         invalid_default_case;
     }
@@ -109,7 +249,7 @@ render_defer_rect_item(UI *ui,
         
         if(is_entry_in_view(window->view, window->entry_count))
         {
-            render_item_type_header(ui, ui->defer_rect, window->pos, type);
+            render_item_type_header(ui->defer_rect, window->pos, type, ui);
             next_defer_rect_line(&window->pos, ui);
         }
     }
@@ -128,26 +268,26 @@ render_defer_rect_item(UI *ui,
         {
             if(is_set(item->flags, ItemFlag_IsIdentified))
             {
-                defer_text(ui, "%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->name.s, get_item_stack_string(item).s, mark.s);
+                defer_text("%s%s%s%s", &name_pos, 0, ui, letter.s, item->name.s, get_item_stack_string(item).s, mark.s);
             }
             else
             {
-                defer_text(ui, "%s%s%s%s%s", name_pos.x, name_pos.y, letter.s, item->c.depiction.s, get_item_id_text(item->id), get_item_stack_string(item).s, mark.s);
+                defer_text("%s%s%s%s%s", &name_pos, 0, ui, letter.s, item->c.depiction.s, get_item_id_text(item->id), get_item_stack_string(item).s, mark.s);
             }
         }
         else
         {
             if(is_set(item->flags, ItemFlag_IsIdentified))
             {
-                String16 equipped_string = {0};
+                String32 equipped_string = {0};
                 
                 if(is_set(item->flags, ItemFlag_IsEquipped))
                 {
                     sprintf(equipped_string.s, " (equipped)");
                 }
                 
-                defer_text(ui, "%s%s%s%s%s%s",
-                           name_pos.x, name_pos.y,
+                defer_text("%s%s%s%s%s%s",
+                               &name_pos, 0, ui,
                            get_item_status_color(item),
                            letter.s,
                            get_item_status_prefix(item),
@@ -157,7 +297,7 @@ render_defer_rect_item(UI *ui,
             }
             else
             {
-                defer_text(ui, "%s%s%s", name_pos.x, name_pos.y, letter.s, get_item_id_text(item->id), mark.s);
+                defer_text("%s%s%s", &name_pos, 0, ui, letter.s, get_item_id_text(item->id), mark.s);
             }
         }
         
@@ -243,13 +383,6 @@ reset_letters(Letter *letters)
             
             switch(letter->parent_type)
             {
-                case LetterParentType_Entity:
-                {
-                    assert(letter->entity->select_letter);
-                    
-                    letter->entity->select_letter = 0;
-                } break;
-                
                 case LetterParentType_Item:
                 {
                     assert(letter->item->select_letter);
@@ -257,7 +390,21 @@ reset_letters(Letter *letters)
                     letter->item->select_letter = 0;
                 } break;
                 
-                case LetterParentType_Trap:
+                case LetterParentType_Spell:
+                {
+                    assert(letter->spell->select_letter);
+                    
+                    letter->spell->select_letter = 0;
+                } break;
+                
+                case LetterParentType_Entity:
+                {
+                    assert(letter->entity->select_letter);
+                    
+                    letter->entity->select_letter = 0;
+                } break;
+                
+                case LetterParentType_DungeonTrap:
                 {
                     assert(letter->trap->select_letter);
                     
@@ -348,9 +495,10 @@ set_letter(Letter *letters, Letter *letter, void *parent, LetterParentType paren
     
     switch(letter->parent_type)
     {
-        case LetterParentType_Entity: letter->entity = parent; break;
         case LetterParentType_Item: letter->item = parent; break;
-        case LetterParentType_Trap: letter->trap = parent; break;
+        case LetterParentType_Spell: letter->spell = parent; break;
+        case LetterParentType_Entity: letter->entity = parent; break;
+        case LetterParentType_DungeonTrap: letter->trap = parent; break;
         
         invalid_default_case;
     }
@@ -359,7 +507,7 @@ set_letter(Letter *letters, Letter *letter, void *parent, LetterParentType paren
     }
 
 internal char
-set_next_letter(Letter *letters, void *parent, LetterParentType parent_type)
+get_new_letter(Letter *letters, void *parent, LetterParentType parent_type)
 {
     for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
     {
@@ -383,12 +531,6 @@ ui_print_view(char *name, View view)
     printf("%s - end: %u\n\n", name, view.end);
 }
 
-internal void
-ui_next_line(UI *ui, v2u *pos, u32 multiplier)
-{
-    pos->y += (ui->font_newline * multiplier);
-}
-
 internal b32
 can_render_window_item(Item *item, ItemType type, u32 dungeon_level, v2u pos)
 {
@@ -407,13 +549,13 @@ can_render_window_item(Item *item, ItemType type, u32 dungeon_level, v2u pos)
 internal void
 log_add_okay(UI *ui)
 {
-    log_add(ui, "%sOkay.", start_color(Color_Yellow));
+    log_add("%sOkay.", ui, start_color(Color_Yellow));
 }
 
 internal void
-render_window_option(UI *ui, char *text, v2u *pos)
+render_window_option(char *text, v2u *pos, UI *ui)
 {
-    defer_text(ui, text, pos->x, pos->y);
+    defer_text(text, pos, 0, ui);
     pos->x += get_text_width(ui->font, text) + 10;
     }
 
@@ -423,13 +565,6 @@ get_centering_offset(u32 total_size, u32 part_size)
     assert(total_size > part_size);
     
     u32 result = (total_size - part_size) / 2;
-    return(result);
-}
-
-internal u32
-get_ui_padding()
-{
-    u32 result = 10;
     return(result);
 }
 
@@ -480,7 +615,7 @@ item_fits_using_item_type(ItemUseType type, Item *item)
 }
 
 internal v2u
-get_examine_window_header_pos(UI *ui, v2u pos)
+get_examine_window_header_pos(v2u pos, UI *ui)
 {
     v2u result = pos;
     
@@ -585,7 +720,7 @@ render_scrollbar_on_rect(Game *game, UI *ui, v4u rect, View *view)
     
     if(view && is_view_scrolling(*view, view->count))
     {
-        u32 rect_gutter_x = rect.x + rect.w - get_ui_padding();
+        u32 rect_gutter_x = rect.x + rect.w - 10;
         
         v4u gutter = {0};
         gutter.x = rect_gutter_x;
@@ -647,22 +782,23 @@ render_centered_rect(Game *game, Assets *assets, v4u *rect)
 }
 
 internal void
-end_defer_rect(Game *game, Assets *assets, UI *ui, View *view, v2u pos)
+end_defer_rect(Game *game, Assets *assets, View *view, v2u pos, u32 next_line_multiplier, UI *ui)
 {
+    ui_next_line(&pos, next_line_multiplier, ui);
+    
     ui->defer_rect.h = pos.y;
     
     render_centered_rect(game, assets, &ui->defer_rect);
     render_scrollbar_on_rect(game, ui, ui->defer_rect, view);
     
-    render_defer(game, ui, assets->tileset);
+    render_defers(game, assets->tileset, ui);
 }
 
 internal void
-end_defer_rect_window(Game *game, Assets *assets, UI *ui, DeferWindow *window)
+end_defer_rect_window(Game *game, Assets *assets, DeferWindow *window, UI *ui)
 {
     window->view.count = window->entry_count;
-    ui_next_line(ui, &window->pos, 1);
-    end_defer_rect(game, assets, ui, &window->view, window->pos);
+    end_defer_rect(game, assets, &window->view, window->pos, 1, ui);
 }
 
 internal void
@@ -670,38 +806,26 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
 {
     assert(is_entity_valid_and_enemy(entity));
     
-    v2u pos = start_defer_rect(ui, 1);
+    v2u pos = start_defer_rect(1, ui);
     
     // Render entity stats
-    v2u name = get_examine_window_header_pos(ui, pos);
+    v2u name_pos = get_examine_window_header_pos(pos, ui);
     
     if(is_set(entity->flags, EntityFlag_IsInvisible))
     {
-        defer_texture(ui, pos, get_dungeon_tileset_rect(DungeonTileID_EntityUnknown));
+        defer_tile(pos, get_dungeon_tileset_rect(DungeonTileID_EntityInvisible), ui);
         
-        defer_text(ui, "Something", name.x, name.y);
-        ui_next_line(ui, &pos, 2);
-        
-        ui_next_line(ui, &pos, 1);
-        defer_text(ui, "An unknown being.", pos.x, pos.y);
-        
-        ui_next_line(ui, &pos, 2);
+        defer_text("Something", &name_pos, 0, ui);
+        defer_text("An unknown being.", &pos, 3, ui);
     }
     else
     {
-        defer_texture(ui, pos, entity->tile_src);
+        defer_tile(pos, entity->tile_src, ui);
         
-        defer_text(ui, "%s", name.x, name.y, entity->name.s);
-        ui_next_line(ui, &pos, 2);
-        
-        ui_next_line(ui, &pos, 1);
-        defer_text(ui, "Max HP: %u", pos.x, pos.y, entity->max_hp);
-        
-        ui_next_line(ui, &pos, 1);
-        defer_text(ui, "Damage: %u", pos.x, pos.y, entity->e.damage);
-        
-        ui_next_line(ui, &pos, 1);
-        defer_text(ui, "Defence: %u", pos.x, pos.y, entity->defence);
+        defer_text("%s", &name_pos, 0, ui, entity->name.s);
+        defer_text("Max HP: %u", &pos, 2, ui, entity->max_hp);
+        defer_text("Damage: %u", &pos, 1, ui, entity->e.damage);
+        defer_text("Defence: %u", &pos, 1, ui, entity->defence);
         
         char evasion_text[24] = {0};
         if(entity->evasion <= 3)
@@ -725,11 +849,8 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
             strcpy(evasion_text, "Very High");
         }
         
-        ui_next_line(ui, &pos, 1);
-        defer_text(ui, "Evasion: %s (%u)", pos.x, pos.y, evasion_text, entity->evasion);
-        
-        ui_next_line(ui, &pos, 1);
-        defer_text(ui, "Speed: %.01f", pos.x, pos.y, entity->action_time);
+        defer_text("Evasion: %s (%u)", &pos, 1, ui, evasion_text, entity->evasion);
+        defer_text("Speed: %.01f", &pos, 1, ui, entity->action_time);
         
         // Find out the longest damage type length and damage type resistance so that
         // we can align text correctly.
@@ -763,6 +884,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         
         // Render entity damage type resistances
         b32 render_prefix_text = true;
+
         for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
         {
             s32 resistance = entity->resistances[damage_type_index];
@@ -770,11 +892,9 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
             {
                 if(render_prefix_text)
                 {
-                    ui_next_line(ui, &pos, 2);
-                    defer_text(ui, "It has the following resistances:", pos.x, pos.y);
-                    
                     render_prefix_text = false;
-                }
+                    defer_text("It has the following resistances:", &pos, 2, ui);
+                    }
                 
                 // This sets the padding after the damage_type_text, we do this so that
                 // the resistance_text_value's start aligned.
@@ -823,129 +943,89 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
                     resistance_value_string.s[padding_length] = ' ';
                 }
                 
-                ui_next_line(ui, &pos, 1);
-                defer_text(ui, "%s: %s%s (%d)",
-                           pos.x, pos.y,
-                           damage_type_text,
-                           damage_type_text_padding.s,
-                           resistance_value_string.s,
-                           resistance);
+                defer_text("%s: %s%s (%d)", &pos, 1, ui, damage_type_text, damage_type_text_padding.s, resistance_value_string.s, resistance);
             }
         }
         
-        // Render entity status effects
-        if(entity_has_any_status_effect(entity))
+        // Render entity statuses
+        b32 render_status_header = true;
+        
+        for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
         {
-            ui_next_line(ui, &pos, 2);
-            defer_text(ui, "It is under the following status effects:", pos.x, pos.y);
+             Status *status = &entity->statuses[index];
             
-            for(u32 index = StatusEffectType_None + 1; index < StatusEffectType_Count; ++index)
+            if(status->type && status->spell)
             {
-                if(entity_has_status_effect(entity, index))
+                if(render_status_header)
                 {
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "%s", pos.x, pos.y, get_status_effect_name(index));
+                    render_status_header = false;
+                    defer_text("It is affected by the following spells:", &pos, 2, ui);
                 }
+                
+                Spell *spell = status->spell;
+                if(!spell->select_letter)
+                {
+                    spell->select_letter = get_new_letter(ui->select_letters, status->spell, LetterParentType_Spell);
+                }
+                
+                defer_text("%s%s", &pos, 1, ui, get_letter_string(spell->select_letter).s, status->name.s);
             }
         }
         
         // Render entity spells
-        char spell_letter = 'a';
-        if(is_set(entity->flags, EntityFlag_UsesMagicAttacks))
+        if(entity->e.spell_count)
         {
-            ui_next_line(ui, &pos, 2);
-            defer_text(ui, "It has the following spells:", pos.x, pos.y);
+            defer_text("It has the following spells:", &pos, 2, ui);
             
             for(u32 spell_index = 0; spell_index < MAX_ENTITY_SPELL_COUNT; ++spell_index)
             {
                 Spell *spell = &entity->e.spells[spell_index];
-                if(spell->id)
+                if(spell->type)
                 {
-                    ui_next_line(ui, &pos, 1);
-                    defer_text(ui, "%s%s", pos.x, pos.y, get_letter_string(spell_letter), get_spell_name(spell->id));
+                    if(!spell->select_letter)
+                    {
+                        spell->select_letter = get_new_letter(ui->select_letters, spell, LetterParentType_Spell);
+                    }
                     
-                    ++spell_letter;
+                    defer_text("%s%s", &pos, 1, ui, get_letter_string(spell->select_letter).s, spell->name.s);
                 }
             }
             
-            ui_next_line(ui, &pos, 2);
-            defer_text(ui, "Press the key shown to read a description.", pos.x, pos.y);
+            defer_text("Press the key next to a spell to view it.", &pos, 2, ui);
         }
-        
-        ui_next_line(ui, &pos, 2);
     }
     
-    end_defer_rect(game, assets, ui, 0, pos);
+    end_defer_rect(game, assets, 0, pos, 2, ui);
         }
 
 internal void
-render_entity_spell_examine_window(Game *game,
-                                   Entity *entity,
+render_spell_examine_window(Game *game,
                                    Spell *spell,
                                    Assets *assets,
-                                   UI *ui,
-                                   v2u player_pos)
+                            UI *ui,
+                            v2u caster_pos,
+                            v2u target_pos)
 {
-    assert(is_entity_valid_and_enemy(entity));
     assert(spell->type);
     
-    v2u pos = start_defer_rect(ui, 1);
+    v2u pos = start_defer_rect(1, ui);
+    defer_text(spell->name.s, &pos, 0, ui);
+    defer_text(spell->description.s, &pos, 2, ui);
     
-    defer_text(ui, get_spell_name(spell->id), pos.x, pos.y);
-    ui_next_line(ui, &pos, 2);
-    
-    defer_text(ui, get_spell_description(spell->id), pos.x, pos.y);
-    ui_next_line(ui, &pos, 2);
-    
-    switch(spell->type)
-    {
-        case SpellType_Offensive:
-        {
-            defer_text(ui, "Damage Type: %s", pos.x, pos.y, get_damage_type_text(spell->damage_type));
-            ui_next_line(ui, &pos, 1);
-            
-            defer_text(ui, "Damage: %u", pos.x, pos.y, spell->value);
-            ui_next_line(ui, &pos, 1);
-        } break;
-        
-        case SpellType_Healing:
-        {
-            defer_text(ui, "Healing: %u", pos.x, pos.y, spell->value);
-            ui_next_line(ui, &pos, 1);
-        } break;
-        
-        case SpellType_Buff:
-        {
-            defer_text(ui, "Increase: %u", pos.x, pos.y, spell->value);
-            ui_next_line(ui, &pos, 1);
-            
-            defer_text(ui, "Duration: %u", pos.x, pos.y, spell->duration);
-            ui_next_line(ui, &pos, 1);
-        } break;
-        
-        invalid_default_case;
-    }
-    
-    char spell_range_text[24] = {0};
+    char spell_range_text[32] = "Spell range is Line of Sight";
     if(spell->range)
     {
-        sprintf(spell_range_text, "Range: %u", spell->range);
-    }
-    else
-    {
-        sprintf(spell_range_text, "Range: Line of sight");
+        sprintf(spell_range_text, "Spell range is %u", spell->range);
     }
     
     char in_spell_range_text[24] = {0};
-    if(in_spell_range(spell->range, entity->pos, player_pos))
+    if(is_entity_in_spell_range(caster_pos, target_pos, spell->range))
     {
         sprintf(in_spell_range_text, "(You are in range)");
     }
     
-    defer_text(ui, "%s %s", pos.x, pos.y, spell_range_text, in_spell_range_text);
-    ui_next_line(ui, &pos, 2);
-    
-    end_defer_rect(game, assets, ui, 0, pos);
+    defer_text("%s %s.", &pos, 1, ui, spell_range_text, in_spell_range_text);
+    end_defer_rect(game, assets, 0, pos, 2, ui);
 }
 
 internal void
@@ -953,22 +1033,21 @@ render_tile_examine_window(Game *game, DungeonTileID tile, Assets *assets, UI *u
 {
     assert(tile);
     
-    v2u pos = start_defer_rect(ui, 1);
+    v2u pos = start_defer_rect(1, ui);
+    defer_tile(pos, get_dungeon_tileset_rect(tile), ui);
     
-    defer_texture(ui, pos, get_dungeon_tileset_rect(tile));
+    v2u header_pos = get_examine_window_header_pos(pos, ui);
+    defer_text("%s", &header_pos, 0, ui, get_dungeon_tile_name(tile));
     
-    v2u header = get_examine_window_header_pos(ui, pos);
-    defer_text(ui, "%s", header.x, header.y, get_dungeon_tile_name(tile));
-    ui_next_line(ui, &pos, 3);
-    
-    char *text = get_dungeon_tile_info_text(tile);
+    u32 text_multiplier = 3;
+    char *text = get_dungeon_tile_description(tile);
     if(text)
     {
-        defer_text(ui, text, pos.x, pos.y);
-        ui_next_line(ui, &pos, 2);
-    }
+        text_multiplier = 2;
+        defer_text(text, &pos, 3, ui);
+        }
     
-    end_defer_rect(game, assets, ui, 0, pos);
+    end_defer_rect(game, assets, 0, pos, text_multiplier, ui);
     }
 
 internal void
@@ -976,17 +1055,14 @@ render_trap_examine_window(Game *game, DungeonTrap *trap, Assets *assets, UI *ui
 {
     assert(trap);
     
-    v2u pos = start_defer_rect(ui, 1);
-    defer_texture(ui, pos, trap->tile_src);
+    v2u pos = start_defer_rect(1, ui);
+    defer_tile(pos, trap->tile_src, ui);
     
-    v2u header = get_examine_window_header_pos(ui, pos);
-        defer_text(ui, "%s%s", header.x, header.y, get_letter_string(trap->select_letter).s, trap->name.s);
-    ui_next_line(ui, &pos, 3);
+    v2u header_pos = get_examine_window_header_pos(pos, ui);
+    defer_text("%s%s", &header_pos, 0, ui, get_letter_string(trap->select_letter).s, trap->name.s);
+    defer_text(trap->description.s, &pos, 3, ui);
     
-    defer_text(ui, trap->description.s, pos.x, pos.y);
-    ui_next_line(ui, &pos, 2);
-    
-    end_defer_rect(game, assets, ui, 0, pos);
+    end_defer_rect(game, assets, 0, pos, 2, ui);
 }
 
 internal void
@@ -994,14 +1070,14 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
 {
     assert(item);
     
-    v2u pos = start_defer_rect(ui, 1);
+    v2u pos = start_defer_rect(1, ui);
     
     // Render item picture and name
-    defer_texture(ui, pos, item->tile_src);
+    defer_tile(pos, item->tile_src, ui);
     
-    v2u header = get_examine_window_header_pos(ui, pos);
-    defer_text(ui, "%s%s%s%s%s%s",
-               header.x, header.y,
+    v2u header_pos = get_examine_window_header_pos(pos, ui);
+    defer_text("%s%s%s%s%s%s",
+                   &header_pos, 0, ui,
                get_item_status_color(item),
                    get_item_letter_string(item).s,
                get_item_status_prefix(item),
@@ -1009,125 +1085,104 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
                    get_item_stack_string(item).s,
                get_item_mark_string(item).s);
     
-    ui_next_line(ui, &pos, 2);
-    
-    if(is_set(item->flags, ItemFlag_IsIdentified))
-    {
         if(item->type == ItemType_Weapon)
         {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Damage: %d", pos.x, pos.y, item->w.damage + item->enchantment_level);
-            
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Accuracy: %d", pos.x, pos.y, item->w.accuracy + item->enchantment_level);
-            
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Attack Speed: %.1f", pos.x, pos.y, item->w.speed);
+            if(is_set(item->flags, ItemFlag_IsIdentified))
+            {
+                defer_text("Damage: %d", &pos, 3, ui, item->w.damage + item->enchantment_level);
+                defer_text("Accuracy: %d", &pos, 1, ui, item->w.accuracy + item->enchantment_level);
+                defer_text("Attack Speed: %.1f", &pos, 1, ui, item->w.speed);
+            }
+            else
+            {
+                defer_text("Base Damage: %u", &pos, 3, ui, item->w.damage);
+                defer_text("Base Accuracy: %d", &pos, 1, ui, item->w.accuracy);
+                defer_text("Base Attack Speed: %.1f", &pos, 1, ui, item->w.speed);
+            }
         }
         else if(item->type == ItemType_Armor)
         {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Defence: %d", pos.x, pos.y, item->a.defence + item->enchantment_level);
-            
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Weight: %d", pos.x, pos.y, item->a.weight);
+            if(is_set(item->flags, ItemFlag_IsIdentified))
+            {
+                defer_text("Defence: %d", &pos, 3, ui, item->a.defence + item->enchantment_level);
+                defer_text("Weight: %d", &pos, 1, ui, item->a.weight);
+            }
+            else
+            {
+                defer_text("Base Defence: %d", &pos, 3, ui, item->a.defence);
+                defer_text("Base Weight: %d", &pos, 1, ui, item->a.weight);
+            }
         }
         else if(is_item_consumable(item->type))
         {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "%s", pos.x, pos.y, item->description.s);
-        }
-    }
-    else
-    {
-        if(item->type == ItemType_Weapon)
-        {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Base Damage: %u", pos.x, pos.y, item->w.damage);
-            
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Base Accuracy: %d", pos.x, pos.y, item->w.accuracy);
-            
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Base Attack Speed: %.1f", pos.x, pos.y, item->w.speed);
-        }
-        else if(item->type == ItemType_Armor)
-        {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Base Defence: %d", pos.x, pos.y, item->a.defence);
-            
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Base Weight: %d", pos.x, pos.y, item->a.weight);
-        }
-        else if(item->type == ItemType_Potion)
-        {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Consuming potions will bestow you with different effects.", pos.x, pos.y);
-            
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Some of these effects will be helpful, while others harmful.", pos.x, pos.y);
-        }
-        else if(item->type == ItemType_Scroll)
-        {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "Reading scrolls will bring out different magical effects.", pos.x, pos.y);
-        }
-    }
+            if(is_set(item->flags, ItemFlag_IsIdentified))
+            {
+                defer_text("%s", &pos, 3, ui, item->description.s);
+            }
+            else
+            {
+                if(item->type == ItemType_Potion)
+                {
+                    defer_text("Consuming potions will bestow you with different effects.", &pos, 3, ui);
+                    defer_text("Some of these effects will be helpful, while others harmful.", &pos, 1, ui);
+                }
+                else if(item->type == ItemType_Scroll)
+                {
+                    defer_text("Reading scrolls will bring out different magical effects.", &pos, 3, ui);
+                }
+            }
+            }
     
-    ui_next_line(ui, &pos, 2);
+    ui_next_line(&pos, 2, ui);
     
+    u32 text_multiplier = 0;
     if(is_set(item->flags, ItemFlag_IsIdentified | ItemFlag_IsCursed))
     {
-        defer_text(ui, "It is a cursed item.", pos.x, pos.y);
-        ui_next_line(ui, &pos, 1);
+        text_multiplier = 1;
+        defer_text("It is a cursed item.", &pos, 0, ui);
     }
     
     if(is_item_equipment(item->type))
     {
-        defer_text(ui, "It is of %s rarity.", pos.x, pos.y, get_item_rarity_text(item->rarity));
+        defer_text("It is of %s rarity.", &pos, text_multiplier, ui, get_item_rarity_text(item->rarity));
         
             if(item->type == ItemType_Weapon)
         {
-            ui_next_line(ui, &pos, 1);
-            defer_text(ui, "It is a %s weapon.", pos.x, pos.y, get_item_handedness_text(item->w.handedness));
+            defer_text("It is a %s weapon.", &pos, 1, ui, get_item_handedness_text(item->w.handedness));
         }
-        
-        ui_next_line(ui, &pos, 2);
     }
     
     if(show_inventory_options)
     {
-        u32 padding = get_ui_padding();
-        render_window_option(ui, "(a)djust", &pos);
+        ui_next_line(&pos, 2, ui);
+        render_window_option("(a)djust", &pos, ui);
         
         if(is_item_equipment(item->type))
         {
             if(is_set(item->flags, ItemFlag_IsEquipped))
             {
-                render_window_option(ui, "(u)nequip", &pos);
+                render_window_option("(u)nequip", &pos, ui);
             }
             else
             {
-                render_window_option(ui, "(e)quip", &pos);
+                render_window_option("(e)quip", &pos, ui);
             }
         }
         else if(item->type == ItemType_Potion ||
                 item->type == ItemType_Ration)
         {
-            render_window_option(ui, "(c)onsume", &pos);
+            render_window_option("(c)onsume", &pos, ui);
         }
         else if(item->type == ItemType_Scroll)
         {
-            render_window_option(ui, "(r)ead", &pos);
+            render_window_option("(r)ead", &pos, ui);
         }
         
-        render_window_option(ui, "(d)rop", &pos);
-        render_window_option(ui, "(m)ark", &pos);
-        
-        ui_next_line(ui, &pos, 2);
+        render_window_option("(d)rop", &pos, ui);
+        render_window_option("(m)ark", &pos, ui);
     }
     
-    end_defer_rect(game, assets, ui, 0, pos);
+    end_defer_rect(game, assets, 0, pos, 2, ui);
 }
 
 internal b32
@@ -1155,12 +1210,12 @@ update_log_view(View *view, u32 index)
 }
 
 internal void
-log_add(UI *ui, char *text, ...)
+log_add(char *text, UI *ui, ...)
 {
     String128 text_format = {0};
     
     va_list arg_list;
-    va_start(arg_list, text);
+    va_start(arg_list, ui);
     vsnprintf(text_format.s, sizeof(text_format), text, arg_list);
     va_end(arg_list);
     
@@ -1174,7 +1229,7 @@ log_add(UI *ui, char *text, ...)
         if(!message->is_set)
         {
             message->is_set = true;
-            strcpy(message->string, text_format.s);
+            strcpy(message->string.s, text_format.s);
             
             return;
         }
@@ -1189,12 +1244,12 @@ log_add(UI *ui, char *text, ...)
         assert(current_message->is_set);
         assert(last_message->is_set);
         
-        strcpy(last_message->string, current_message->string);
+        strcpy(last_message->string.s, current_message->string.s);
     }
     
     // Set the new log message to the bottom
     LogMessage *new_message = &ui->log_messages[MAX_LOG_MESSAGE_COUNT - 1];
-    strcpy(new_message->string, text_format.s);
+    strcpy(new_message->string.s, text_format.s);
 }
 
 internal void
@@ -1205,6 +1260,8 @@ render_defer_window_items(DeferWindow *window,
                           u32 dungeon_level,
                           UI *ui)
 {
+    ui_next_line(&window->pos, 1, ui);
+    
     for(ItemType type = ItemType_None + 1; type < ItemType_Count; ++type)
     {
         b32 needs_header = true;
@@ -1217,7 +1274,7 @@ render_defer_window_items(DeferWindow *window,
             {
                 if(!item->select_letter)
                 {
-                    item->select_letter = set_next_letter(ui->select_letters, item, LetterParentType_Item);
+                    item->select_letter = get_new_letter(ui->select_letters, item, LetterParentType_Item);
                 }
                 
                 render_defer_rect_item(ui, window, item, type, inventory, &needs_header);
@@ -1301,11 +1358,9 @@ render_multiple_pickup_window(Game *game,
         sprintf(select_text.s, "(%u item)", select_count);
     }
     
-    defer_text(ui, "Pickup what? %u/%u slots %s", window->pos.x, window->pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, select_text.s);
-    ui_next_line(ui, &window->pos, 1);
-    
+    defer_text("Pickup what? %u/%u slots %s", &window->pos, 0, ui, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, select_text.s);
     render_defer_window_items(window, items, inventory, player_pos, dungeon_level, ui);
-    end_defer_rect_window(game, assets, ui, window);
+    end_defer_rect_window(game, assets, window, ui);
     
 #if 0
     ui_print_view("Multiple Pickup", window->view);
@@ -1401,22 +1456,26 @@ render_inventory_window(Game *game,
     
     // Render inventory header
         if(inventory->item_use_type)
-        {
+    {
+        char *item_use_text = 0;
+        
             switch(inventory->item_use_type)
-            {
-            case ItemUseType_Identify: defer_text(ui, "Identify which item?", window->pos.x, window->pos.y); break;
-            case ItemUseType_EnchantWeapon: defer_text(ui, "Enchant which weapon?", window->pos.x, window->pos.y); break;
-            case ItemUseType_EnchantArmor: defer_text(ui, "Enchant which armor?", window->pos.x, window->pos.y); break;
-            case ItemUseType_Uncurse: defer_text(ui, "Uncurse which item?", window->pos.x, window->pos.y); break;
+        {
+            case ItemUseType_Identify: item_use_text = "Identify which item?"; break;
+            case ItemUseType_EnchantWeapon: item_use_text = "Enchant which weapon?"; break;
+            case ItemUseType_EnchantArmor: item_use_text = "Enchant which armor?"; break;
+            case ItemUseType_Uncurse: item_use_text = "Uncurse which item?"; break;
                 
                 invalid_default_case;
-            }
+        }
+        
+        defer_text(item_use_text, &window->pos, 0, ui);
         }
         else
         {
-        defer_text(ui, "Inventory: %u/%u slots", window->pos.x, window->pos.y, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
+        defer_text("Inventory: %u/%u slots", &window->pos, 0, ui, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
         }
-    ui_next_line(ui, &window->pos, 1);
+    ui_next_line(&window->pos, 1, ui);
     
     // Render inventory items
     for(ItemType type = ItemType_None + 1; type < ItemType_Count; ++type)
@@ -1435,7 +1494,7 @@ render_inventory_window(Game *game,
                 }
             }
     
-    end_defer_rect_window(game, assets, ui, window);
+    end_defer_rect_window(game, assets, window, ui);
     
 #if 0
     ui_print_view("Inventory View", *view);
@@ -1454,7 +1513,7 @@ render_examine_window(Game *game, Assets *assets, UI *ui, v2u player_pos)
         {
             case ExamineType_Item: render_item_examine_window(game, examine->item, assets, ui, false); break;
             case ExamineType_Entity: render_entity_examine_window(game, examine->entity, assets, ui); break;
-            case ExamineType_Spell: render_entity_spell_examine_window(game, examine->entity, examine->spell, assets, ui, player_pos); break;
+            case ExamineType_Spell: render_spell_examine_window(game, examine->spell, assets, ui, examine->entity->pos, player_pos); break;
             case ExamineType_Trap: render_trap_examine_window(game, examine->trap, assets, ui); break;
             case ExamineType_Tile: render_tile_examine_window(game, examine->tile, assets, ui); break;
             
@@ -1487,7 +1546,7 @@ render_defer_window_header_and_body(char *header_name,
     if(is_entry_in_view(window->view, window->entry_count))
     {
         v2u header_pos = render_window_separator(ui->defer_rect, window->pos, ui);
-        defer_text(ui, header_name, header_pos.x, header_pos.y);
+        defer_text(header_name, &header_pos, 0, ui);
         next_defer_rect_line(&window->pos, ui);
     }
     
@@ -1498,7 +1557,7 @@ render_defer_window_header_and_body(char *header_name,
     switch(type)
     {
         case LetterParentType_Entity: entity = parent; break;
-        case LetterParentType_Trap: trap = parent; break;
+        case LetterParentType_DungeonTrap: trap = parent; break;
         
         invalid_default_case;
     }
@@ -1512,7 +1571,7 @@ render_defer_window_header_and_body(char *header_name,
         switch(type)
         {
             case LetterParentType_Entity: picture_pos = render_window_tile(entity->tile_src, window->pos, ui); break;
-            case LetterParentType_Trap: picture_pos = render_window_tile(trap->tile_src, window->pos, ui); break;
+            case LetterParentType_DungeonTrap: picture_pos = render_window_tile(trap->tile_src, window->pos, ui); break;
             
             invalid_default_case;
         }
@@ -1525,15 +1584,15 @@ render_defer_window_header_and_body(char *header_name,
             {
                 if(!entity->select_letter)
                 {
-                    entity->select_letter = set_next_letter(ui->select_letters, parent, type);
+                    entity->select_letter = get_new_letter(ui->select_letters, parent, type);
                 }
             } break;
             
-            case LetterParentType_Trap:
+            case LetterParentType_DungeonTrap:
             {
                 if(!trap->select_letter)
                 {
-                    trap->select_letter = set_next_letter(ui->select_letters, parent, type);
+                    trap->select_letter = get_new_letter(ui->select_letters, parent, type);
                 }
             } break;
             
@@ -1542,8 +1601,8 @@ render_defer_window_header_and_body(char *header_name,
         
         switch(type)
         {
-            case LetterParentType_Entity: defer_text(ui, "%s%s", name_pos.x, name_pos.y, get_letter_string(entity->select_letter).s, entity->name.s); break;
-            case LetterParentType_Trap: defer_text(ui, "%s%s", name_pos.x, name_pos.y, get_letter_string(trap->select_letter).s, trap->name.s); break;
+            case LetterParentType_Entity: defer_text("%s%s", &name_pos, 0, ui, get_letter_string(entity->select_letter).s, entity->name.s); break;
+            case LetterParentType_DungeonTrap: defer_text("%s%s", &name_pos, 0, ui, get_letter_string(trap->select_letter).s, trap->name.s); break;
             
             invalid_default_case;
         };
@@ -1601,9 +1660,7 @@ render_multiple_examine_window(Game *game,
     init_defer_window(window, ui);
     ui->defer_rect.w = get_default_defer_window_width();
     
-    defer_text(ui, "Examine what?", window->pos.x, window->pos.y);
-    ui_next_line(ui, &window->pos, 1);
-    
+    defer_text("Examine what?", &window->pos, 0, ui);
     Entity *entity = items->examine_window_entity;
     DungeonTrap *trap = items->examine_window_trap;
     
@@ -1621,11 +1678,11 @@ render_multiple_examine_window(Game *game,
         }
         else if(examine_type == ExamineType_Trap && trap)
         {
-            render_defer_window_header_and_body("Traps", window, trap, LetterParentType_Trap, ui);
+            render_defer_window_header_and_body("Traps", window, trap, LetterParentType_DungeonTrap, ui);
             }
             }
     
-    end_defer_rect_window(game, assets, ui, window);
+    end_defer_rect_window(game, assets, window, ui);
     
     #if 0
     ui_print_view("Multiple Examine", window->view);
@@ -1767,33 +1824,16 @@ render_ui(Game *game,
         left.y
     };
     
-    { // Left side
-        render_text(game, player->name.s, left.x, left.y, ui->font, 0);
-        
-        ui_next_line(ui, &left, 1);
-        render_text(game, "Health:    %u/%u", left.x, left.y, ui->font, 0, player->hp, player->max_hp);
-        
-        ui_next_line(ui, &left, 1);
-        render_text(game, "Strength:     %u", left.x, left.y, ui->font, 0, player->strength);
-        
-        ui_next_line(ui, &left, 1);
-        render_text(game, "Intelligence: %u", left.x, left.y, ui->font, 0, player->intelligence);
-        
-        ui_next_line(ui, &left, 1);
-        render_text(game, "Dexterity:    %u", left.x, left.y, ui->font, 0, player->dexterity);
-        
-        ui_next_line(ui, &left, 1);
-        render_text(game, "Evasion:      %u", left.x, left.y, ui->font, 0, player->evasion);
-        
-        ui_next_line(ui, &left, 1);
-        render_text(game, "Defence:      %u", left.x, left.y, ui->font, 0, player->defence);
-        
-        ui_next_line(ui, &left, 1);
-        render_text(game, "Weight:       %u", left.x, left.y, ui->font, 0, player->p.weight);
-    }
+    { // Render stats
+        defer_text(player->name.s, &left, 0, ui);
+        defer_text("Health:    %u/%u", &left, 1, ui, player->hp, player->max_hp);
+        defer_text("Strength:     %u", &left, 1, ui, player->strength);
+        defer_text("Intelligence: %u", &left, 1, ui, player->intelligence);
+        defer_text("Dexterity:    %u", &left, 1, ui, player->dexterity);
+        defer_text("Evasion:      %u", &left, 1, ui, player->evasion);
+        defer_text("Defence:      %u", &left, 1, ui, player->defence);
+        defer_text("Weight:       %u", &left, 1, ui, player->p.weight);
     
-    { // Right side
-        
         { // Render healthbar
             right.y += ui->font_newline - 1;
             
@@ -1812,14 +1852,11 @@ render_ui(Game *game,
             }
         }
         
-        ui_next_line(ui, &right, 1);
-        render_text(game, "Time:          %.01f", right.x, right.y, ui->font, 0, game->time);
+        defer_text("Time:          %.01f", &right, 1, ui, game->time);
+        defer_text("Action Time:   %.01f", &right, 1, ui, player->action_time);
+        defer_text("Dungeon Level: %u", &right, 1, ui, dungeon->level);
         
-        ui_next_line(ui, &right, 1);
-        render_text(game, "Action Time:   %.01f", right.x, right.y, ui->font, 0, player->action_time);
-        
-        ui_next_line(ui, &right, 1);
-        render_text(game, "Dungeon Level: %u", right.x, right.y, ui->font, 0, dungeon->level);
+    render_defers(game, assets->tileset, ui);
     }
     
     // Render Short Log
@@ -1838,8 +1875,8 @@ render_ui(Game *game,
         LogMessage *message = &ui->log_messages[index];
         if(message->is_set)
         {
-            render_text(game, message->string, short_log_pos.x, short_log_pos.y, ui->font, 0);
-            ui_next_line(ui, &short_log_pos, 1);
+            render_text(game, message->string.s, short_log_pos.x, short_log_pos.y, ui->font, 0);
+            ui_next_line(&short_log_pos, 1, ui);
         }
     }
     
@@ -1868,7 +1905,7 @@ render_ui(Game *game,
                 
                 if(can_add_defer_rect_entry(test_message_pos, ui->font_newline * 2, ui->window_scroll_start_y))
                 {
-                    ui_next_line(ui, &test_message_pos, 1);
+                    ui_next_line(&test_message_pos, 1, ui);
                 }
                 else
                 {
@@ -1894,20 +1931,20 @@ render_ui(Game *game,
             {
                 if(is_entry_in_view(ui->full_log_view, index + 1))
                 {
-                    defer_text(ui, message->string, full_log_pos.x, full_log_pos.y);
-                    ui_next_line(ui, &full_log_pos, 1);
+                    defer_text(message->string.s, &full_log_pos, 0, ui);
+                    ui_next_line(&full_log_pos, 1, ui);
                 }
                 else
                 {
                     // Even if the entry is not in view, update the ui defer rect so that the
                     // full log width is the same as the longest log message.
-                    update_defer_rect_width(full_log_pos.x, message->string, ui);
+                    update_defer_rect_width(full_log_pos.x, message->string.s, ui);
                 }
             }
         }
         
         full_log_pos.y += (ui->font_newline / 2);
-        end_defer_rect(game, assets, ui, &ui->full_log_view, full_log_pos);
+        end_defer_rect(game, assets, &ui->full_log_view, full_log_pos, 1, ui);
         
         #if 0
         ui_print_view("Full Log View", ui->full_log_view);
@@ -1938,4 +1975,4 @@ render_ui(Game *game,
     {
         render_multiple_pickup_window(game, player->pos, items, inventory, dungeon->level, assets, ui);
     }
-}
+    }

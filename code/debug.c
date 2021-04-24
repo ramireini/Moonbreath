@@ -211,7 +211,7 @@ add_debug_tree(DebugState *debug, u32 x, u32 y)
 internal void
 add_debug_text_(DebugState *debug, DebugTree *tree, char *text, Color color, ...)
 {
-    String128 text_final = {0};
+    String256 text_final = {0};
     
     va_list arg_list;
     va_start(arg_list, color);
@@ -226,6 +226,26 @@ end_debug_group(DebugTree *tree)
 {
     assert(tree->root);
     tree->root = tree->root->parent_group;
+}
+
+internal void
+add_status_debug_variables(Game *game, DebugTree *tree, Status *status)
+{
+    DebugState *debug = &game->debug;
+    
+    add_debug_enum(tree, "Type", status->type, get_status_type_text);
+    
+    if(status->type == StatusType_Damage)
+    {
+        add_debug_enum(tree, "Damage Type", status->damage_type, get_damage_type_text);
+    }
+    
+        add_debug_enum(tree, "Stat Type", status->stat_type, get_stat_type_text);
+    
+    add_debug_variable(tree, "Was Value Used", status->was_value_used, DebugVariableType_B32);
+    add_debug_variable(tree, "Value", status->value, DebugVariableType_U32);
+    add_debug_variable(tree, "Chance", status->chance, DebugVariableType_U32);
+    add_debug_variable(tree, "Duration", status->duration, DebugVariableType_U32);
 }
 
 internal void
@@ -250,21 +270,21 @@ update_and_render_debug_state(Game *game,
                 
         u32 var_count = 0;
         u32 group_depth = 0;
-        
+                
         DebugVariable *var = tree->root->group.first_child;
         while(var)
                 {
             // Set text
-            String128 text = {0};
+                    String256 text = {0};
             
             switch(var->type)
             {
                 case DebugVariableType_Newline: break;
                 
                 case DebugVariableType_Group:
-                case DebugVariableType_Text: snprintf(text.s, sizeof(text), "%s", var->name.s); break;
+                        case DebugVariableType_Text: snprintf(text.s, sizeof(text), "%s", var->name.s); break;
                 
-                case DebugVariableType_S32: snprintf(text.s, sizeof(text), "%s: %d", var->name.s, *var->s32); break;
+                        case DebugVariableType_S32: snprintf(text.s, sizeof(text), "%s: %d", var->name.s, *var->s32); break;
                         case DebugVariableType_U32: snprintf(text.s, sizeof(text), "%s: %u", var->name.s, *var->u32); break;
                         case DebugVariableType_B32: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, (*var->b32 == true) ? "true" : "false"); break;
                         case DebugVariableType_F32: snprintf(text.s, sizeof(text), "%s: %.01f", var->name.s, *var->f32); break;
@@ -275,8 +295,15 @@ update_and_render_debug_state(Game *game,
                 case DebugVariableType_Enum:
                 {
                     if(var->enum_to_string_callback)
-                    {
+                            {
+                                if(*var->u32 == 0)
+                                {
+                                    snprintf(text.s, sizeof(text), "%s: None", var->name.s);
+                                }
+                                else
+                                {
                                 snprintf(text.s, sizeof(text), "%s: %s", var->name.s, var->enum_to_string_callback(*var->u32));
+                                }
                     }
                     else
                     {
@@ -302,8 +329,8 @@ update_and_render_debug_state(Game *game,
                     
                     // Set text rect
                     Font *font = debug->font;
-            assert(font->type == FontType_TTF);
-            
+                    assert(font->type == FontType_TTF);
+                    
             Color background_color = Color_DebugBackgroundDark;
                     Color text_color = tree->group_text_color.inactive;
             if(var->group.is_expanded)
@@ -316,7 +343,7 @@ update_and_render_debug_state(Game *game,
             {
                 tree->move_rect.x,
                 tree->move_rect.y,
-                get_text_width(font, text.s),
+                        get_text_width(font, text.s),
                 font->size
                     };
                     
@@ -389,11 +416,11 @@ update_and_render_debug_state(Game *game,
             if(var->color)
             {
                         text_color = var->color;
-            }
-            
+                    }
+                    
                     render_text(game, "%s%s", text_rect.x, text_rect.y, font, 0,
-                                start_color(text_color), text.s);
-            
+                                    start_color(text_color), text.s);
+                    
             // Get next variable
             if(is_var_group(var->type) && var->group.is_expanded)
             {
@@ -487,7 +514,6 @@ update_and_render_debug_state(Game *game,
                         add_debug_flag(new_tree, "Notify About Multiple Items", entity->flags, EntityFlag_NotifyAboutMultipleItems);
                         add_debug_flag(new_tree, "Uses Physical Attacks", entity->flags, EntityFlag_UsesPhysicalAttacks);
                         add_debug_flag(new_tree, "Uses Ranged Attacks", entity->flags, EntityFlag_UsesRangedAttacks);
-                        add_debug_flag(new_tree, "Uses Magic Attacks", entity->flags, EntityFlag_UsesMagicAttacks);
                         add_debug_flag(new_tree, "Has Been Seen", entity->flags, EntityFlag_HasBeenSeen);
                         add_debug_flag(new_tree, "Is Flipped", entity->flags, EntityFlag_IsFlipped);
                         add_debug_flag(new_tree, "In Combat", entity->flags, EntityFlag_InCombat);
@@ -545,22 +571,19 @@ update_and_render_debug_state(Game *game,
                         }
                     }
                     end_debug_group(new_tree);
-                    
-                    start_debug_group(debug, new_tree, "Status Effects", false);
-                    {
-                        for(StatusEffectType status_type = StatusEffectType_None + 1;
-                            status_type < StatusEffectType_Count;
-                            ++status_type)
-                        {
-                            if(entity_has_status_effect(entity, status_type))
+                        add_debug_newline(debug, new_tree);
+                        
+                        for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
                             {
-                                add_debug_text(new_tree, "%s", Color_White, get_status_effect_text(status_type));
-                            }
-                        }
+                                Status *status = &entity->statuses[index];
+                                
+                                    start_debug_group(debug, new_tree, "Status", false);
+                                    {
+                                        add_status_debug_variables(game, new_tree, status);
+                                    }
+                                    end_debug_group(new_tree);
+                                }
                     }
-                    end_debug_group(new_tree);
-                    
-                }
                 end_debug_group(new_tree);
                 
                 return;
@@ -587,7 +610,7 @@ update_and_render_debug_state(Game *game,
                     add_debug_variable(new_tree, "ID", item->id, DebugVariableType_U32);
                     add_debug_enum(new_tree, "Type", item->type, get_item_type_text);
                         add_debug_variable(new_tree, "Name", item->name.s, DebugVariableType_String);
-                    add_debug_variable(new_tree, "Description", item->description.s, DebugVariableType_String);
+                    add_debug_variable(new_tree, "Description", item->description, DebugVariableType_String);
                     add_debug_newline(debug, new_tree);
                     
                         add_debug_variable(new_tree, "Inventory Letter", item->inventory_letter, DebugVariableType_String);
@@ -623,24 +646,12 @@ update_and_render_debug_state(Game *game,
                         add_debug_variable(new_tree, "Weight", item->a.weight, DebugVariableType_U32);
                     }
                     else if(is_item_consumable(item->type))
-                    {
-                        add_debug_variable(new_tree, "Heal Value", item->c.heal_value, DebugVariableType_U32);
-                        add_debug_variable(new_tree, "Stack Count", item->c.stack_count, DebugVariableType_U32);
-                            add_debug_variable(new_tree, "Depiction", item->c.depiction.s, DebugVariableType_String);
-                        add_debug_newline(debug, new_tree);
-                        
-                        StatusEffect *status_effect = &item->c.status_effect;
-                        if(status_effect->type)
                         {
-                            start_debug_group(debug, new_tree, "Status Effect", false);
+                            start_debug_group(debug, new_tree, "Status", false);
                             {
-                                add_debug_enum(new_tree, "Type", status_effect->type, get_status_effect_text);
-                                add_debug_variable(new_tree, "Value", status_effect->value, DebugVariableType_U32);
-                                add_debug_variable(new_tree, "Chance", status_effect->chance, DebugVariableType_U32);
-                                add_debug_variable(new_tree, "Duration", status_effect->duration, DebugVariableType_U32);
+                            add_status_debug_variables(game, new_tree, &item->c.status);
                             }
                             end_debug_group(new_tree);
-                        }
                     }
                     
                     add_debug_newline(debug, new_tree);

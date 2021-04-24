@@ -283,11 +283,6 @@ typedef struct
 
 typedef struct
 {
-    char s[16];
-} String16;
-
-typedef struct
-{
     char s[32];
 } String32;
 
@@ -462,31 +457,79 @@ typedef enum
 
 typedef enum
 {
-    StatusEffectType_None,
+    DamageType_None,
     
-    StatusEffectType_Might,
-    StatusEffectType_Wisdom,
-    StatusEffectType_Agility,
-    StatusEffectType_Elusion,
-    StatusEffectType_Healing,
-    StatusEffectType_Decay,
-    StatusEffectType_Confusion,
-    StatusEffectType_Poison,
+    DamageType_Physical,
+    DamageType_Fire,
+    DamageType_Ice,
+    DamageType_Lightning,
+    DamageType_Poison,
+    DamageType_Holy,
+    DamageType_Dark,
     
-    StatusEffectType_Bolster,
-    StatusEffectType_Bind,
+    DamageType_Count
+} DamageType;
+
+typedef enum
+{
+    StatusType_None,
     
-    StatusEffectType_Count
-} StatusEffectType;
+    StatusType_Damage,
+    StatusType_Heal,
+    StatusType_Stat,
+    StatusType_Bind,
+    StatusType_Confusion,
+    StatusType_Poison
+} StatusType;
+
+typedef enum
+{
+    StatType_None,
+    
+    StatType_Str,
+    StatType_Int,
+    StatType_Dex,
+    StatType_Def,
+    StatType_EV,
+    StatType_StrIntDex
+} StatType;
 
 typedef struct
 {
-    StatusEffectType type;
+    String32 name;
+    String64 description;
+    char select_letter;
+    
+    StatusType type;
+    DamageType damage_type;
+    StatType stat_type;
     
     u32 value;
     u32 chance;
     u32 duration;
-} StatusEffect;
+    u32 range;
+} Spell;
+
+typedef struct
+{
+    String32 name;
+    String64 description;
+    
+    String64 max_message;
+    String64 start_message;
+    String64 end_message;
+    
+    StatusType type;
+    DamageType damage_type;
+     StatType stat_type;
+    
+    Spell *spell;
+    
+    b32 was_value_used;
+    s32 value;
+    u32 chance;
+    u32 duration;
+} Status;
 
 #define MAX_INVENTORY_SLOT_COUNT 52
 

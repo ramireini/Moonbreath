@@ -102,7 +102,7 @@ typedef enum
     Scroll_EnchantWeapon,
     Scroll_EnchantArmor,
     Scroll_MagicMapping,
-    Scroll_Teleportation,
+    Scroll_Teleport,
     Scroll_Uncurse,
     
     Scroll_Count
@@ -163,21 +163,6 @@ typedef enum
 
 typedef enum
 {
-    DamageType_None,
-    
-    DamageType_Physical,
-    DamageType_Fire,
-    DamageType_Ice,
-    DamageType_Lightning,
-    DamageType_Poison,
-    DamageType_Holy,
-    DamageType_Dark,
-    
-    DamageType_Count
-} DamageType;
-
-typedef enum
-{
     LetterType_Letter,
     LetterType_SelectLetter
 } LetterType;
@@ -204,8 +189,7 @@ typedef struct
     u32 stack_count;
     String32 depiction;
     
-    u32 heal_value;
-    StatusEffect status_effect;
+    Status status;
 } ItemConsumable;
 
 struct Item
@@ -243,7 +227,9 @@ struct Item
 
 typedef struct
 {
-    b32 known;
+    b32 is_known;
+    
+    v2u value_range;
     v4u tile_src;
     String32 depiction;
 } ConsumableInfo;
@@ -259,11 +245,9 @@ typedef struct
     Entity *examine_window_entity;
      DungeonTrap *examine_window_trap;
     
-    v2u potion_healing_range;
-    v2u ration_healing_range;
-    
     ConsumableInfo potion_info[Potion_Count];
     ConsumableInfo scroll_info[Scroll_Count];
+    ConsumableInfo ration_info;
     } ItemState;
 
 // TODO(rami): Inventory mouse on entry highlight, mouse entry click

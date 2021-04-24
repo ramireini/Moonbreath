@@ -50,8 +50,7 @@ get_random_dungeon_pos_with_type(Random *random,
         }
         else if(type == DungeonRandomPosType_TraversableUnoccupiedRect)
         {
-            assert(rect.x);
-            assert(rect.y);
+            assert(rect.x || rect.y);
             assert(rect.w);
             assert(rect.h);
             
@@ -506,11 +505,6 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
     assert(type);
     assert(!is_dungeon_pos_trap(traps, pos));
     
-    // TODO(rami): Dungeon trap ideas
-    // Summoning traps summoning more than one enemy?
-    // Teleporting traps teleporting you into other levels than current?
-    // Traps with random effects?
-    
     for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
     {
         DungeonTrap *trap = &traps->array[index];
@@ -679,9 +673,7 @@ get_dungeon_pos_tile(DungeonTiles tiles, v2u pos)
 }
 
 internal EntityID
-get_random_enemy_suitable_for_dungeon_level(Random *random,
-                            u32 *entity_levels,
-                            u32 dungeon_level)
+get_random_enemy_suitable_for_dungeon_level(Random *random, u32 dungeon_level)
 {
     EntityID enemy_id = EntityID_None;
     
@@ -700,9 +692,10 @@ get_random_enemy_suitable_for_dungeon_level(Random *random,
         }
         
         enemy_id = get_random_number(random, ENEMY_START_ID, ENEMY_END_ID);
+        u32 enemy_level = get_enemy_level_from_entity_id(enemy_id);
         
-        if(entity_levels[enemy_id] >= level_min &&
-               entity_levels[enemy_id] <= level_max)
+        if(enemy_level >= level_min &&
+               enemy_level <= level_max)
         {
             break;
         }
@@ -759,8 +752,8 @@ get_dungeon_tile_tileset_pos(DungeonTileID tile)
         case DungeonTileID_ExitDungeon: result = make_v2u(32, 0); break;
         
         case DungeonTileID_EntityStatus: result = make_v2u(7, 15); break;
-        case DungeonTileID_EntityAlert: result = make_v2u(8, 15); break;
-        case DungeonTileID_EntityUnknown: result = make_v2u(9, 15); break;
+        case DungeonTileID_EntityAlerted: result = make_v2u(8, 15); break;
+        case DungeonTileID_EntityInvisible: result = make_v2u(9, 15); break;
         
         case DungeonTileID_FootstepsUp: result = make_v2u(14, 3); break;
         case DungeonTileID_FootstepsDown: result = make_v2u(15, 3); break;
@@ -819,7 +812,7 @@ get_random_with_chances(Random *random,
     u32 result = 0;
     u32 counter = 0;
     
-    for(;;)
+    while(counter < 100)
     {
         switch(random_chance_type)
         {
@@ -854,11 +847,6 @@ get_random_with_chances(Random *random,
             } break;
             
             invalid_default_case;
-        }
-        
-        if(counter >= 100)
-        {
-            break;
         }
     }
     
@@ -925,7 +913,7 @@ get_dungeon_tile_name(DungeonTileID tile)
 }
 
 internal char *
-get_dungeon_tile_info_text(DungeonTileID tile)
+get_dungeon_tile_description(DungeonTileID tile)
 {
     char *result = 0;
     
@@ -1905,8 +1893,6 @@ create_dungeon(Game *game,
         dungeon_above = get_dungeon_from_level(dungeons, dungeon_level - 1);
     }
     
-    // TODO(rami): Spec Start
-    
     DungeonSpec *spec = &dungeon->spec;
     
     spec->size.w = 64;
@@ -1981,9 +1967,7 @@ create_dungeon(Game *game,
     spec->scroll_chances[Scroll_EnchantWeapon] = 25;
     spec->scroll_chances[Scroll_EnchantArmor] = 25;
     spec->scroll_chances[Scroll_MagicMapping] = 25;
-    spec->scroll_chances[Scroll_Teleportation] = 25;
-    
-    // TODO(rami): Spec End
+    spec->scroll_chances[Scroll_Teleport] = 25;
     
     dungeon->size.w = 64;
     dungeon->size.h = 64;
@@ -2071,9 +2055,15 @@ create_dungeon(Game *game,
     set_dungeon_pos_tile(dungeon->tiles, make_v2u(11, 16), DungeonTileID_Water1);
     #endif
     
-    move_entity(random, player, dungeon, ui, make_v2u(20, 1));
+    player->dungeon_level = 1;
     
-    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 25, 4);
+    move_entity(random, player, dungeon, ui, make_v2u(9, 1));
+    //move_entity(random, player, dungeon, ui, make_v2u(25, 4));
+    //add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 24, 8);
+    //add_enemy_entity(entities, dungeon, EntityID_OrcShaman, 25, 8);
+    //add_enemy_entity(entities, dungeon, EntityID_ShadowWalker, 25, 8);
+    
+    //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 25, 8);
     //add_enemy_entity(entities, dungeon, EntityID_Rat, 12, 15);
     
     //add_enemy_entity(entities, dungeon, EntityID_Python, 7, 1);
@@ -2090,14 +2080,6 @@ create_dungeon(Game *game,
     //add_enemy_entity(entities, dungeon, EntityID_Dummy, 6, 7);
     //add_enemy_entity(entities, dungeon, EntityID_KoboldShaman, 5, 7);
     //add_enemy_entity(entities, dungeon, EntityID_Python, 5, 5);
-    
-#if 0
-    StatusEffect test_effect = {0};
-    test_effect.type = StatusEffectType_Confusion;
-    test_effect.chance = 50;
-    test_effect.duration = 15;
-    start_entity_status_effect(test_entity, test_effect);
-#endif
     
 #if 1
     // Test traps
@@ -2155,7 +2137,7 @@ create_dungeon(Game *game,
     
     for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
     {
-        add_weapon_item(random, items, dungeon_level, weapon_id, ItemRarity_Common, weapon.x + 1, weapon.y, false);
+        add_weapon_item(random, items, dungeon_level, weapon_id, ItemRarity_Common, weapon.x + 1, weapon.y, true);
         add_weapon_item(random, items, dungeon_level, weapon_id, ItemRarity_Magical, weapon.x + 2, weapon.y, false);
         add_weapon_item(random, items, dungeon_level, weapon_id, ItemRarity_Mythical, weapon.x + 3, weapon.y, false);
         

@@ -1,15 +1,17 @@
 #define MAX_SELECT_LETTER_COUNT MAX_INVENTORY_SLOT_COUNT
 #define MAX_LOG_MESSAGE_COUNT 1024
+#define MAX_DEFER_COUNT 128
 #define MAX_MARK_SIZE 64
 
 typedef enum
 {
     LetterParentType_None,
     
-    LetterParentType_Entity,
     LetterParentType_Item,
-    LetterParentType_Trap
-} LetterParentType;
+    LetterParentType_Spell,
+    LetterParentType_Entity,
+    LetterParentType_DungeonTrap
+    } LetterParentType;
 
 typedef struct
 {
@@ -17,7 +19,8 @@ typedef struct
     
     union
     {
-    Item *item;
+        Item *item;
+        Spell *spell;
     Entity *entity;
         DungeonTrap *trap;
     };
@@ -56,8 +59,28 @@ typedef struct
 typedef struct
 {
     b32 is_set;
-    char string[128];
+    String256 string;
     } LogMessage;
+
+typedef enum
+{
+    DeferType_None,
+    
+    DeferType_Text,
+    DeferType_Tile,
+    DeferType_FillRect
+} DeferType;
+
+typedef struct
+{
+    DeferType type;
+    String256 text;
+    
+    v2u pos;
+    v4u tile_src;
+    v4u fill_rect;
+    Color fill_rect_color;
+} Defer;
 
 typedef struct
 {
@@ -74,7 +97,7 @@ typedef struct
     Letter select_letters[MAX_SELECT_LETTER_COUNT];
     
     v4u defer_rect;
-    Defer defer[MAX_DEFER_COUNT];
+    Defer defers[MAX_DEFER_COUNT];
     
     u32 window_entry_size;
     u32 window_scroll_start_y;
@@ -84,10 +107,10 @@ internal void clear_letter(Letter *letters, char *clear_c);
 internal void reset_letters(Letter *letters);
 internal void set_view_at_end(View *view);
 internal void set_view_at_start(View *view);
-internal void log_add(UI *ui, char *text, ...);
+internal void log_add(char *text, UI *ui, ...);
 internal void update_view_scrolling(View *view, Input *input);
 internal char set_letter(Letter *letters, Letter *letter, void *parent, LetterParentType parent_type);
-internal char set_next_letter(Letter *letters, void *parent, LetterParentType parent_type);
+internal char get_new_letter(Letter *letters, void *parent, LetterParentType parent_type);
 internal b32 is_view_scrolling(View view, u32 count);
 internal b32 is_entry_in_view(View view, u32 entry);
 internal u32 get_view_range(View view);

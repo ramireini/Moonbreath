@@ -14,17 +14,14 @@ set_pathfind_value(PathfindMap *pathfind_map, v2u pos, u32 value)
 internal v2u
 get_pathfind_pos(PathfindMap *pathfind_map, DungeonTiles tiles, v2u origin_pos, v2u target_pos)
 {
+    assert(get_pathfind_value(pathfind_map, origin_pos));
+    
     v2u result = origin_pos;
     u32 closest_dist = get_pathfind_value(pathfind_map, origin_pos);
     
 #if 0
     printf("Origin distance to target: %u\n", closest_distance);
     #endif
-    
-    // Origin needs to have a positive tile distance to target.
-    // Target needs to have a distance of zero because the pathfind map is created from it.
-    assert(get_pathfind_value(pathfind_map, origin_pos));
-    assert(!get_pathfind_value(pathfind_map, target_pos));
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {

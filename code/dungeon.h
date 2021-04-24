@@ -51,8 +51,8 @@ typedef enum
     DungeonTileID_ExitDungeon,
     
     DungeonTileID_EntityStatus,
-    DungeonTileID_EntityAlert,
-    DungeonTileID_EntityUnknown,
+    DungeonTileID_EntityAlerted,
+    DungeonTileID_EntityInvisible,
     
     DungeonTileID_FootstepsUp,
     DungeonTileID_FootstepsDown,
@@ -248,15 +248,17 @@ typedef enum
     DungeonTrapFlag_HasBeenSeen = (1 << 1)
 } DungeonTrapFlag;
 
+// Dungeon trap ideas:
+// Summoning multiple enemies
+// Traps with random effects
 struct DungeonTrap
 {
     u32 flags;
     
-    char select_letter;
-    
     DungeonTrapType type;
     String32 name;
     String128 description;
+    char select_letter;
     
     v2u pos;
     v4u tile_src;

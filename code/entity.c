@@ -1,4 +1,64 @@
 internal void
+reset_inventory_multiple_pickup(ItemState *items, u32 *inventory_flags, u32 dungeon_level, Letter *select_letters)
+{
+    assert(items);
+    assert(inventory_flags);
+    assert(is_dungeon_level_valid(dungeon_level));
+    assert(select_letters);
+    
+    reset_letters(select_letters);
+    unset_item_selections(items, dungeon_level);
+    unset(*inventory_flags, InventoryFlag_MultiplePickup);
+}
+
+internal Entity *
+get_player_entity(EntityState *entities)
+{
+    Entity *result = &entities->array[0];
+    return(result);
+}
+
+internal char *
+get_status_type_text(StatusType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case StatusType_Damage: result = "Damage"; break;
+        case StatusType_Heal: result = "Heal"; break;
+        case StatusType_Stat: result = "Stat"; break;
+        case StatusType_Bind: result = "Bind"; break;
+        case StatusType_Confusion: result = "Confusion"; break;
+        case StatusType_Poison: result = "Poison"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
+get_stat_type_text(StatType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        case StatType_Str: result = "Str"; break;
+        case StatType_Int: result = "Int"; break;
+        case StatType_Dex: result = "Dex"; break;
+        case StatType_Def: result = "Def"; break;
+        case StatType_EV: result = "EV"; break;
+        case StatType_StrIntDex: result = "StrIntDex"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal void
 set_flag_if_player_is_not_pathfinding(u32 player_flags, u32 *flags, u32 flag)
 {
     // Pathfinding needs to be able to set HasBeenSeen manually
@@ -171,11 +231,11 @@ apply_entity_resistance_to_damage(Entity *defender, UI *ui, u32 damage, DamageTy
         
         if(resistance == 5)
         {
-            log_add(ui, "%sYou fully resist the attack!", start_color(Color_LightGray));
+            log_add("%sYou fully resist the attack!", ui, start_color(Color_LightGray));
         }
         else
         {
-            log_add(ui, "%sYou partially resist the attack!", start_color(Color_LightGray));
+            log_add("%sYou partially resist the attack!", ui, start_color(Color_LightGray));
         }
     }
     
@@ -198,23 +258,43 @@ reset_player_pathfind_trail(Entity *player)
     zero_array(player->p.pathfind_trail, MAX_PATHFIND_TRAIL_COUNT);
 }
 
-internal b32
-entity_has_status_effect(Entity *entity, StatusEffectType type)
+internal s32
+get_statuses_stat_value(Status *statuses, StatType stat_type)
 {
-    b32 result = entity->statuses[type].type;
+    assert(statuses);
+    assert(stat_type);
+    
+    s32 result = 0;
+    
+    for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
+    {
+        Status *status = &statuses[index];
+        
+        if(status->type == StatusType_Stat &&
+               status->stat_type == stat_type)
+        {
+            assert(status->value != 0);
+            
+            result += status->value;
+        }
+    }
+    
     return(result);
 }
 
-internal b32
-entity_has_any_status_effect(Entity *entity)
+internal Status *
+get_status_from_statuses(Status *statuses, StatusType type)
 {
-    b32 result = false;
+    Status *result = 0;
     
-    for(u32 status_index = StatusEffectType_None + 1; status_index < StatusEffectType_Count; ++status_index)
+    for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
     {
-        if(entity_has_status_effect(entity, status_index))
+        Status *status = &statuses[index];
+        
+        if(status->type && status->type == type)
         {
-            result = true;
+            result = status;
+            break;
         }
     }
     
@@ -222,66 +302,24 @@ entity_has_any_status_effect(Entity *entity)
 }
 
 internal b32
-in_spell_range(u32 range, v2u origin, v2u target)
+is_entity_in_spell_range(v2u caster_pos, v2u target_pos, u32 spell_range)
 {
-    b32 result = (!range || get_ordinal_and_ordinal_distance(origin, target) <= range);
+    assert(!is_v2u_zero(caster_pos));
+    assert(!is_v2u_zero(target_pos));
+    
+    b32 result = (!spell_range || get_cardinal_and_ordinal_distance(caster_pos, target_pos) <= spell_range);
     return(result);
 }
 
 internal b32
-is_inside_rect_and_spell_range(v4u rect, u32 range, v2u origin, v2u target)
+is_entity_in_view_and_spell_range(v4u caster_view_rect, v2u caster_pos, v2u target_pos, u32 spell_range)
 {
-    b32 result = (is_pos_inside_rect(rect, target) &&
-                  in_spell_range(range, origin, target));
+    assert(!is_v4u_zero(caster_view_rect));
+    assert(!is_v2u_zero(caster_pos));
+    assert(!is_v2u_zero(target_pos));
     
-    return(result);
-}
-
-internal char *
-get_status_effect_name(StatusEffectType type)
-{
-    char *result = 0;
-    
-    switch(type)
-    {
-        case StatusEffectType_Bolster: result = "Bolster"; break;
-        
-        invalid_default_case;
-    }
-    
-    return(result);
-}
-
-internal char *
-get_spell_name(SpellID id)
-{
-    char *result = 0;
-    
-    switch(id)
-    {
-        case SpellID_DarkBolt: result = "Dark Bolt"; break;
-        case SpellID_LesserHeal: result = "Lesser Heal"; break;
-        case SpellID_Bolster: result = "Bolster"; break;
-        
-        invalid_default_case;
-    }
-    
-    return(result);
-}
-
-internal char *
-get_spell_description(SpellID id)
-{
-    char *result = 0;
-    
-    switch(id)
-    {
-        case SpellID_DarkBolt: result = "Hurls a bolt of dark energy at the target."; break;
-        case SpellID_LesserHeal: result = "Heals the target by a slight amount."; break;
-        case SpellID_Bolster: result = "Increases the defence of the target."; break;
-        
-        invalid_default_case;
-    }
+    b32 result = (is_dungeon_pos_inside_rect(caster_view_rect, target_pos) &&
+        is_entity_in_spell_range(caster_pos, target_pos, spell_range));
     
     return(result);
 }
@@ -299,17 +337,17 @@ update_player_pathfind(Game *game,
     if(are_new_items_in_player_view(items, dungeon))
     {
         can_update = false;
-        log_add(ui, "%sNew items come into view..", start_color(Color_LightGray));
+        log_add("%sNew items come into view..", ui, start_color(Color_LightGray));
     }
     else if(are_new_dungeon_traps_in_player_view(dungeon))
     {
         can_update = false;
-        log_add(ui, "%sNew dungeon traps come into view..", start_color(Color_LightGray));
+        log_add("%sNew dungeon traps come into view..", ui, start_color(Color_LightGray));
     }
     else if(are_new_enemies_in_player_view(entities, dungeon))
     {
         can_update = false;
-        log_add(ui, "%sNew enemies come into view..", start_color(Color_LightGray));
+        log_add("%sNew enemies come into view..", ui, start_color(Color_LightGray));
     }
     
     if(can_update)
@@ -400,11 +438,11 @@ is_entity_valid(Entity *entity)
 {
     b32 result = false;
     
-    if(entity && entity->id)
+    if(entity &&
+           entity->id &&
+           entity->type &&
+           is_dungeon_level_valid(entity->dungeon_level))
     {
-        assert(entity->type);
-        assert(is_dungeon_level_valid(entity->dungeon_level));
-        
         result = true;
     }
     
@@ -414,18 +452,14 @@ is_entity_valid(Entity *entity)
 internal b32
 is_entity_valid_and_player(Entity *entity)
 {
-    b32 result = (is_entity_valid(entity) &&
-                      entity->type == EntityType_Player);
-    
+    b32 result = (is_entity_valid(entity) && entity->type == EntityType_Player);
     return(result);
 }
 
 internal b32
 is_entity_valid_and_enemy(Entity *entity)
 {
-    b32 result = (is_entity_valid(entity) &&
-                      entity->type == EntityType_Enemy);
-    
+    b32 result = (is_entity_valid(entity) && entity->type == EntityType_Enemy);
     return(result);
 }
 
@@ -578,7 +612,7 @@ add_player_starting_item(Game *game,
     else if(is_item_id_potion(item_id))
     {
         item = add_consumable_item(&game->random, items, dungeon_level, item_id, x, y, 1);
-        set_as_known_and_identify_existing(items, item->id);
+        set_potion_or_scroll_as_known(items, item->id);
     }
     
     assert(item);
@@ -674,46 +708,58 @@ get_entity_tile_pos(EntityID id)
     return(result);
 }
 
-internal void
-add_enemy_spell(Entity *enemy, u32 *spell_chances, SpellID spell_id)
+internal Spell *
+get_random_entity_spell(Random *random, Entity *entity)
 {
-    assert(enemy->type == EntityType_Enemy);
-    assert(is_set(enemy->flags, EntityFlag_UsesMagicAttacks));
+    assert(is_entity_valid_and_enemy(entity));
+    
+    Spell *result = 0;
+    u32 counter = 0;
+    
+    while(counter < 100)
+    {
+        u32 spell_index = get_random_number(random, 0, entity->e.spell_count - 1);
+        Spell *spell = &entity->e.spells[spell_index];
+        
+        assert(spell->type);
+        assert(spell->chance);
+        
+        result = spell;
+        counter += spell->chance;
+    }
+    
+    assert(result);
+    return(result);
+    }
+
+internal void
+add_entity_attack_spell(Entity *entity,
+                        char *name,
+                        DamageType damage_type,
+                        u32 value,
+                        u32 chance)
+{
+    assert(is_entity_valid_and_enemy(entity));
+    assert(is_chance_valid(chance));
+    assert(value > 0);
     
     for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
     {
-        Spell *spell = &enemy->e.spells[index];
-        if(!spell->id)
+        Spell *spell = &entity->e.spells[index];
+        
+        if(!spell->type)
         {
-            ++enemy->e.spell_count;
-            spell->id = spell_id;
+            strcpy(spell->name.s, name);
             
-            switch(spell_id)
-            {
-                case SpellID_DarkBolt:
-                {
-                    spell->type = SpellType_Offensive;
-                    spell->damage_type = DamageType_Dark;
-                    spell->value = 5;
-                } break;
-                
-                case SpellID_LesserHeal:
-                {
-                    spell->type = SpellType_Healing;
-                    spell->value = 2;
-                } break;
-                
-                case SpellID_Bolster:
-                {
-                    spell->type = SpellType_Buff;
-                    spell->value = 2;
-                    spell->duration = 6;
-                } break;
-                
-                invalid_default_case;
-            }
+            spell->type = StatusType_Damage;
+            spell->damage_type = damage_type;
             
-            spell->chance = spell_chances[spell->id];
+            spell->value = value;
+            spell->chance = chance;
+            
+            sprintf(spell->description.s, "Deals %u %s damage to the target.", spell->value, get_damage_type_text(damage_type));
+            
+            ++entity->e.spell_count;
             return;
         }
     }
@@ -722,183 +768,295 @@ add_enemy_spell(Entity *enemy, u32 *spell_chances, SpellID spell_id)
 }
 
 internal void
-start_entity_status_effect(Entity *entity, StatusEffect status_effect)
+add_entity_heal_spell(Entity *entity,
+                        char *name,
+                        u32 value,
+                        u32 chance)
 {
-    // Set status effect
-    entity->statuses[status_effect.type] = status_effect;
+    assert(is_entity_valid_and_enemy(entity));
+    assert(is_chance_valid(chance));
+    assert(value > 0);
     
-    // Change entity stats based on status effect type
-    switch(status_effect.type)
+    for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
     {
-        case StatusEffectType_Might: entity->strength += status_effect.value; break;
-        case StatusEffectType_Wisdom: entity->intelligence += status_effect.value; break;
-        case StatusEffectType_Agility: entity->dexterity += status_effect.value; break;
+        Spell *spell = &entity->e.spells[index];
         
-        case StatusEffectType_Decay:
+        if(!spell->type)
         {
-            entity->strength -= status_effect.value;
-            entity->intelligence -= status_effect.value;
-            entity->dexterity -= status_effect.value;
-        } break;
+            strcpy(spell->name.s, name);
+            spell->type = StatusType_Heal;
+            
+            spell->value = value;
+            spell->chance = chance;
+            
+            sprintf(spell->description.s, "Heals the target for %u health.", spell->value);
+            
+            ++entity->e.spell_count;
+            return;
+        }
+    }
+    
+    assert(false);
+}
+
+internal void
+add_entity_stat_spell(Entity *entity,
+                      char *name,
+                      StatType stat_type,
+                      u32 value,
+                      u32 duration,
+                      u32 chance)
+{
+    assert(is_entity_valid_and_enemy(entity));
+    assert(is_chance_valid(chance));
+    assert(stat_type);
+    
+    for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
+    {
+        Spell *spell = &entity->e.spells[index];
         
-        case StatusEffectType_Bolster: entity->defence += status_effect.value; break;
+        if(!spell->type)
+        {
+            strcpy(spell->name.s, name);
+            spell->type = StatusType_Stat;
+            spell->stat_type = stat_type;
+            
+            spell->value = value;
+            spell->chance = chance;
+            spell->duration = duration;
+            
+            char *action = "Increases";
+            if(spell->value < 0)
+            {
+                action = "Decreases";
+            }
+            
+            char *stat = 0;
+            switch(spell->stat_type)
+            {
+                case StatType_Def: stat = "Defence"; break;
+                
+                invalid_default_case;
+            }
+            
+            sprintf(spell->description.s, "%s the targets %s by %u for %u turns.", action, stat, get_absolute(spell->value), spell->duration);
+            
+            ++entity->e.spell_count;
+            return;
+        }
+    }
+    
+    assert(false);
+}
+
+internal void
+add_entity_status(Status *statuses, Status *new_status)
+{
+    assert(new_status->type);
+    
+    for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
+    {
+        Status *status = &statuses[index];
         
-        case StatusEffectType_Elusion: break;
-        case StatusEffectType_Confusion: break;
-        case StatusEffectType_Poison: break;
-        case StatusEffectType_Bind: break;
+        if(!status->type)
+        {
+            *status = *new_status;
+            return;
+        }
+    }
+    
+    assert(0);
+}
+
+internal void
+update_entity_stat_status(Entity *entity, Status *status, UI *ui)
+{
+    assert(status->duration);
+    assert(status->value != 0);
+    
+    if(!status->was_value_used)
+    {
+        status->was_value_used = true;
+        if(status->start_message.s[0]) log_add(status->start_message.s, ui);
         
-        invalid_default_case;
+        switch(status->stat_type)
+        {
+            case StatType_Str:
+            {
+                entity->strength += status->value;
+            } break;
+            
+            case StatType_Int:
+            {
+                entity->intelligence += status->value;
+            } break;
+            
+            case StatType_Dex:
+            {
+                entity->dexterity += status->value;
+            } break;
+            
+            // Stat EV is applied in player update
+            case StatType_EV: break;
+            
+            case StatType_Def:
+            {
+                entity->defence += status->value;
+            } break;
+            
+            case StatType_StrIntDex:
+            {
+                entity->strength += status->value;
+                entity->intelligence += status->value;
+                entity->dexterity += status->value;
+            } break;
+            
+            invalid_default_case;
+        }
     }
 }
 
 internal void
-update_entity_status_effects(Game *game,
+update_entity_statuses(Game *game,
                              Entity *entity,
                              Dungeon *dungeon,
                              Inventory *inventory,
                              UI *ui)
 {
-    for(u32 index = StatusEffectType_None + 1; index < StatusEffectType_Count; ++index)
+    assert(is_entity_valid(entity));
+    
+    for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
     {
-        StatusEffect *status = &entity->statuses[index];
+        Status *status = &entity->statuses[index];
+        
         if(status->type)
         {
-            if(status->duration)
+            switch(status->type)
             {
-                switch(index)
+                case StatusType_Damage:
                 {
-                    case StatusEffectType_Poison:
+                    assert(status->value);
+                    assert(status->damage_type);
+                    
+                    attack_entity(&game->random, 0, entity, dungeon, ui, status->value, status->damage_type);
+                } break;
+                
+                case StatusType_Heal:
+                {
+                    assert(status->value > 0);
+                    
+                    if(entity->hp == entity->max_hp &&
+                           status->max_message.s[0])
                     {
-                        assert(status->value);
-                        
-                        switch(entity->type)
+                        log_add(status->max_message.s, ui);
+                    }
+                    else
+                    {
+                        log_add(status->start_message.s, ui);
+                        heal_entity(entity, status->value);
+                    }
+                    } break;
+                
+                case StatusType_Stat: update_entity_stat_status(entity, status, ui); break;
+                
+                case StatusType_Bind:
+                {
+                    assert(status->duration);
+                    
+                    if(!status->was_value_used &&
+                           status->start_message.s[0])
+                    {
+                        status->was_value_used = true;
+                        log_add(status->start_message.s, ui);
+                    }
+                    
+                } break;
+                
+                case StatusType_Confusion:
+                {
+                    assert(status->duration);
+                    
+                    assert(0);
+                } break;
+                
+                case StatusType_Poison:
+                {
+                    assert(status->duration);
+                    
+                    assert(0);
+                    
+                    // TODO(rami): This belongs here
+                    // log_add(ui, "%sYou don't feel sick anymore.", start_color(Color_LightGray));
+                    
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            if(status->duration) --status->duration;
+            
+            // End status
+                if(!status->duration)
+            {
+                if(status->end_message.s[0]) log_add(status->end_message.s, ui);
+                
+                    if(status->stat_type)
+                {
+                    if(status->end_message.s[0]) log_add(status->end_message.s, ui);
+                    
+                        switch(status->stat_type)
                         {
-                            case EntityType_Player: log_add(ui, "%sPoison wrecks you for %u damage.", start_color(Color_DarkGreen), status->value); break;
-                            case EntityType_Enemy: log_add(ui, "%sPoison wrecks the %s for %u damage.", start_color(Color_DarkGreen), entity->name.s, status->value); break;
+                        case StatType_Str: entity->strength -= status->value; break;
+                        case StatType_Int: entity->intelligence -= status->value; break;
+                        case StatType_Dex: entity->dexterity -= status->value; break;
+                        case StatType_EV: break; // EV is applied in entity update
+                        case StatType_Def: entity->defence -= status->value;
+                        
+                            case StatType_StrIntDex:
+                            {
+                                entity->strength -= status->value;
+                                entity->intelligence -= status->value;
+                                entity->dexterity -= status->value;
+                            } break;
                             
                             invalid_default_case;
                         }
-                        
-                        attack_entity(&game->random,
-                                          0,
-                                          entity,
-                                          dungeon,
-                                          inventory,
-                                          ui,
-                                          status->value,
-                                          DamageType_Poison,
-                                          true);
-                    } break;
-                    
-                    case StatusEffectType_Might: break;
-                    case StatusEffectType_Wisdom: break;
-                    case StatusEffectType_Agility: break;
-                    case StatusEffectType_Confusion: break;
-                    case StatusEffectType_Elusion: break;
-                    case StatusEffectType_Decay: break;
-                    case StatusEffectType_Bolster: break;
-                    case StatusEffectType_Bind: break;
-                    
-                    invalid_default_case;
-                    }
-            }
-            
-            --status->duration;
-            
-            #if 0
-            printf("\nindex: %u\n", index);
-            printf("status->type: %u\n", status->type);
-            printf("status->duration: %u\n", status->duration);
-            #endif
-            
-            if(!status->duration)
-            {
-                switch(index)
-                {
-                    case StatusEffectType_Might:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "%sYou don't feel as mighty anymore.", start_color(Color_LightGray));
-                        }
-                        
-                        entity->strength -= status->value;
-                    } break;
-                    
-                    case StatusEffectType_Wisdom:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "%sYou don't feel as wise anymore.", start_color(Color_LightGray));
-                        }
-                        
-                        entity->intelligence -= status->value;
-                    } break;
-                    
-                    case StatusEffectType_Agility:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "%sYou don't feel as agile anymore.", start_color(Color_LightGray));
-                        }
-                        
-                        entity->dexterity -= status->value;
-                    } break;
-                    
-                    case StatusEffectType_Elusion:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "%sYou don't feel as elusive anymore.", start_color(Color_LightGray));
-                        }
-                    } break;
-                    
-                    case StatusEffectType_Decay:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "%sYou don't feel as weak anymore.", start_color(Color_LightGray));
-                        }
-                        
-                        entity->strength += status->value;
-                        entity->intelligence += status->value;
-                        entity->dexterity += status->value;
-                    } break;
-                    
-                    case StatusEffectType_Confusion:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "%sYou don't feel confused anymore.", start_color(Color_LightGray));
-                        }
-                    } break;
-                    
-                    case StatusEffectType_Poison:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "%sYou don't feel sick anymore.", start_color(Color_LightGray));
-                        }
-                    } break;
-                    
-                    case StatusEffectType_Bolster: entity->defence -= status->value; break;
-                    case StatusEffectType_Bind:
-                    {
-                        if(entity->type == EntityType_Player)
-                        {
-                            log_add(ui, "You feel like you can move again.");
-                        }
-                    } break;
-                    
-                    invalid_default_case;
                 }
-                
-                zero_struct(*status);
-            }
-            }
+                    
+                    zero_struct(*status);
+                }
         }
     }
+    }
+
+internal void
+add_entity_status_from_spell(Game *game,
+                             Entity *entity,
+                             Dungeon *dungeon,
+                             Inventory *inventory,
+                             UI *ui,
+                             Spell *spell)
+{
+    Status *statuses = entity->statuses;
+    
+    assert(statuses);
+    assert(spell);
+    assert(spell->type);
+    
+    Status status = {0};
+    strcpy(status.name.s, spell->name.s);
+    strcpy(status.description.s, spell->description.s);
+    status.type = spell->type;
+    status.damage_type = spell->damage_type;
+    status.stat_type = spell->stat_type;
+    status.spell = spell;
+    status.value = spell->value;
+    status.chance = spell->chance;
+    status.duration = spell->duration;
+    
+    update_entity_stat_status(entity, &status, ui);
+    add_entity_status(statuses, &status);
+}
 
 internal b32
 will_entity_hit(Random *random, Entity *attacker, Entity *defender)
@@ -931,18 +1089,27 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 }
 
 internal b32
-entity_can_move(Entity *entity, UI *ui, b32 should_log_add)
+entity_can_move(Entity *entity, UI *ui, b32 add_to_log)
 {
-    b32 result = true;
+    assert(is_entity_valid(entity));
     
-    if(entity_has_status_effect(entity, StatusEffectType_Bind))
+    b32 result = true;
+     
+    for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
     {
-        result = false;
+        Status *status = &entity->statuses[index];
         
-        if(should_log_add)
+        if(status->type && status->type == StatusType_Bind)
         {
-            log_add(ui, "You attempt to move, but are not able to!");
-        }
+            result = false;
+            
+            if(add_to_log)
+            {
+                log_add("You attempt to move, but are not able to!", ui);
+            }
+            
+            break;
+            }
     }
     
     return(result);
@@ -993,13 +1160,13 @@ entity_use_passage(Game *game,
     {
         --new_dungeon_level;
         
-        log_add(ui, "%sYou go up the passage..", start_color(Color_LightGray));
+        log_add("%sYou go up the passage..", ui, start_color(Color_LightGray));
     }
     else if(passage->type == DungeonPassageType_Down)
     {
         ++new_dungeon_level;
         
-        log_add(ui, "%sYou go down the passage..", start_color(Color_LightGray));
+        log_add("%sYou go down the passage..", ui, start_color(Color_LightGray));
     }
     
     move_entity_between_dungeons(game, player, entities, dungeons, items, inventory, ui, passage->dest_pos, new_dungeon_level);
@@ -1008,20 +1175,22 @@ entity_use_passage(Game *game,
 internal b32
 move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u pos)
 {
-    assert(entity->type == EntityType_Player || entity->type == EntityType_Enemy);
+    assert(is_entity_valid(entity));
+    assert(!is_v2u_zero(pos));
     
     b32 result = entity_can_move(entity, ui, true);
     
     if(result)
     {
-    // If the entity is confused, we attempt to find a direction we could stumble to,
-    // that is different from the original move direction.
-    if(entity_has_status_effect(entity, StatusEffectType_Confusion))
-    {
-        StatusEffect *confused_status = &entity->statuses[StatusEffectType_Confusion];
-        assert(confused_status->chance);
+        // If the entity is confused, attempt to stumble in a direction that is different from
+        // the intended move direction.
         
-        if(hit_random_chance(random, confused_status->chance))
+        Status *confusion_status = get_status_from_statuses(entity->statuses, StatusType_Confusion);
+        if(confusion_status)
+    {
+            assert(confusion_status->chance);
+        
+        if(hit_random_chance(random, confusion_status->chance))
         {
             Direction confused_direction = get_random_direction(random);
             v2u confused_move_pos = get_direction_pos(entity->pos, confused_direction);
@@ -1039,11 +1208,11 @@ move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u pos)
                 
                 if(entity->type == EntityType_Player)
                 {
-                    log_add(ui, "%sYou stumble slightly..", start_color(Color_LightGray));
+                        log_add("%sYou stumble slightly..", ui, start_color(Color_LightGray));
                 }
                 else if(entity->type == EntityType_Enemy)
                 {
-                        log_add(ui, "%sThe %s stumbles slightly..", start_color(Color_LightGray), entity->name.s);
+                        log_add("%sThe %s stumbles slightly..", ui, start_color(Color_LightGray), entity->name.s);
                 }
             }
         }
@@ -1070,6 +1239,9 @@ move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u pos)
 internal b32
 heal_entity(Entity *entity, u32 value)
 {
+    assert(entity);
+    assert(value);
+    
     b32 result = false;
     
     if(entity->hp < entity->max_hp)
@@ -1086,27 +1258,27 @@ heal_entity(Entity *entity, u32 value)
     return(result);
 }
 
-internal String128
+internal String256
 get_entity_attack_text(Random *random,
-                       Inventory *inventory,
                        Entity *attacker,
                        Entity *defender,
                        u32 value)
 {
+    assert(random);
     assert(attacker);
     assert(defender);
     assert(value);
     
-    String128 result = {0};
+    String256 result = {0};
     
     if(attacker->type == EntityType_Player)
     {
+        Item *player_weapon = attacker->p.weapon;
         char *attack_text = 0;
         
-        Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
-        if(item)
+        if(player_weapon)
         {
-            switch(item->id)
+            switch(player_weapon->id)
             {
                 case ItemID_Dagger:
                 case ItemID_Sword:
@@ -1193,17 +1365,18 @@ get_entity_attack_text(Random *random,
     }
     else if(attacker->type == EntityType_Enemy)
     {
-        if(is_set(attacker->flags, EntityFlag_UsesMagicAttacks))
+        if(attacker->e.spell_count)
         {
-            Spell *spell = &attacker->e.spells[attacker->e.spell_index];
+            Spell *enemy_spell = attacker->e.spell;
+            assert(enemy_spell);
             
             if(defender->type == EntityType_Player)
             {
-                snprintf(result.s, sizeof(result.s), "The %s casts %s at you, dealing %u damage.", attacker->name.s, get_spell_name(spell->id), value);
+                snprintf(result.s, sizeof(result.s), "The %s casts %s at you, dealing %u damage.", attacker->name.s, enemy_spell->name.s, value);
             }
             else
             {
-                snprintf(result.s, sizeof(result.s), "The %s casts %s at the %s, healing it for %u health.", attacker->name.s, get_spell_name(spell->id), defender->name.s, value);
+                snprintf(result.s, sizeof(result.s), "The %s casts %s at the %s, healing it for %u health.", attacker->name.s, enemy_spell->name.s, defender->name.s, value);
             }
         }
         else if(is_set(attacker->flags, EntityFlag_UsesRangedAttacks))
@@ -1226,22 +1399,29 @@ get_entity_attack_text(Random *random,
 internal void
 remove_entity(Entity *entity)
 {
+    assert(entity);
     zero_struct(*entity);
 }
 
 internal void
 kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
 {
+    assert(random);
+    assert(entity);
+    assert(dungeon);
+    assert(ui);
+    
     if(entity->type == EntityType_Player)
     {
-        // TODO(rami): Death message
-        // TODO(rami): Character dumps
-        log_add(ui, "Oh no, you are dead!");
+        // TODO(rami): Character dumps, on death create a text file and put all of the player
+        // information in there.
+        
+        log_add("Oh no, you are dead!", ui);
         entity->hp = 0;
     }
     else if(entity->type == EntityType_Enemy)
     {
-        log_add(ui, "%sThe %s dies!", start_color(Color_LightRed), entity->name.s);
+        log_add("%sThe %s dies!", ui, start_color(Color_LightRed), entity->name.s);
         
         // Place entity death remains
         if(entity->remains && can_place_dungeon_remains_on_pos(dungeon->tiles, entity->pos))
@@ -1280,15 +1460,16 @@ attack_entity(Random *random,
               Entity *attacker,
               Entity *defender,
               Dungeon *dungeon,
-              Inventory *inventory,
               UI *ui,
               u32 damage,
-              DamageType damage_type,
-              b32 has_no_attacker)
+              DamageType damage_type)
 {
+    assert(random);
+    assert(defender);
+    assert(dungeon);
+    assert(ui);
     assert(damage);
     assert(damage_type);
-    assert(attacker || has_no_attacker);
     
 #if MOONBREATH_SLOW
     // Skip dummies during debugging
@@ -1323,7 +1504,7 @@ attack_entity(Random *random,
     }
 #endif
     
-    if(has_no_attacker || will_entity_hit(random, attacker, defender))
+    if(!attacker || will_entity_hit(random, attacker, defender))
     {
         if(defender->defence)
         {
@@ -1336,9 +1517,9 @@ attack_entity(Random *random,
             
             if(!is_zero(damage))
             {
-                if(!has_no_attacker)
+                if(attacker)
                 {
-                log_add(ui, get_entity_attack_text(random, inventory, attacker, defender, damage).s);
+                log_add(get_entity_attack_text(random, attacker, defender, damage).s, ui);
                 }
                 
                 defender->hp -= damage;
@@ -1447,27 +1628,31 @@ attack_entity(Random *random,
                         }
                     }
                     
-                    // Apply poison status effect from attacker to defender if possible
-                    if(attacker &&
-                       attacker->e.poison.type &&
-                           !entity_has_status_effect(defender, StatusEffectType_Poison) &&
-                               hit_random_chance(random, attacker->e.poison.chance))
+                    // Apply attacker poison to defender
+                    if(attacker)
                     {
-                        if(is_entity_immune(defender, DamageType_Poison))
+                        Status *attacker_poison = &attacker->e.poison;
+                        
+                        if(attacker_poison->type &&
+                               !get_status_from_statuses(defender->statuses, StatusType_Poison) &&
+                               hit_random_chance(random, attacker_poison->chance))
                         {
-                            log_add(ui, "%sYour resistance stopped you from being poisoned.", start_color(Color_DarkGreen));
-                            }
-                        else
-                        {
-                            switch(defender->type)
+                            if(is_entity_immune(defender, DamageType_Poison))
                             {
-                                case EntityType_Player: log_add(ui, "%sYou start feeling unwell.", start_color(Color_DarkGreen)); break;
-                                case EntityType_Enemy: log_add(ui, "%sThe %s starts to look unwell.", start_color(Color_DarkGreen)); break;
-                                
-                                invalid_default_case;
+                                log_add("%sYour resistance stopped you from being poisoned.", ui, start_color(Color_DarkGreen));
                             }
-                            
-                            start_entity_status_effect(defender, attacker->e.poison);
+                            else
+                            {
+                                switch(defender->type)
+                                {
+                                    case EntityType_Player: log_add("%sYou start feeling unwell.", ui, start_color(Color_DarkGreen)); break;
+                                    case EntityType_Enemy: log_add("%sThe %s starts to look unwell.", ui, start_color(Color_DarkGreen)); break;
+                                    
+                                    invalid_default_case;
+                                }
+                                
+                                add_entity_status(defender->statuses, attacker_poison);
+                            }
                         }
                     }
                 }
@@ -1481,11 +1666,11 @@ attack_entity(Random *random,
         {
             if(defender->type == EntityType_Player)
             {
-                log_add(ui, "%sYour armor blocks the attack.", start_color(Color_LightGray));
+                log_add("%sYour armor blocks the attack.", ui, start_color(Color_LightGray));
             }
             else if(defender->type == EntityType_Enemy)
             {
-                log_add(ui, "%sThe %s's armor blocks your attack.", start_color(Color_LightGray), defender->name.s);
+                log_add("%sThe %s's armor blocks your attack.", ui, start_color(Color_LightGray), defender->name.s);
             }
         }
     }
@@ -1495,16 +1680,16 @@ attack_entity(Random *random,
         {
             if(is_set(defender->flags, EntityFlag_IsInvisible))
             {
-                log_add(ui, "%sYou miss the something.", start_color(Color_LightGray));
+                log_add("%sYou miss the something.", ui, start_color(Color_LightGray));
             }
             else
             {
-            log_add(ui, "%sYou miss the %s.", start_color(Color_LightGray), defender->name.s);
+                log_add("%sYou miss the %s.", ui, start_color(Color_LightGray), defender->name.s);
             }
         }
         else if(attacker->type == EntityType_Enemy)
         {
-            log_add(ui, "%sYou dodge the attack.", start_color(Color_LightGray));
+            log_add("%sYou dodge the attack.", ui, start_color(Color_LightGray));
         }
     }
 }
@@ -1521,7 +1706,7 @@ handle_asking_player(Game *game,
     {
         if(inventory->item_use_type)
         {
-            log_add(ui, "%sThe scroll turns illegible, you discard it.", start_color(Color_LightGray));
+            log_add("%sThe scroll turns illegible, you discard it.", ui, start_color(Color_LightGray));
             inventory->item_use_type = ItemUseType_None;
         }
         
@@ -1621,6 +1806,8 @@ update_player_input(Game *game,
             
             if(is_set(inventory->flags, InventoryFlag_Open))
             {
+                printf("F2: All inventory items have been dropped\n");
+                
             for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
             {
                 Item *item = inventory->slots[index];
@@ -1636,6 +1823,18 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[3]))
         {
+            printf("F3: All items IsIdentified toggle\n");
+            
+                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+                {
+                    Item *item = &items->array[index];
+                    
+                if(is_item_valid(item, dungeon->level))
+                {
+                    toggle(item->flags, ItemFlag_IsIdentified);
+                    }
+                }
+            
             return;
         }
         else if(was_pressed(&input->fkeys[4]))
@@ -1719,16 +1918,18 @@ update_player_input(Game *game,
             else if(was_pressed(&input->GameKey_Back))
                 {
                     if(!is_set(inventory->flags, InventoryFlag_Mark))
-                    {
+                {
                         if((is_set(examine->flags, ExamineFlag_Open) || examine->type))
                         {
                             if(examine->type == ExamineType_Spell)
-                            {
+                        {
+                            reset_letters(ui->select_letters);
                                 examine->type = ExamineType_Entity;
                             }
                             else
                             {
                             unset(examine->flags, ExamineFlag_Open | ExamineFlag_ReadyForKeypress);
+                            
                             examine->type = ExamineType_None;
                             examine->selected_passage = 0;
                             }
@@ -1752,10 +1953,7 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                     {
-                        unset_item_selections(items, dungeon->level);
-                        
-                        reset_letters(ui->select_letters);
-                        unset(inventory->flags, InventoryFlag_MultiplePickup);
+                        reset_inventory_multiple_pickup(items, &inventory->flags, dungeon->level, ui->select_letters);
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
@@ -1792,7 +1990,7 @@ update_player_input(Game *game,
                         }
                         else
                         {
-                            log_add(ui, "You see nothing to pick up here.");
+                            log_add("You see nothing to pick up here.", ui);
                         }
                     }
                     }
@@ -1823,7 +2021,7 @@ update_player_input(Game *game,
                 
                 if(are_new_enemies_in_player_view(entities, dungeon))
                     {
-                        log_add(ui, "There are enemies near!");
+                        log_add("There are enemies near!", ui);
                     }
                     else
                 {
@@ -1850,7 +2048,7 @@ update_player_input(Game *game,
                             }
                             else
                             {
-                                log_add(ui, "Nothing more to explore.");
+                                log_add("Nothing more to explore.", ui);
                             }
                         }
                     }
@@ -1877,7 +2075,7 @@ update_player_input(Game *game,
                 {
                 if(other_windows_are_closed(examine, inventory, ui))
                 {
-                    log_add(ui, "%sA moment goes by..", start_color(Color_LightGray));
+                    log_add("%sYou wait for a moment..", ui, start_color(Color_LightGray));
                     unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
                         
                         game->should_update = true;
@@ -1929,7 +2127,7 @@ update_player_input(Game *game,
                                 if(was_pressed(&input->Key_A))
                                 {
                                 set(inventory->flags, InventoryFlag_Adjust);
-                                log_add(ui, "%sAdjust to which letter? (%s to quit).", start_color(Color_Yellow), get_printable_key(input, game->keybinds[GameKey_Back]).s);
+                                log_add("%sAdjust to which letter? (%s to cancel)", ui, start_color(Color_Yellow), get_printable_key(input, game->keybinds[GameKey_Back]).s);
                                 }
                                 else if(was_pressed(&input->Key_E))
                                 {
@@ -1942,20 +2140,10 @@ update_player_input(Game *game,
                                     log_add_item_action_text(examine_item, ui, ItemActionType_Unequip);
                                     }
                                 }
-                                else if(was_pressed(&input->Key_R))
-                                {
-                                    if(examine_item->type == ItemType_Scroll)
-                                    {
-                                    read_scroll(game, player, examine_item, items, inventory, dungeon, ui);
-                                    }
-                                }
-                                else if(was_pressed(&input->Key_C))
-                                {
-                                    if(examine_item->type == ItemType_Potion ||
-                                       examine_item->type == ItemType_Ration)
-                                    {
-                                    consume_consumable(game, player, examine_item, items, inventory, ui, dungeon->level);
-                                    }
+                            else if(was_pressed(&input->Key_C) ||
+                                    was_pressed(&input->Key_R))
+                            {
+                                use_consumable(game, player, dungeon, examine_item, items, inventory, ui);
                                 }
                                 else if(was_pressed(&input->Key_D))
                             {
@@ -2038,8 +2226,7 @@ update_player_input(Game *game,
                                 }
                             }
                             
-                            unset_item_selections(items, dungeon->level);
-                            unset(inventory->flags, InventoryFlag_MultiplePickup);
+                            reset_inventory_multiple_pickup(items, &inventory->flags, dungeon->level, ui->select_letters);
                             }
                             else if(pressed)
                         {
@@ -2076,7 +2263,7 @@ update_player_input(Game *game,
                                     examine->item = letter->item;
                                     } break;
                                     
-                                    case LetterParentType_Trap:
+                                case LetterParentType_DungeonTrap:
                                     {
                                         examine->type = ExamineType_Trap;
                                     examine->trap = letter->trap;
@@ -2090,13 +2277,6 @@ update_player_input(Game *game,
             }
             }
     }
-}
-
-internal Entity *
-get_player_entity(EntityState *entities)
-{
-    Entity *result = &entities->array[0];
-    return(result);
 }
 
 internal void
@@ -2120,14 +2300,16 @@ UI *ui)
     player->defence = 0;
     player->p.weight = 0;
     
+    // Apply player armor stats
     for(u32 slot_index = ItemSlot_None + 1; slot_index < ItemSlot_Count; ++slot_index)
     {
         for(u32 inventory_index = 0; inventory_index < MAX_INVENTORY_SLOT_COUNT; ++inventory_index)
         {
             Item *item = inventory->slots[inventory_index];
+            
             if(item &&
                    is_set(item->flags, ItemFlag_IsEquipped) &&
-               (item->slot == slot_index) &&
+               item->slot == slot_index &&
                item->type == ItemType_Armor)
             {
                 player->defence += (item->a.defence + item->enchantment_level);
@@ -2137,10 +2319,7 @@ UI *ui)
     }
     
     player->evasion = 10 - (player->p.weight / player->p.weight_to_evasion_ratio);
-    if(player->statuses[StatusEffectType_Elusion].type)
-    {
-        player->evasion += 2;
-    }
+    player->evasion += get_statuses_stat_value(player->statuses, StatType_EV);
     
 #if 0
     printf("Player Defence: %u\n", player->defence);
@@ -2176,13 +2355,13 @@ UI *ui)
                         f32 player_attack_speed = 1.0f;
                         DamageType player_damage_type = DamageType_Physical;
                         
-                        Item *item = get_equipped_item_from_slot(ItemSlot_FirstHand, inventory);
-                        if(item)
+                        Item *player_weapon = player->p.weapon;
+                        if(player_weapon)
                         {
-                            player_damage = item->w.damage + item->enchantment_level;
-                            player_accuracy = item->w.accuracy + item->enchantment_level;
-                            player_attack_speed = item->w.speed;
-                            player_damage_type = item->w.first_damage_type;
+                            player_damage = player_weapon->w.damage + player_weapon->enchantment_level;
+                            player_accuracy = player_weapon->w.accuracy + player_weapon->enchantment_level;
+                            player_attack_speed = player_weapon->w.speed;
+                            player_damage_type = player_weapon->w.first_damage_type;
                         }
                         
 #if 0
@@ -2208,7 +2387,7 @@ UI *ui)
                         //printf("modified_player_damage: %u\n", modified_player_damage);
                         
                         set(target->flags, EntityFlag_InCombat);
-                        attack_entity(&game->random, player, target, dungeon, inventory, ui, modified_player_damage, player_damage_type, false);
+                        attack_entity(&game->random, player, target, dungeon, ui, modified_player_damage, player_damage_type);
                         
                         game->action_time = player_attack_speed;
                     }
@@ -2226,7 +2405,7 @@ UI *ui)
                     if(is_dungeon_pos_water(dungeon->tiles, player->pos))
                     {
                         game->action_time = player->p.turn_action_time * 2.0f;
-                        log_add(ui, "%sYou wade through the water..", start_color(Color_LightGray));
+                        log_add("%sYou wade through the water..", ui, start_color(Color_LightGray));
                     }
                     else
                     {
@@ -2235,9 +2414,9 @@ UI *ui)
                     
                     if(move_entity(&game->random, player, dungeon, ui, player->new_pos))
                     {
-                    // TODO(rami): Maybe a specific color for trap trigger messages
-                    
-                    // Player stepped on a trap
+                        DungeonSpec *spec = &dungeon->spec;
+                        
+                        // Player steps on a dungeon trap
                     if(is_dungeon_pos_trap(&dungeon->traps, player->new_pos))
                     {
                         DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, player->new_pos);
@@ -2246,19 +2425,19 @@ UI *ui)
                             case DungeonTrapType_Spike:
                             {
                                 DamageType spike_damage_type = DamageType_Physical;
-                                u32 spike_damage = get_random_number_from_v2u(&game->random, dungeon->spec.spike_trap_value);
+                                u32 spike_damage = get_random_number_from_v2u(&game->random, spec->spike_trap_value);
                                 
-                                log_add(ui, "Sharp spikes pierce you, dealing %u damage.", spike_damage);
-                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, spike_damage, spike_damage_type, true);
+                                    log_add("Sharp spikes pierce you, dealing %u damage!", ui, spike_damage);
+                                attack_entity(&game->random, 0, player, dungeon, ui, spike_damage, spike_damage_type);
                             } break;
                             
                             case DungeonTrapType_Sword:
                             {
                                 DamageType sword_damage_type = DamageType_Physical;
-                                u32 sword_damage = get_random_number_from_v2u(&game->random, dungeon->spec.sword_trap_value);
+                                u32 sword_damage = get_random_number_from_v2u(&game->random, spec->sword_trap_value);
                                 
-                                log_add(ui, "Swords lacerate you, dealing %u damage.", sword_damage);
-                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, sword_damage, sword_damage_type, true);
+                                    log_add("Swords lacerate you, dealing %u damage!", ui, sword_damage);
+                                    attack_entity(&game->random, 0, player, dungeon, ui, sword_damage, sword_damage_type);
                                 
                             } break;
                             
@@ -2266,10 +2445,10 @@ UI *ui)
                             {
                                 DamageType arrow_damage_type = DamageType_Physical;
                                 
-                                u32 arrow_damage = get_random_number_from_v2u(&game->random, dungeon->spec.arrow_trap_value);
+                                u32 arrow_damage = get_random_number_from_v2u(&game->random, spec->arrow_trap_value);
                                 
-                                log_add(ui, "Multiple arrows fire at you, dealing %u damage.", arrow_damage);
-                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, arrow_damage, arrow_damage_type, true);
+                                    log_add("Multiple arrows fire at you, dealing %u damage!", ui, arrow_damage);
+                                    attack_entity(&game->random, 0, player, dungeon, ui, arrow_damage, arrow_damage_type);
                             } break;
                             
                             case DungeonTrapType_Magic:
@@ -2277,33 +2456,32 @@ UI *ui)
                                 DamageType magic_damage_type = get_random_damage_type(&game->random);
                                 assert(magic_damage_type != DamageType_Physical);
                                 
-                                u32 magic_damage = get_random_number_from_v2u(&game->random, dungeon->spec.magic_trap_value);
+                                u32 magic_damage = get_random_number_from_v2u(&game->random, spec->magic_trap_value);
                                 
-                                log_add(ui, "A magical trap explodes below you, dealing %u %s damage.", magic_damage, get_damage_type_text(magic_damage_type));
-                                attack_entity(&game->random, 0, player, dungeon, inventory, ui, magic_damage, magic_damage_type, true);
+                                    log_add("A magical trap explodes below you, dealing %u %s damage!", ui, magic_damage, get_damage_type_text(magic_damage_type));
+                                    attack_entity(&game->random, 0, player, dungeon, ui, magic_damage, magic_damage_type);
                             } break;
                             
                             case DungeonTrapType_Bind:
-                            {
-                                log_add(ui, "You feel like you can't move!");
-                                
-                                StatusEffect bind_status_effect = {0};
-                                bind_status_effect.type = StatusEffectType_Bind;
-                                bind_status_effect.duration = get_random_number_from_v2u(&game->random, dungeon->spec.bind_trap_value);
-                                
-                                start_entity_status_effect(player, bind_status_effect);
-                                
+                                {
+                                        Status bind_status = {0};
+                                        bind_status.type = StatusType_Bind;
+                                        bind_status.duration = get_random_number_from_v2u(&game->random, spec->bind_trap_value);
+                                    sprintf(bind_status.start_message.s, "You feel like you can't move!");
+                                    sprintf(bind_status.end_message.s, "%sYou feel like you can move again.", start_color(Color_LightGray));
+                                        
+                                    add_entity_status(player->statuses, &bind_status);
                             } break;
                             
                             case DungeonTrapType_Shaft:
                             {
                                 assert(!is_set(player->flags, EntityFlag_IsPathfinding));
                                 
-                                log_add(ui, "You fall into a shaft!");
+                                log_add("You fall into a shaft!", ui);
                                 
                                 if(!trap->is_shaft_set)
                                 { 
-                                    trap->shaft_depth = get_random_number_from_v2u(&game->random, dungeon->spec.shaft_trap_value);
+                                    trap->shaft_depth = get_random_number_from_v2u(&game->random, spec->shaft_trap_value);
                                     u32 shaft_dungeon_level = dungeons->current_level + trap->shaft_depth;
                                         
                                         Dungeon *shaft_dungeon = get_dungeon_from_level(dungeons, shaft_dungeon_level);
@@ -2318,10 +2496,10 @@ UI *ui)
                             
                             case DungeonTrapType_Summon:
                             {
-                                log_add(ui, "You hear an odd sound and something appears next to you.");
+                                log_add("You hear an odd sound and something appears next to you!", ui);
                                 
-                                EntityID enemy_id = get_random_enemy_suitable_for_dungeon_level(&game->random, entities->levels, dungeon->level);
-                                v4u summon_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, 2);
+                                EntityID enemy_id = get_random_enemy_suitable_for_dungeon_level(&game->random, dungeon->level);
+                                    v4u summon_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, 2);
                                     v2u summon_pos = get_random_dungeon_traversable_unoccupied_rect_pos(&game->random, dungeon, summon_rect);
                                 
                                 add_enemy_entity(entities, dungeon, enemy_id, summon_pos.x, summon_pos.y);
@@ -2335,7 +2513,7 @@ UI *ui)
                             
                             case DungeonTrapType_Teleport:
                             {
-                                log_add(ui, "You take a step and find yourself in a different place.");
+                                log_add("You take a step and find yourself in a different place!", ui);
                                 teleport_entity(&game->random, player, dungeon, ui);
                             } break;
                             
@@ -2355,7 +2533,7 @@ UI *ui)
         
         for(u32 action_count = 0; action_count < player->action_time; ++action_count)
         {
-            update_entity_status_effects(game, player, dungeon, inventory, ui);
+            update_entity_statuses(game, player, dungeon, inventory, ui);
         }
         
         // Inform the player if there are multiple items on their position
@@ -2363,7 +2541,7 @@ UI *ui)
         {
             if(get_dungeon_pos_item_count(items, dungeon->level, player->pos) > 1)
             {
-                log_add(ui, "There are multiple items here.");
+                log_add("There are multiple items here.", ui);
             }
         }
         
@@ -2388,17 +2566,15 @@ UI *ui)
 #endif
                 
                 enemy->e.action_timer += game->action_time;
-                //printf("enemy->e.action_timer: %.01f\n", enemy->e.action_timer);
-                
                 f32 current_time = enemy->e.action_timer;
+                
+                //printf("enemy->e.action_timer: %.01f\n", enemy->e.action_timer);
                 
                 for(;;)
                 {
+                    u32 enemy_turn_count = get_enemy_turn_count(dungeon->tiles, enemy, &current_time);
+                    
                     //printf("\ncurrent_time: %.01f\n", current_time);
-                    
-                    u32 enemy_turn_count = get_enemy_turn_count(dungeon->tiles, enemy,
-                                                                &current_time);
-                    
                     //printf("enemy_turn_count: %u\n", enemy_turn_count);
                     
                     if(!enemy_turn_count)
@@ -2432,26 +2608,24 @@ UI *ui)
                                 break;
                             }
                             
+                        enemy->hit_chance = 30;
+                        assert(player->evasion < enemy->hit_chance);
+                        
+                        v4u enemy_view_rect = get_dungeon_dimension_rect(dungeon->size, enemy->pos, enemy->fov);
                         v2u pathfind_pos = get_pathfind_pos(&entities->enemy_pathfind_map, dungeon->tiles, enemy->pos, player->pos);
-                            enemy->hit_chance = 30;
-                            assert(player->evasion < enemy->hit_chance);
                             
-                        v4u enemy_fov_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, enemy->fov);
+                        if(enemy->e.spell_count)
+                        {
+                            enemy->e.spell = get_random_entity_spell(&game->random, enemy);
+                            Spell *enemy_spell = enemy->e.spell;
                             
-                        if(is_set(enemy->flags, EntityFlag_UsesMagicAttacks))
-                            {
-                                enemy->e.spell_index = get_random_with_chances(&game->random, entities->spell_chances, 0, enemy->e.spell_count, RandomChanceType_Normal);
-                                
-                                // TODO(rami): Duplication
-                                Spell *spell = &enemy->e.spells[enemy->e.spell_index];
-                                if(spell->type == SpellType_Offensive)
+                            if(enemy_spell->type == StatusType_Damage &&
+                                   is_entity_in_view_and_spell_range(enemy_view_rect, enemy->pos, player->pos, enemy_spell->range))
                                 {
-                                    if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, player->pos))
-                                    {
-                                        attack_entity(&game->random, enemy, player, dungeon, inventory, ui, spell->value, spell->damage_type, false);
-                                    }
-                                }
-                                else if(spell->type == SpellType_Healing)
+                                attack_entity(&game->random, enemy, player, dungeon, ui, enemy_spell->value, enemy_spell->damage_type);
+                            }
+                            #if 0
+                            else if(spell->type == StatusType_Heal)
                                 {
                                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                                     {
@@ -2463,40 +2637,48 @@ UI *ui)
                                                is_set(target->flags, EntityFlag_InCombat) &&
                                                target->hp < target->max_hp)
                                             {
-                                                log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, get_spell_name(spell->id), target->name, spell->value);
+                                            log_add(ui, "The %s casts %s at the %s, healing it for %u health.", enemy->name, spell->name.s, target->name, spell->value);
                                                 heal_entity(target, spell->value);
                                                 
                                                 break;
                                             }
                                         }
                                     }
-                                }
-                                else if(spell->type == SpellType_Buff)
-                                {
+                            }
+                            #endif
+                            
+#if 1
+                            else if(enemy_spell->type == StatusType_Stat)
+                            {
+                                // TODO(rami): If repeated, get_entity_from_type(caster_exclude_index)
                                     for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                                     {
-                                        Entity *target = &entities->array[target_index];
+                                    Entity *target = &entities->array[target_index];
+                                    
                                         if(target_index != enemy_index &&
                                            is_entity_valid_and_enemy(target))
-                                        {
-                                            if(is_inside_rect_and_spell_range(enemy_fov_rect, spell->range, enemy->pos, target->pos) &&
+                                    {
+                                        if(is_entity_in_view_and_spell_range(enemy_view_rect, enemy->pos, target->pos, enemy_spell->range) &&
                                                is_set(target->flags, EntityFlag_InCombat) &&
-                                               !entity_has_status_effect(target, spell->type))
-                                            {
-                                                log_add(ui, "The %s casts %s on the %s.", enemy->name, get_spell_name(spell->id), target->name);
-                                                start_entity_status_effect(target, spell->status_effect);
+                                               !get_statuses_stat_value(target->statuses, enemy_spell->stat_type))
+                                        {
+                                            log_add("The %s casts %s on the %s.", ui, enemy->name.s, enemy_spell->name.s, target->name.s);
+                                            add_entity_status_from_spell(game, target, dungeon, inventory, ui, enemy_spell);
                                                 
                                                 break;
-                                            }
+                                        }
                                         }
                                     }
-                                }
                             }
-                            else if(is_pos_inside_rect(enemy_fov_rect, player->pos) &&
-                                    (is_set(enemy->flags, EntityFlag_UsesRangedAttacks) ||
-                                     is_v2u_equal(pathfind_pos, player->pos)))
+                            
+                            enemy->e.spell = 0;
+                            #endif
+                            }
+                        else if((is_pos_inside_rect(enemy_view_rect, player->pos) &&
+                                 is_set(enemy->flags, EntityFlag_UsesRangedAttacks)) ||
+                                    is_v2u_equal(pathfind_pos, player->pos))
                             {
-                                attack_entity(&game->random, enemy, player, dungeon, inventory, ui, enemy->e.damage, enemy->e.damage_type, false);
+                                attack_entity(&game->random, enemy, player, dungeon, ui, enemy->e.damage, enemy->e.damage_type);
                             }
                             else
                             {
@@ -2568,7 +2750,7 @@ UI *ui)
                         move_entity(&game->random, enemy, dungeon, ui, enemy->new_pos);
                         }
                         
-                    update_entity_status_effects(game, enemy, dungeon, inventory, ui);
+                    update_entity_statuses(game, enemy, dungeon, inventory, ui);
 #if 0
                     printf("\nturns_in_player_view: %u\n", enemy->e.turns_in_player_view);
                     printf("is_pathfinding: %u\n", enemy->e.is_pathfinding);
@@ -2661,16 +2843,26 @@ render_entities(Game *game,
                     v4u dest = get_game_dest(game, enemy->pos);
                         SDL_RenderCopyEx(game->renderer, assets->tileset.tex, (SDL_Rect *)&enemy->tile_src, (SDL_Rect *)&dest, 0, 0, is_set(enemy->flags, EntityFlag_IsFlipped));
                     
-                    // Additional things to render on enemy tile.
+                    // Additional things to render on enemy tile
                     if(enemy->e.turns_in_player_view == 1)
                     {
-                            v4u status_src = get_dungeon_tileset_rect(DungeonTileID_EntityStatus);
+                            v4u status_src = get_dungeon_tileset_rect(DungeonTileID_EntityAlerted);
                         SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
                     }
-                    else if(entity_has_any_status_effect(enemy))
-                    {
-                            v4u status_src = get_dungeon_tileset_rect(DungeonTileID_EntityAlert);
-                        SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
+                    else
+                        {
+                            for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
+                            {
+                                 Status *status = &enemy->statuses[index];
+                                
+                                if(status->type)
+                                {
+                                    v4u status_src = get_dungeon_tileset_rect(DungeonTileID_EntityStatus);
+                                    SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&status_src, (SDL_Rect *)&dest);
+                                    
+                                    break;
+                                }
+                            }
                     }
                     
                         if(is_set(enemy->flags, EntityFlag_InCombat))
@@ -2764,6 +2956,80 @@ add_player_entity(Entity *player)
     //player->resistances[DamageType_Poison] = 5;
 }
 
+internal u32
+get_enemy_level_from_entity_id(EntityID id)
+{
+    u32 result = 0;
+    
+    switch(id)
+    {
+        case EntityID_Dummy: result = 1; break;
+        case EntityID_SkeletonWarrior: result = 1; break;
+        case EntityID_SkeletonArcher: result = 1; break;
+        case EntityID_SkeletonMage: result = 1; break;
+        case EntityID_Bat: result = 1; break;
+        case EntityID_Rat: result = 1; break;
+        
+        case EntityID_KoboldWarrior: result = 2; break;
+        case EntityID_KoboldShaman: result = 2; break;
+        case EntityID_Snail: result = 2; break;
+        case EntityID_Slime: result = 2; break;
+        case EntityID_Dog: result = 2; break;
+        
+        case EntityID_OrcWarrior: result = 3; break;
+        case EntityID_OrcArcher: result = 3; break;
+        case EntityID_OrcShaman: result = 3; break;
+        case EntityID_Python: result = 3; break;
+        case EntityID_Shade: result = 3; break;
+        
+        case EntityID_ElfKnight: result = 4; break;
+        case EntityID_ElfArbalest: result = 4; break;
+        case EntityID_ElfMage: result = 4; break;
+        case EntityID_GiantSlime: result = 4; break;
+        case EntityID_Spectre: result = 4; break;
+        
+        case EntityID_OrcAssassin: result = 5; break;
+        case EntityID_OrcSorcerer: result = 5; break;
+        case EntityID_Minotaur: result = 5; break;
+        case EntityID_Treant: result = 5; break;
+        case EntityID_Viper: result = 5; break;
+        
+        case EntityID_CentaurWarrior: result = 6; break;
+        case EntityID_CentaurSpearman: result = 6; break;
+        case EntityID_CentaurArcher: result = 6; break;
+        case EntityID_CursedSkull: result = 6; break;
+        case EntityID_Wolf: result = 6; break;
+        
+        case EntityID_OgreWarrior: result = 7; break;
+        case EntityID_OgreArcher: result = 7; break;
+        case EntityID_OgreMage: result = 7; break;
+        case EntityID_Cyclops: result = 7; break;
+        case EntityID_ShadowWalker: result = 7; break;
+        
+        case EntityID_DwarwenWarrior: result = 8; break;
+        case EntityID_DwarwenSorcerer: result = 0; break;
+        case EntityID_DwarwenPriest: result = 8; break;
+        case EntityID_ScarletSnake: result = 8; break;
+        case EntityID_Lich: result = 8; break;
+        
+        case EntityID_AbyssalFiend: result = 9; break;
+        case EntityID_BloodTroll: result = 9; break;
+        case EntityID_IronGolem: result = 9; break;
+        case EntityID_Griffin: result = 9; break;
+        case EntityID_Imp: result = 9; break;
+        
+        case EntityID_BlackKnight: result = 10; break;
+        case EntityID_GiantDemon: result = 10; break;
+        case EntityID_Hellhound: result = 10; break;
+        case EntityID_AbyssalHexmaster: result = 10; break;
+        case EntityID_Mahjarrat: result = 10; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
 internal Entity *
 add_enemy_entity(EntityState *entities,
                  Dungeon *dungeon,
@@ -2786,20 +3052,11 @@ add_enemy_entity(EntityState *entities,
             enemy->tile_src = get_dungeon_tile_rect(get_entity_tile_pos(enemy->id));
             enemy->type = EntityType_Enemy;
             enemy->fov = 8;
-            enemy->e.level = entities->levels[id];
+            enemy->e.level = get_enemy_level_from_entity_id(id);
             
             force_move_entity(enemy, dungeon, enemy->new_pos, dungeon->level);
             
             #if 0
-            StatusEffect status_effect = {0};
-            status_effect.type = StatusEffectType_Bolster;
-            status_effect.value = 2;
-            status_effect.chance = 100;
-            status_effect.duration = 5;
-            start_entity_status_effect(enemy, status_effect);
-            #endif
-            
-            #if 1
             enemy->resistances[DamageType_Physical] = -5;
             enemy->resistances[DamageType_Fire] = -3;
             enemy->resistances[DamageType_Ice] = -1;
@@ -2813,12 +3070,9 @@ add_enemy_entity(EntityState *entities,
             {
                 case EntityID_Dummy:
                 {
-                    // This is a dummy entity for testing purposes.
+                    // This is a dummy entity for testing purposes
                     strcpy(enemy->name.s, "Dummy");
                     enemy->max_hp = enemy->hp = U32_MAX;
-                    
-                    enemy->evasion = 10;
-                    enemy->action_time = 1.0f;
                 } break;
                 
                 case EntityID_SkeletonWarrior:
@@ -2853,8 +3107,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 4;
                     enemy->action_time = 1.0f;
                     
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
-                    add_enemy_spell(enemy, entities->spell_chances, SpellID_DarkBolt);
+                    add_entity_attack_spell(enemy, "Dark Bolt", DamageType_Dark, 5, 100);
                     } break;
                 
                 case EntityID_Bat:
@@ -2902,10 +3155,8 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
-                    
-                    add_enemy_spell(enemy, entities->spell_chances, SpellID_Bolster);
-                    add_enemy_spell(enemy, entities->spell_chances, SpellID_LesserHeal);
+                    //add_entity_spell(enemy, SpellID_Bolster, 0);
+                    //add_entity_spell(enemy, SpellID_LesserHeal, 0);
                 } break;
                 
                 case EntityID_Snail:
@@ -2979,11 +3230,10 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
-                    
-                    // TODO(rami): Lesser Heal
-                    // TODO(rami): Bolster / Reinforce (maybe not for this enemy)
-                } break;
+                    add_entity_attack_spell(enemy, "Lightning Whip", DamageType_Lightning, 6, 70);
+                    add_entity_stat_spell(enemy, "Protective Shout", StatType_Def, 3, 5, 30);
+                    //add_entity_heal_spell(enemy, "Healing Wave", 8, 20);
+                    } break;
                 
                 case EntityID_Python:
                 {
@@ -2996,10 +3246,11 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.poison.type = StatusEffectType_Poison;
-                    enemy->e.poison.value = 2;
-                    enemy->e.poison.chance = 33;
-                    enemy->e.poison.duration = 8;
+                    Status *poison = &enemy->e.poison;
+                    poison->type = StatusType_Poison;
+                    poison->value = 2;
+                    poison->chance = 33;
+                    poison->duration = 8;
                 } break;
                 
                 case EntityID_Shade:
@@ -3011,8 +3262,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage = 3;
                     enemy->evasion = 16;
                     enemy->action_time = 1.0f;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_ElfKnight:
@@ -3051,8 +3300,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
-                    
                     // TODO(rami): Blood mage? blood siphon?
                     // TODO(rami): Weaken
                 } break;
@@ -3082,8 +3329,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
-                    
                     // TODO(rami): Slow and invisible?
                     // TODO(rami): Slow and blink?
                 } break;
@@ -3108,8 +3353,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 5;
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                     
                     // TODO(rami): Focused on damage
                 } break;
@@ -3149,10 +3392,11 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
                     
-                    enemy->e.poison.type = StatusEffectType_Poison;
-                    enemy->e.poison.value = 3;
-                    enemy->e.poison.chance = 33;
-                    enemy->e.poison.duration = 8;
+                    Status *poison = &enemy->e.poison;
+                    poison->type = StatusType_Poison;
+                    poison->value = 2;
+                    poison->chance = 33;
+                    poison->duration = 8;
                 } break;
                 
                 case EntityID_CentaurWarrior:
@@ -3204,7 +3448,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->action_time = 1.0f;
                     
                     // TODO(rami): Maybe these attack physically and have a chance
-                    // on hit to give you a status effect?
+                    // on hit to give you a status?
                 } break;
                 
                 case EntityID_Wolf:
@@ -3256,8 +3500,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_Cyclops:
@@ -3306,8 +3548,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_DwarwenPriest:
@@ -3319,8 +3559,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_ScarletSnake:
@@ -3343,8 +3581,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_AbyssalFiend:
@@ -3452,8 +3688,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
                     enemy->remains = EntityRemains_RedBlood;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                 } break;
                 
                 case EntityID_Mahjarrat:
@@ -3464,8 +3698,6 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage = 0;
                     enemy->evasion = 0;
                     enemy->action_time = 1.0f;
-                    
-                    set(enemy->flags, EntityFlag_UsesMagicAttacks);
                 } break;
                 
                 invalid_default_case;

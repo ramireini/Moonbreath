@@ -1,7 +1,6 @@
 #define FONT_ATLAS_WIDTH 1920
 #define FONT_ATLAS_HEIGHT 1080
 #define FONT_START_GLYPH 32
-#define MAX_DEFER_COUNT 128
 
 // Font test
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~
@@ -62,25 +61,6 @@ typedef enum
     Color_WindowBackground,
     Color_WindowAccent
 } Color;
-
-typedef enum
-{
-    DeferType_None,
-    
-    DeferType_Text,
-    DeferType_Texture,
-    DeferType_Rect
-} DeferType;
-
-typedef struct
-{
-    DeferType type;
-    
-    String128 text;
-    u32 x, y, w, h;
-    v4u tile_src;
-    Color color;
-} Defer;
 
 typedef struct
 {

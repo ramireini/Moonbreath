@@ -15,14 +15,11 @@ typedef struct
     v2u pos;
     
     ExamineType type;
-    union
-    {
         Item *item;
         Spell *spell;
         Entity *entity;
         DungeonTrap *trap;
         DungeonTileID tile;
-    };
     
     u32 selected_passage;
 } Examine;
@@ -76,7 +73,8 @@ internal char *get_direction_string(Direction direction);
 internal u32 get_sdl_ticks_difference(u32 start_time);
 internal u32 tile_div(u32 value);
 internal u32 tile_mul(u32 value);
-internal b32 is_zero(u32 value);
+internal b32 is_chance_valid(u32 chance);
+internal b32 is_zero(s32 value);
 internal b32 was_pressed(InputState *state);
 internal b32 is_value_in_range(s32 value, s32 start, s32 end);
 internal v4u get_dungeon_tile_rect(v2u tile);

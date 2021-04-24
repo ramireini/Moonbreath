@@ -105,7 +105,7 @@ get_cardinal_distance(v2u a, v2u b)
 }
 
 internal u32
-get_ordinal_and_ordinal_distance(v2u a, v2u b)
+get_cardinal_and_ordinal_distance(v2u a, v2u b)
 {
     u32 result = 0;
     

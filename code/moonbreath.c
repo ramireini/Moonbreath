@@ -29,7 +29,7 @@ update_examine_mode(Examine *examine,
                     Entity *player,
                     EntityState *entities,
                     ItemState *items,
-                    Inventory *inventory,
+                    u32 *inventory_flags,
                     Dungeon *dungeon,
                     UI *ui)
 {
@@ -39,27 +39,19 @@ update_examine_mode(Examine *examine,
     {
         if(examine->type == ExamineType_Entity)
         {
-            Entity *entity = examine->entity;
-            if(is_set(entity->flags, EntityFlag_UsesMagicAttacks))
-            {
+            assert(is_entity_valid_and_enemy(examine->entity));
+            
+            // Begin entity spell examine
                 char pressed = get_pressed_alphabet_char(input);
                 if(pressed)
-                {
-                    if(is_set(examine->flags, ExamineFlag_ReadyForKeypress))
-                    {
-                        Spell *spell = &entity->e.spells[(pressed - 'a')];
-                        if(spell->id)
-                        {
-                            examine->type = ExamineType_Spell;
-                            examine->spell = spell;
-                        }
+            {
+                    Letter *letter = get_letter(ui->select_letters, pressed);
+                    if(letter->parent_type)
+                           {
+                        examine->type = ExamineType_Spell;
+                        examine->spell = letter->spell;
+                           }
                     }
-                    else
-                    {
-                        set(examine->flags, ExamineFlag_ReadyForKeypress);
-                    }
-                }
-            }
         }
         else if(!examine->type)
         {
@@ -174,7 +166,7 @@ update_examine_mode(Examine *examine,
                 {
                     // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
-                    set(inventory->flags, InventoryFlag_MultipleExamine);
+                    set(*inventory_flags, InventoryFlag_MultipleExamine);
                     set_view_at_start(&items->examine_window.view);
                     
                     return;
@@ -531,9 +523,9 @@ get_sdl_ticks_difference(u32 start_time)
 }
 
 internal b32
-is_zero(u32 value)
+is_zero(s32 value)
 {
-    b32 result = ((s32)value <= 0);
+    b32 result = (value <= 0);
     return(result);
 }
 
@@ -541,6 +533,13 @@ internal b32
 is_value_in_range(s32 value, s32 start, s32 end)
 {
     b32 result = ((value > start) && (value < end));
+    return(result);
+}
+
+internal b32
+is_chance_valid(u32 chance)
+{
+    b32 result = chance <= 100;
     return(result);
 }
 
@@ -1349,8 +1348,9 @@ update_and_render_game(Game *game,
                 }
             }
             
-            items->potion_healing_range = make_v2u(20, 40);
-            items->ration_healing_range = make_v2u(10, 20);
+            items->potion_info[Potion_Healing].value_range = make_v2u(20, 40);
+            items->ration_info.value_range = make_v2u(10, 20);
+            items->ration_info.tile_src = get_dungeon_tile_rect(make_v2u(12, 2));
             
 #if 0
             // Print randomized potion and scroll tiles.
@@ -1369,78 +1369,13 @@ update_and_render_game(Game *game,
                 printf("[%u]: %u, %u\n", index, info->tile.x, info->tile.y);
             }
 #endif
-            // Set entity spell chances
-            entities->spell_chances[SpellID_DarkBolt] = 40;
-            entities->spell_chances[SpellID_LesserHeal] = 30;
-            entities->spell_chances[SpellID_Bolster] = 20;
-            
-            // Set entity levels
-            entities->levels[EntityID_SkeletonWarrior] = 1;
-            entities->levels[EntityID_SkeletonArcher] = 1;
-            entities->levels[EntityID_SkeletonMage] = 1;
-            entities->levels[EntityID_Bat] = 1;
-            entities->levels[EntityID_Rat] = 1;
-            
-            entities->levels[EntityID_KoboldWarrior] = 2;
-            entities->levels[EntityID_KoboldShaman] = 2;
-            entities->levels[EntityID_Snail] = 2;
-            entities->levels[EntityID_Slime] = 2;
-            entities->levels[EntityID_Dog] = 2;
-            
-            entities->levels[EntityID_OrcWarrior] = 3;
-            entities->levels[EntityID_OrcArcher] = 3;
-            entities->levels[EntityID_OrcShaman] = 3;
-            entities->levels[EntityID_Python] = 3;
-            entities->levels[EntityID_Shade] = 3;
-            
-            entities->levels[EntityID_ElfKnight] = 4;
-            entities->levels[EntityID_ElfArbalest] = 4;
-            entities->levels[EntityID_ElfMage] = 4;
-            entities->levels[EntityID_GiantSlime] = 4;
-            entities->levels[EntityID_Spectre] = 4;
-            
-            entities->levels[EntityID_OrcSorcerer] = 5;
-            entities->levels[EntityID_OrcAssassin] = 5;
-            entities->levels[EntityID_Minotaur] = 5;
-            entities->levels[EntityID_Treant] = 5;
-            entities->levels[EntityID_Viper] = 5;
-            
-            entities->levels[EntityID_CentaurWarrior] = 6;
-            entities->levels[EntityID_CentaurSpearman] = 6;
-            entities->levels[EntityID_CentaurArcher] = 6;
-            entities->levels[EntityID_CursedSkull] = 6;
-            entities->levels[EntityID_Wolf] = 6;
-            
-            entities->levels[EntityID_OgreWarrior] = 7;
-            entities->levels[EntityID_OgreArcher] = 7;
-            entities->levels[EntityID_OgreMage] = 7;
-            entities->levels[EntityID_Cyclops] = 7;
-            entities->levels[EntityID_ShadowWalker] = 7;
-            
-            entities->levels[EntityID_DwarwenWarrior] = 8;
-            entities->levels[EntityID_DwarwenSorcerer] = 8;
-            entities->levels[EntityID_DwarwenPriest] = 8;
-            entities->levels[EntityID_ScarletSnake] = 8;
-            entities->levels[EntityID_Lich] = 8;
-            
-            entities->levels[EntityID_AbyssalFiend] = 9;
-            entities->levels[EntityID_BloodTroll] = 9;
-            entities->levels[EntityID_IronGolem] = 9;
-            entities->levels[EntityID_Griffin] = 9;
-            entities->levels[EntityID_Imp] = 9;
-            
-            entities->levels[EntityID_BlackKnight] = 10;
-            entities->levels[EntityID_GiantDemon] = 10;
-            entities->levels[EntityID_Hellhound] = 10;
-            entities->levels[EntityID_AbyssalHexmaster] = 10;
-            entities->levels[EntityID_Mahjarrat] = 10;
             
             add_player_entity(player);
             create_dungeon(game, player, entities, dungeons, items, inventory, ui, 1);
             
-            log_add(ui, "%sWelcome, %s!", start_color(Color_Yellow), player->name);
-            log_add(ui, "%sFind and destroy the underworld portal, ", start_color(Color_Yellow));
-            log_add(ui, "%swhich is located somewhere in the depths.", start_color(Color_Yellow));
+            log_add("%sWelcome, %s!", ui, start_color(Color_Yellow), player->name);
+            log_add("%sFind and destroy the underworld portal, ", ui, start_color(Color_Yellow));
+            log_add("%swhich is located somewhere in the depths.", ui, start_color(Color_Yellow));
             
             game->is_set = true;
         }
@@ -1458,7 +1393,7 @@ update_and_render_game(Game *game,
         printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
         #endif
         
-        update_examine_mode(examine, input, player, entities, items, inventory, dungeon, ui);
+        update_examine_mode(examine, input, player, entities, items, &inventory->flags, dungeon, ui);
         update_entities(game, input, entities, items, inventory, dungeons, assets, ui);
         update_camera(game, player->pos, dungeon->size);
         
