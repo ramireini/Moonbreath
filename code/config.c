@@ -164,13 +164,6 @@ is_whitespace(char c)
 }
 
 internal b32
-is_numeric(char c)
-{
-    b32 result = ((c >= '0') && (c <= '9'));
-    return(result);
-}
-
-internal b32
 is_special(char c)
 {
     b32 result = ((c >= '!') && (c <= '/') ||

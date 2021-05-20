@@ -143,13 +143,13 @@ typedef enum
 
 typedef enum
 {
-    ItemUseType_None,
+    UsedItemType_None,
     
-    ItemUseType_Identify,
-    ItemUseType_EnchantWeapon,
-    ItemUseType_EnchantArmor,
-    ItemUseType_Uncurse
-} ItemUseType;
+    UsedItemType_Identify,
+    UsedItemType_EnchantWeapon,
+    UsedItemType_EnchantArmor,
+    UsedItemType_Uncurse
+} UsedItemType;
 
 typedef enum
 {
@@ -237,7 +237,6 @@ typedef struct
 typedef struct
 {
     Item array[MAX_ITEM_COUNT];
-    
     Mark temp_mark;
     
     DeferWindow pickup_window;
@@ -250,14 +249,15 @@ typedef struct
     ConsumableInfo ration_info;
     } ItemState;
 
-// TODO(rami): Inventory mouse on entry highlight, mouse entry click
+// TODO(rami): Mouse highlight for inventory elements.
+// TODO(rami): Mouse left click for inventory item examine.
 
 typedef struct
 {
     u32 flags;
     
-    ItemUseType item_use_type;
-    ItemType view_update_item_type;
+    ItemType dropped_item_type;
+    UsedItemType used_item_type;
     DeferWindow window;
     
     Item *examine_item;
@@ -268,7 +268,6 @@ typedef struct
 internal void remove_item_from_game(Item *item);
 internal s32 get_index(s32 value);
 internal b32 is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level);
-internal b32 item_fits_using_item_type(ItemUseType type, Item *item);
 internal ItemType random_item_type(Random *random);
 internal Item *get_dungeon_pos_item(ItemState *items, u32 dungeon_level, v2u pos, ItemID id);
 internal Item *add_armor_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, b32 is_cursed);

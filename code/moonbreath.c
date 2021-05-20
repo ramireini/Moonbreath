@@ -208,6 +208,18 @@ update_examine_mode(Examine *examine,
         }
     }
 
+internal void
+init_view_scrolling_data(View *view, u32 entry_size, f32 shared_step_multiplier)
+{
+    assert(view);
+    assert(entry_size);
+    assert(shared_step_multiplier);
+    
+    view->entry_size = entry_size;
+    view->move.size = entry_size;
+    view->shared_step_multiplier = shared_step_multiplier;
+}
+
 internal Texture
 load_texture(SDL_Renderer *renderer, char *path, v4u *color_key)
 {
@@ -260,14 +272,26 @@ set_render_color(Game *game, Color color)
 internal u32
 tile_div(u32 value)
 {
-    u32 result = value / 32;
+    u32 result = 0;
+    
+    if(value)
+    {
+        result = value / 32;
+    }
+    
     return(result);
 }
 
 internal u32
 tile_mul(u32 value)
 {
-    u32 result = value * 32;
+    u32 result = 0;
+    
+    if(value)
+    {
+        result = value * 32;
+    }
+    
     return(result);
 }
 
@@ -299,6 +323,9 @@ get_direction_string(Direction direction)
 internal Direction
 get_direction_moved_from(v2u old_pos, v2u new_pos)
 {
+    assert(!is_v2u_zero(old_pos));
+    assert(!is_v2u_zero(new_pos));
+    
     Direction result = Direction_None;
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
@@ -306,6 +333,7 @@ get_direction_moved_from(v2u old_pos, v2u new_pos)
         if(is_v2u_equal(old_pos, get_direction_pos(new_pos, direction)))
         {
             result = direction;
+            break;
         }
     }
     
@@ -315,6 +343,8 @@ get_direction_moved_from(v2u old_pos, v2u new_pos)
 internal v2u
 get_direction_pos(v2u pos, Direction direction)
 {
+    assert(!is_v2u_zero(pos));
+    
     v2u result = {0};
     
     switch(direction)
@@ -337,9 +367,18 @@ get_direction_pos(v2u pos, Direction direction)
     return(result);
 }
 
+internal b32
+is_direction_vertical(Direction direction)
+{
+    b32 result = (direction == Direction_Up || direction == Direction_Down);
+    return(result);
+    }
+
 internal Direction
 get_random_direction(Random *random)
 {
+    assert(random);
+    
     Direction result = get_random_number(random, Direction_Up, Direction_DownRight);
     return(result);
 }
@@ -752,6 +791,7 @@ update_events(Game *game, Input *input)
                     case SDLK_y: input->Key_Y.repeat = true; break;
                     case SDLK_z: input->Key_Z.repeat = true; break;
                     
+                    case SDLK_QUOTE: input->Key_Quote.repeat = true; break;
                     case SDLK_SPACE: input->Key_Space.repeat = true; break;
                     case SDLK_DELETE: input->Key_Del.repeat = true; break;
                     case SDLK_BACKSPACE: input->Key_Backspace.repeat = true; break;
@@ -814,6 +854,7 @@ update_events(Game *game, Input *input)
                     case SDLK_8: update_input(&input->Key_8, is_down); break;
                     case SDLK_9: update_input(&input->Key_9, is_down); break;
                     
+                    case SDLK_QUOTE: update_input(&input->Key_Quote, is_down); break;
                     case SDLK_SPACE: update_input(&input->Key_Space, is_down); break;
                     case SDLK_PLUS: update_input(&input->Key_Plus, is_down); break;
                     case SDLK_MINUS: update_input(&input->Key_Minus, is_down); break;
@@ -875,8 +916,8 @@ render_rect(Game *game, v4u rect, u32 border_size)
     v4u background_rect = get_border_adjusted_rect(rect, border_size);
     render_fill_rect(game, background_rect, Color_WindowBackground);
     
-    // Window accent
-    render_outline_rect(game, background_rect, Color_WindowAccent);
+    // Window shadow
+    render_outline_rect(game, background_rect, Color_WindowShadow);
 }
 
 internal void
@@ -1054,6 +1095,7 @@ get_printable_key(Input *input, Key key)
             }
         } break;
         
+        case Key_Quote: result.s[0] = '\''; break;
         case Key_Space: result.s[0] = ' '; break;
         
         case Key_Plus:
@@ -1126,8 +1168,11 @@ get_printable_key(Input *input, Key key)
 internal char
 get_pressed_keyboard_char(Input *input)
 {
+    assert(input);
+    
     char result = 0;
     
+    // Only check if any of the printable characters are being pressed
     for(Key key = Key_A; key < Key_Shift; ++key)
     {
         if(was_pressed(&input->keyboard[key]))
@@ -1173,9 +1218,10 @@ update_and_render_game(Game *game,
         v4u rect = {50, 300, 200, 100};
         render_fill_rect(game, rect, Color_Cyan);
         
+        v2u pos = {100, 340};
         if(is_pos_inside_rect(rect, input->mouse_pos))
         {
-            render_text(game, "%sNew Game", 100, 340, &assets->fonts[FontName_DosVga], 0, start_color(Color_Yellow));
+            render_text(game, "%sNew Game", &pos, ui->font, start_color(Color_Yellow));
             
             if(was_pressed(&input->Button_Left))
             {
@@ -1184,7 +1230,7 @@ update_and_render_game(Game *game,
         }
         else
         {
-            render_text(game, "New Game", 100, 340, &assets->fonts[FontName_DosVga], 0);
+            render_text(game, "New Game", &pos, ui->font);
         }
     }
     else if(game->mode == GameMode_Playing)
@@ -1373,8 +1419,8 @@ update_and_render_game(Game *game,
             add_player_entity(player);
             create_dungeon(game, player, entities, dungeons, items, inventory, ui, 1);
             
-            log_add("%sWelcome, %s!", ui, start_color(Color_Yellow), player->name);
-            log_add("%sFind and destroy the underworld portal, ", ui, start_color(Color_Yellow));
+            log_add("%sWelcome, %s!", ui, start_color(Color_Yellow), player->name.s);
+            log_add("%sFind and destroy the underworld portal,", ui, start_color(Color_Yellow));
             log_add("%swhich is located somewhere in the depths.", ui, start_color(Color_Yellow));
             
             game->is_set = true;
@@ -1473,20 +1519,24 @@ int main(int argc, char *argv[])
             dungeons->levels[index].tiles.array = push_memory(&game->memory_arena, MAX_DUNGEON_SIZE_SQUARED * sizeof(DungeonTile));
         }
         
-        ItemState *items = push_memory_struct(&game->memory_arena, ItemState);
-        items->temp_mark.cursor_blink_duration = 800;
-        items->temp_mark.view.end = 24;
-        
-        Inventory *inventory = push_memory_struct(&game->memory_arena, Inventory);
-        init_letters(inventory->item_letters);
-        
         Assets *assets = push_memory_struct(&game->memory_arena, Assets);
         
         UI *ui = push_memory_struct(&game->memory_arena, UI);
+        init_letters(ui->select_letters);
+        
         ui->window_offset = 12;
         ui->short_log_view.end = 9;
-        ui->window_entry_size = 32;
-        init_letters(ui->select_letters);
+        ui->default_view_step_multiplier = 0.14f;
+        
+        ItemState *items = push_memory_struct(&game->memory_arena, ItemState);
+        items->temp_mark.cursor_blink_duration = 800;
+        items->temp_mark.view.end = 24;
+        init_view_scrolling_data(&items->pickup_window.view, 32, ui->default_view_step_multiplier);
+        init_view_scrolling_data(&items->examine_window.view, 32, ui->default_view_step_multiplier);
+        
+        Inventory *inventory = push_memory_struct(&game->memory_arena, Inventory);
+        init_letters(inventory->item_letters);
+        init_view_scrolling_data(&inventory->window.view, 32, ui->default_view_step_multiplier);
         
 #if 0
         // Config Example
@@ -1620,22 +1670,26 @@ int main(int argc, char *argv[])
                                             SDL_WINDOWPOS_UNDEFINED,
                                             game->window_size.w,
                                             game->window_size.h,
-                                            window_flags);
+                                                window_flags);
+            
             if(game->window)
             {
                 u32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
                 game->renderer = SDL_CreateRenderer(game->window, -1, renderer_flags);
+                
                 if(game->renderer)
                 {
                     u32 image_flags = IMG_INIT_PNG;
+                    
                     if(IMG_Init(image_flags) & image_flags)
                     {
                         if(!TTF_Init())
                         {
                             if(initialize_assets(game, assets))
                             {
+                                ui->window_scroll_start_y = game->window_size.h - assets->stat_and_log_window_h;
                                 ui->font = &assets->fonts[FontName_DosVga];
-                                ui->font_newline = get_font_newline(ui->font->size);
+                                init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
                                 u64 seed = 1602811425;
@@ -1645,10 +1699,7 @@ int main(int argc, char *argv[])
                                 
                                 game->mode = GameMode_Playing;
                                 //game->mode = GameMode_MainMenu;
-                                
-                                game->camera = make_v4s(0, 0,
-                                                        game->window_size.w,
-                                                        game->window_size.h - assets->stat_and_log_window_h);
+                                game->camera = make_v4s(0, 0, game->window_size.w, ui->window_scroll_start_y);
                                 
                                 u32 target_fps = 60;
                                 f32 target_seconds_per_frame = 1.0f / (f32)target_fps;

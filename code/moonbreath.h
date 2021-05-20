@@ -39,7 +39,7 @@ typedef struct
     memory_size used;
 } GameMemory;
 
-typedef struct
+struct Game
 {
     b32 is_set;
     
@@ -61,7 +61,7 @@ typedef struct
     f32 action_time;
     
     b32 show_item_ground_outline;
-    } Game;
+    };
 
 internal void render_outline_rect(Game *game, v4u rect, Color color);
 internal void render_fill_rect(Game *game, v4u rect, Color color);
@@ -73,6 +73,7 @@ internal char *get_direction_string(Direction direction);
 internal u32 get_sdl_ticks_difference(u32 start_time);
 internal u32 tile_div(u32 value);
 internal u32 tile_mul(u32 value);
+internal b32 is_direction_vertical(Direction direction);
 internal b32 is_chance_valid(u32 chance);
 internal b32 is_zero(s32 value);
 internal b32 was_pressed(InputState *state);

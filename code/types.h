@@ -247,6 +247,7 @@ typedef enum
     Key_8,
     Key_9,
     
+    Key_Quote,
     Key_Space,
     Key_Plus,
     Key_Minus,
@@ -405,6 +406,7 @@ typedef struct
             InputState Key_8;
             InputState Key_9;
             
+            InputState Key_Quote;
             InputState Key_Space;
             InputState Key_Plus;
             InputState Key_Minus;
@@ -533,8 +535,9 @@ typedef struct
 
 #define MAX_INVENTORY_SLOT_COUNT 52
 
-typedef struct Entity Entity;
+typedef struct Game Game;
 typedef struct Item Item;
+typedef struct Entity Entity;
 typedef struct DungeonTrap DungeonTrap;
 
 #include "assets.h"

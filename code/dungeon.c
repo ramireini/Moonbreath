@@ -2058,9 +2058,9 @@ create_dungeon(Game *game,
     player->dungeon_level = 1;
     
     move_entity(random, player, dungeon, ui, make_v2u(9, 1));
-    //move_entity(random, player, dungeon, ui, make_v2u(25, 4));
-    //add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 24, 8);
-    //add_enemy_entity(entities, dungeon, EntityID_OrcShaman, 25, 8);
+    add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 25, 2);
+    //add_enemy_entity(entities, dungeon, EntityID_OrcShaman, 5, 3);
+    //add_enemy_entity(entities, dungeon, EntityID_OrcShaman, 5, 5);
     //add_enemy_entity(entities, dungeon, EntityID_ShadowWalker, 25, 8);
     
     //add_enemy_entity(entities, dungeon, EntityID_OrcWarrior, 25, 8);

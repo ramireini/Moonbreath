@@ -11,34 +11,48 @@ get_next_line(v2u pos, u32 start_x, u32 font_size)
 }
 
 internal u32
-get_metric_index(char c)
+get_font_metric_index_from_char(char c)
 {
-    u32 result = c - FONT_START_GLYPH;
+    assert(c);
+    
+    u32 result = (c - FONT_START_GLYPH);
     return(result);
 }
 
 internal u32
-get_glyph_width(Font *font, char c)
+get_glyph_width(char c, Font *font)
 {
+    assert(font);
+    
     u32 result = 0;
     
     if(c)
     {
-        u32 index = get_metric_index(c);
-        result = font->metrics[index].advance;
+        result = font->metrics[get_font_metric_index_from_char(c)].advance;
     }
     
     return(result);
 }
 
 internal u32
-get_text_width(Font *font, char *text)
+get_text_width(char *text, Font *font, b32 strip_color_codes)
 {
+    assert(font);
+    assert(text);
+    
     u32 result = 0;
     
     for(char *c = text; *c; ++c)
     {
-        result += get_glyph_width(font, *c);
+        if(strip_color_codes &&
+               c[0] == '#' &&
+               c[1] == '#')
+        {
+            assert(is_numeric(c[2]) || is_uppercase(c[2]));
+            c += 3;
+        }
+        
+        result += get_glyph_width(*c, font);
     }
     
     return(result);
@@ -58,8 +72,7 @@ get_glyph_advance(Font *font, char c)
         
         case FontType_TTF:
         {
-            u32 index = get_metric_index(c);
-            result = font->metrics[index].advance;
+            result = font->metrics[get_font_metric_index_from_char(c)].advance;
         } break;
         
         invalid_default_case;
@@ -107,7 +120,7 @@ get_color_value(Color color)
         
         case Color_WindowBackground: result = make_v4u(20, 35, 51, 255); break;
         case Color_WindowBorder: result = make_v4u(122, 138, 153, 255); break;
-        case Color_WindowAccent: result = make_v4u(6, 13, 19, 255); break;
+        case Color_WindowShadow: result = make_v4u(6, 13, 19, 255); break;
         
         invalid_default_case;
     }
@@ -354,31 +367,41 @@ set_texture_color(SDL_Texture *texture, Color color)
     SDL_SetTextureAlphaMod(texture, color_value.a);
 }
 
+#define render_text_and_move(game, text, pos, lines_before, lines_after, font, ...) render_text_full(game->renderer, text, pos, lines_before, lines_after, font, 0, ##__VA_ARGS__)
+#define render_text(game, text, pos, font, ...) render_text_full(game->renderer, text, pos, 0, 0, font, 0, ##__VA_ARGS__)
 internal void
-render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wrap_x, ...)
+render_text_full(SDL_Renderer *renderer,
+                 char *text,
+                 v2u *start_pos,
+                 u32 lines_before,
+                 u32 lines_after,
+                 Font *font,
+                 u32 wrap_x, ...)
 {
-    assert(game);
+    assert(renderer);
     assert(text);
     assert(font);
     assert(font->is_valid);
     
-    b32 is_using_code = false;
-    b32 is_word_scanned = false;
-    
     String256 text_format = {0};
-    v2u text_pos = {start_x, start_y};
-    
     va_list arg_list;
     va_start(arg_list, wrap_x);
     vsnprintf(text_format.s, sizeof(text_format), text, arg_list);
     va_end(arg_list);
     
+    if(lines_before)
+    {
+        pos_newline(start_pos, font->size, lines_before);
+    }
+    
+    b32 using_color_code = false;
+    b32 word_was_scanned = false;
+    v2u text_pos = {start_pos->x, start_pos->y};
     set_texture_color(font->atlas, Color_White);
     
     for(char *at = text_format.s; *at;)
     {
-        u32 metric_index = get_metric_index(at[0]);
-        GlyphMetrics *metrics = &font->metrics[metric_index];
+        GlyphMetrics *metrics = &font->metrics[get_font_metric_index_from_char(at[0])];
         
         assert(metrics);
         assert(metrics->w);
@@ -387,9 +410,9 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
         if(at[0] == '#' &&
            at[1] == '#')
         {
-            if(is_using_code)
+            if(using_color_code)
             {
-                is_using_code = false;
+                using_color_code = false;
                 
                 set_texture_color(font->atlas, Color_White);
                 at += 2;
@@ -430,7 +453,7 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
                         invalid_default_case;
                     }
                     
-                    is_using_code = true;
+                    using_color_code = true;
                     
                     set_texture_color(font->atlas, color);
                     at += 3;
@@ -439,12 +462,12 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
         }
         else if(at[0] == '\n')
         {
-            text_pos = get_next_line(text_pos, start_x, font->size);
+            text_pos = get_next_line(text_pos, start_pos->x, font->size);
             ++at;
         }
         else
         {
-            if(wrap_x && !is_word_scanned)
+            if(wrap_x && !word_was_scanned)
             {
                 char *scan_at = at;
                 u32 scan_x = text_pos.x;
@@ -458,22 +481,27 @@ render_text(Game *game, char *text, u32 start_x, u32 start_y, Font *font, u32 wr
                 
                 if(scan_x >= wrap_x)
                 {
-                    text_pos = get_next_line(text_pos, start_x, font->size);
+                    text_pos = get_next_line(text_pos, start_pos->x, font->size);
                 }
                 
-                is_word_scanned = true;
+                word_was_scanned = true;
             }
             else if(at[0] == ' ')
             {
-                is_word_scanned = false;
+                word_was_scanned = false;
             }
             
             v4u src = {metrics->x, metrics->y, metrics->w, metrics->h};
             v4u dest = {text_pos.x, text_pos.y, metrics->w, metrics->h};
-            SDL_RenderCopy(game->renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+            SDL_RenderCopy(renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
             
             text_pos.x += get_glyph_advance(font, at[0]);
             ++at;
         }
     }
-}
+    
+    if(lines_after)
+    {
+        pos_newline(start_pos, font->size, lines_after);
+    }
+    }

@@ -196,6 +196,13 @@ is_pos_inside_rect(v4u rect, v2u pos)
 }
 
 internal b32
+is_numeric(char c)
+{
+    b32 result = ((c >= '0') && (c <= '9'));
+    return(result);
+}
+
+internal b32
 is_lowercase(char c)
 {
     b32 result = (c >= 'a') && (c <= 'z');
@@ -247,6 +254,20 @@ strings_match(char *a, char *b)
         }
     }
     
+    return(result);
+}
+
+internal f32
+lerp(f32 start, f32 end, f32 step)
+{
+    f32 result = (start * (1.0f - step)) + (end * step);
+    return(result);
+}
+
+internal u32
+f32_to_u32_rounded_up(f32 value)
+{
+    u32 result = (u32)(value + 0.5f);
     return(result);
 }
 

@@ -59,7 +59,7 @@ typedef enum
     
     Color_WindowBorder,
     Color_WindowBackground,
-    Color_WindowAccent
+    Color_WindowShadow
 } Color;
 
 typedef struct

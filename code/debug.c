@@ -343,7 +343,7 @@ update_and_render_debug_state(Game *game,
             {
                 tree->move_rect.x,
                 tree->move_rect.y,
-                        get_text_width(font, text.s),
+                        get_text_width(text.s, font, false),
                 font->size
                     };
                     
@@ -418,8 +418,8 @@ update_and_render_debug_state(Game *game,
                         text_color = var->color;
                     }
                     
-                    render_text(game, "%s%s", text_rect.x, text_rect.y, font, 0,
-                                    start_color(text_color), text.s);
+                    v2u text_pos = {text_rect.x, text_rect.y};
+                    render_text(game, "%s%s", &text_pos, font, start_color(text_color), text.s);
                     
             // Get next variable
             if(is_var_group(var->type) && var->group.is_expanded)

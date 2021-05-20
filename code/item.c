@@ -1,4 +1,18 @@
 internal b32
+item_fits_using_item_type(Item *item, UsedItemType type)
+{
+    assert(item);
+    assert(type);
+    
+    if(type == UsedItemType_EnchantArmor && item->type == ItemType_Armor) return(true);
+    else if(type == UsedItemType_EnchantWeapon && item->type == ItemType_Weapon) return(true);
+    else if(type == UsedItemType_Identify && !is_set(item->flags, ItemFlag_IsIdentified)) return(true);
+    else if(type == UsedItemType_Uncurse && is_set(item->flags, ItemFlag_IsIdentified | ItemFlag_IsCursed)) return(true);
+    
+    return(false);
+}
+
+internal b32
 is_item_id_weapon(ItemID id)
 {
     b32 result = (id > ItemID_WeaponStart && id < ItemID_WeaponEnd);
@@ -124,6 +138,15 @@ is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level)
 {
     b32 result = (is_item_valid(item, dungeon_level) &&
                       !is_set(item->flags, ItemFlag_InInventory));
+    
+    return(result);
+}
+
+internal b32
+is_item_valid_and_not_in_inventory_and_on_pos(Item *item, v2u pos, u32 dungeon_level)
+{
+    b32 result = (is_item_valid_and_not_in_inventory(item, dungeon_level) &&
+                  is_v2u_equal(item->pos, pos));
     
     return(result);
 }
@@ -270,7 +293,7 @@ get_full_item_name(Item *item)
 }
 
 internal void
-update_item_adjusting(Input *input,
+update_item_adjust(Input *input,
                       Item *item,
                       ItemState *items,
                       Inventory *inventory,
@@ -564,19 +587,19 @@ use_consumable(Game *game,
             case ItemID_IdentifyScroll:
             {
                 log_add("You read the scroll, choose an item to identify.", ui);
-                inventory->item_use_type = ItemUseType_Identify;
+                inventory->used_item_type = UsedItemType_Identify;
             } break;
             
             case ItemID_EnchantWeaponScroll:
             {
                 log_add("You read the scroll, choose a weapon to enchant.", ui);
-                inventory->item_use_type = ItemUseType_EnchantWeapon;
+                inventory->used_item_type = UsedItemType_EnchantWeapon;
             } break;
             
             case ItemID_EnchantArmorScroll:
             {
                 log_add("You read the scroll, choose an armor to enchant.", ui);
-                inventory->item_use_type = ItemUseType_EnchantArmor;
+                inventory->used_item_type = UsedItemType_EnchantArmor;
             } break;
             
             case ItemID_MagicMappingScroll:
@@ -605,7 +628,7 @@ use_consumable(Game *game,
             case ItemID_UncurseScroll:
             {
                 log_add("You read the scroll, choose an item to uncurse.", ui);
-                inventory->item_use_type = ItemUseType_Uncurse;
+                inventory->used_item_type = UsedItemType_Uncurse;
             } break;
             
             invalid_default_case;
@@ -613,8 +636,6 @@ use_consumable(Game *game,
     }
     
     add_entity_status(player->statuses, &item->c.status);
-    
-    inventory->view_update_item_type = item->type;
     end_consumable_use(item, items, inventory, dungeon->level);
     
     unset(inventory->flags, InventoryFlag_Examine);
@@ -635,16 +656,16 @@ use_inventory_item(Random *random,
         Item *item = inventory->slots[index];
         if(item &&
                item->inventory_letter == pressed &&
-               item_fits_using_item_type(inventory->item_use_type, item))
+               item_fits_using_item_type(item, inventory->used_item_type))
         {
-            assert(inventory->item_use_type);
+            assert(inventory->used_item_type);
             
-            if(inventory->item_use_type == ItemUseType_Identify)
+            if(inventory->used_item_type == UsedItemType_Identify)
             {
                 set(item->flags, ItemFlag_IsIdentified);
                 log_add("You identify the %s.", ui, get_full_item_name(item).s);
             }
-            else if(inventory->item_use_type == ItemUseType_EnchantWeapon)
+            else if(inventory->used_item_type == UsedItemType_EnchantWeapon)
             {
                 switch(get_random_number(random, 1, 4))
                 {
@@ -658,7 +679,7 @@ use_inventory_item(Random *random,
                 
                 ++item->enchantment_level;
             }
-            else if(inventory->item_use_type == ItemUseType_EnchantArmor)
+            else if(inventory->used_item_type == UsedItemType_EnchantArmor)
             {
                 switch(get_random_number(random, 1, 4))
                 {
@@ -672,14 +693,14 @@ use_inventory_item(Random *random,
                 
                 ++item->enchantment_level;
             }
-            else if(inventory->item_use_type == ItemUseType_Uncurse)
+            else if(inventory->used_item_type == UsedItemType_Uncurse)
             {
                 unset(item->flags, ItemFlag_IsCursed);
                 log_add("The %s seems slightly different now..", ui, get_item_id_text(item->id));
             }
             
             end_consumable_use(item, items, inventory, dungeon_level);
-            inventory->item_use_type = ItemUseType_None;
+            inventory->used_item_type = UsedItemType_None;
             set_view_at_start(&inventory->window.view);
         }
     }
@@ -861,7 +882,6 @@ drop_item_from_inventory(Game *game,
                          Dungeon *dungeon,
                          UI *ui)
 {
-    // Drop item from inventory
     if(is_set(item->flags, ItemFlag_IsEquipped | ItemFlag_IsCursed))
     {
         log_add_item_cursed_unequip(item, ui);
@@ -872,7 +892,6 @@ drop_item_from_inventory(Game *game,
         unset(inventory->flags, InventoryFlag_Examine);
         
         log_add_item_action_text(item, ui, ItemActionType_Drop);
-        inventory->view_update_item_type = item->type;
         
         if(is_set(item->flags, ItemFlag_IsEquipped))
         {
@@ -883,7 +902,7 @@ drop_item_from_inventory(Game *game,
             game->action_time = player->p.turn_action_time;
         }
         
-        b32 removed_from_game = false;
+        b32 remove_item_from_game = false;
         
             if(is_item_consumable(item->type))
             {
@@ -900,22 +919,22 @@ drop_item_from_inventory(Game *game,
                 assert(is_item_consumable(pos_item->type));
                 pos_item->c.stack_count += item->c.stack_count;
                 
-                // Stacks have been combined, remove the original item
-                removed_from_game = true;
+                // Item stacks have been combined, remove the original item from the game
+                remove_item_from_game = true;
                 remove_item_from_inventory_and_game(item, items, inventory, dungeon->level);
                 }
             }
         
-        // If the original item has not been removed because things like consumable stack
-        // combination etc, we will only remove the item from inventory as usual.
-        if(!removed_from_game)
+        // Remove the item from inventory if we didn't remove it from the game
+        if(!remove_item_from_game)
         {
             item->pos = player->pos;
             item->dungeon_level = dungeon->level;
             clear_letter(inventory->item_letters, &item->inventory_letter);
             
+            inventory->dropped_item_type = item->type;
             remove_item_from_inventory(item, items, inventory, dungeon->level);
-        }
+            }
         }
 }
 
@@ -923,51 +942,36 @@ internal void
 force_render_mark_cursor(Mark *mark)
 {
     mark->render_cursor = true;
-    mark->cursor_render_start = 0;
-}
-
-internal void
-set_mark_view_and_cursor_to_start(Mark *mark)
-{
-    set_view_at_start(&mark->view);
-    mark->cursor_index = 0;
-}
-
-internal void
-set_mark_view_and_cursor_to_end(Mark *mark)
-{
-    if(is_view_scrolling(mark->view, mark->view.count + 1))
-    {
-        set_view_at_end(&mark->view);
-    }
-    
-    mark->cursor_index = mark->view.count;
+    mark->render_cursor_start_ms = 0;
 }
 
 internal void
 add_mark_character(Mark *mark, char c)
 {
+    assert(mark);
+    assert(c);
+    
     if(mark->view.count < (MAX_MARK_SIZE - 1))
     {
         force_render_mark_cursor(mark);
         
-        if(mark->cursor_index == mark->view.count)
+        if(mark->cursor == mark->view.count)
         {
             mark->array[mark->view.count] = c;
         }
         else
         {
-            // Move characters after mark->cursor_index towards buffer end
-            for(u32 index = MAX_MARK_SIZE - 1; index > mark->cursor_index; --index)
+            // Move characters after mark->cursor towards buffer end
+            for(u32 index = MAX_MARK_SIZE - 1; index > mark->cursor; --index)
             {
                 mark->array[index] = mark->array[index - 1];
             }
             
-            mark->array[mark->cursor_index] = c;
+            mark->array[mark->cursor] = c;
         }
         
 #if 0
-        printf("mark->cursor_index: %u\n", mark->cursor_index);
+        printf("mark->cursor: %u\n", mark->cursor);
         printf("mark->view.count: %u\n", mark->view.count);
         printf("mark->view.start: %u\n", mark->view.start);
         printf("mark->view.end: %u\n\n", mark->view.end);
@@ -975,45 +979,132 @@ add_mark_character(Mark *mark, char c)
         
         ++mark->view.count;
         
-        // If we are at the end of the view we see on screen then move the view.
-        if(mark->cursor_index == get_view_range(mark->view) - 1)
+        // Move mark view if we are currently on the boundary of it
+        if(mark->cursor == get_view_range(mark->view) - 1)
         {
-            if(is_view_scrolling(mark->view, mark->view.count))
+            if(is_view_scrolling(mark->view))
             {
                 ++mark->view.start;
             }
         }
         
-        ++mark->cursor_index;
+        ++mark->cursor;
     }
 }
 
 internal void
-update_item_marking(Input *input, Mark *temp_mark, Item *item, u32 *inventory_flags)
+move_mark_cursor_left(Mark *mark)
 {
-    assert(temp_mark->view.end == 24);
-    temp_mark->view.count = get_string_length(temp_mark->array);
+    assert(mark);
+    
+    if(is_view_scrolling_with_count(mark->view, mark->view.count + 1) &&
+                   mark->cursor == (mark->view.start - 1))
+                {
+                    --mark->view.start;
+                }
+                
+                --mark->cursor;
+                force_render_mark_cursor(mark);
+}
+
+internal void
+move_mark_cursor_right(Mark *mark)
+{
+    assert(mark);
+    
+    if(mark->cursor < MAX_MARK_SIZE &&
+       mark->cursor < mark->view.count)
+    {
+        if(is_view_scrolling_with_count(mark->view, mark->view.count + 1) &&
+           (mark->cursor == get_view_range(mark->view) - 1))
+        {
+            ++mark->view.start;
+        }
+        
+        ++mark->cursor;
+        force_render_mark_cursor(mark);
+    }
+}
+
+internal void
+remove_mark_char(Mark *mark)
+{
+    assert(mark);
+    
+    if(mark->cursor && mark->view.count)
+    {
+        // Remove the character before mark->cursor and move the buffer.
+        for(u32 index = mark->cursor; index < MAX_MARK_SIZE; ++index)
+        {
+            mark->array[index - 1] = mark->array[index];
+            mark->array[index] = 0;
+        }
+        
+        if(mark->view.start > 1)
+        {
+            // If we're on the left edge of the buffer, move the view start to the left a single extra
+            // time so we can see the next character on the left of the cursor.
+            if(mark->cursor + 1 == mark->view.start)
+            {
+                --mark->view.start;
+            }
+            
+                --mark->view.start;
+        }
+        
+        --mark->cursor;
+        force_render_mark_cursor(mark);
+        }
+    }
+
+internal void
+move_mark_to_start(Mark *mark)
+{
+    assert(mark);
+    
+    set_view_at_start(&mark->view);
+    mark->cursor = 0;
+}
+
+internal void
+move_mark_to_end(Mark *mark)
+{
+    assert(mark);
+    
+    if(is_view_scrolling_with_count(mark->view, mark->view.count + 1))
+    {
+        set_view_at_end(&mark->view);
+    }
+    
+    mark->cursor = mark->view.count;
+}
+
+internal void
+update_item_mark(Input *input, Mark *mark, Item *item, u32 *inventory_flags)
+{
+    assert(mark->view.end == 24);
+    mark->view.count = get_string_length(mark->array);
     
     if(was_pressed(&input->Key_Enter))
     {
-        // The array is not valid if it is empty or consists of only spaces
-        b32 is_temp_mark_valid = false;
+        // The mark is not valid if it's empty or consists of only spaces
+        b32 is_mark_valid = false;
         
         for(u32 index = 0; index < MAX_MARK_SIZE; ++index)
         {
-            if(temp_mark->array[index] &&
-                   temp_mark->array[index] != ' ')
+            if(mark->array[index] &&
+                   mark->array[index] != ' ')
             {
-                is_temp_mark_valid = true;
+                is_mark_valid = true;
                 break;
             }
         }
         
-        if(is_temp_mark_valid)
+        if(is_mark_valid)
         {
             // Copy the item mark to be the temp mark if it's valid
-            item->mark.view = temp_mark->view;
-            strcpy(item->mark.array, temp_mark->array);
+            item->mark.view = mark->view;
+            strcpy(item->mark.array, mark->array);
             
             set(item->flags, ItemFlag_IsMarked);
         }
@@ -1022,116 +1113,132 @@ update_item_marking(Input *input, Mark *temp_mark, Item *item, u32 *inventory_fl
             unset(item->flags, ItemFlag_IsMarked);
         }
         
-        // This data has to be reset so it doesn't appear in the mark of other items.
-        zero_array(temp_mark->array, MAX_MARK_SIZE);
-        temp_mark->view.count = 0;
-        temp_mark->view.start = 0;
+        // This data has to be reset so it doesn't appear in the mark of other items
+        zero_array(mark->array, MAX_MARK_SIZE);
+        mark->view.count = 0;
+        mark->view.start = 0;
         
         unset(*inventory_flags, InventoryFlag_Mark);
     }
     else if(was_pressed(&input->Key_Escape))
     {
-        zero_array(temp_mark->array, MAX_MARK_SIZE);
+        zero_array(mark->array, MAX_MARK_SIZE);
         unset(*inventory_flags, InventoryFlag_Mark);
     }
     else if(was_pressed(&input->Key_Del))
     {
-        // Don't do this if we are at the end of the buffer.
-        if((temp_mark->cursor_index < temp_mark->view.count) && temp_mark->view.count)
+        // Don't do this if we are at the end of the buffer
+        if((mark->cursor < mark->view.count) && mark->view.count)
         {
-            // Remove the character at mark->cursor_index and move the buffer.
-            for(u32 index = temp_mark->cursor_index; index < MAX_MARK_SIZE; ++index)
+            // Remove the character at mark->cursor and move the buffer
+            for(u32 index = mark->cursor; index < MAX_MARK_SIZE; ++index)
             {
-                temp_mark->array[index] = temp_mark->array[index + 1];
-                temp_mark->array[index + 1] = 0;
+                mark->array[index] = mark->array[index + 1];
+                mark->array[index + 1] = 0;
             }
             
-            force_render_mark_cursor(temp_mark);
+            force_render_mark_cursor(mark);
         }
     }
-    else if(was_pressed(&input->Key_Backspace))
+    else if(was_pressed_core(&input->Key_Backspace))
     {
-        if(temp_mark->cursor_index && temp_mark->view.count)
+        if(input->Key_Control.is_down)
         {
-            if(temp_mark->cursor_index == temp_mark->view.count)
+            b32 should_return = false;
+            
+            while(mark->cursor && mark->array[mark->cursor - 1] != ' ')
             {
-                --temp_mark->cursor_index;
-                temp_mark->array[temp_mark->cursor_index] = 0;
+                should_return = true;
+                remove_mark_char(mark);
             }
-            else
+            
+            if(should_return) return;
+            
+                while(mark->cursor && mark->array[mark->cursor - 1] == ' ')
             {
-                // Remove the character before mark->cursor_index and move the buffer.
-                for(u32 index = temp_mark->cursor_index; index < MAX_MARK_SIZE; ++index)
-                {
-                    temp_mark->array[index - 1] = temp_mark->array[index];
-                    temp_mark->array[index] = 0;
+                    remove_mark_char(mark);
                 }
-                
-                --temp_mark->cursor_index;
-            }
-            
-            if(is_view_scrolling(temp_mark->view, temp_mark->view.count) &&
-                   get_view_range(temp_mark->view) > temp_mark->view.count)
-            {
-                --temp_mark->view.start;
-            }
-            
-            force_render_mark_cursor(temp_mark);
+        }
+        else
+        {
+            remove_mark_char(mark);
         }
     }
     else if(was_pressed(&input->Key_ArrowLeft))
     {
-        if(temp_mark->cursor_index)
+        if(mark->cursor)
         {
-            if(is_view_scrolling(temp_mark->view, temp_mark->view.count + 1) &&
-                   temp_mark->cursor_index == (temp_mark->view.start - 1))
+            if(input->Key_Control.is_down)
             {
-                --temp_mark->view.start;
+                b32 should_return = false;
+                
+                while(mark->cursor && mark->array[mark->cursor - 1] != ' ')
+                    {
+                        should_return = true;
+                        move_mark_cursor_left(mark);
+                    }
+                
+                if(should_return) return;
+                
+                while(mark->cursor && mark->array[mark->cursor - 1] == ' ')
+                    {
+                        move_mark_cursor_left(mark);
+                    }
             }
-            
-            --temp_mark->cursor_index;
-            force_render_mark_cursor(temp_mark);
+            else
+            {
+                move_mark_cursor_left(mark);
+            }
         }
     }
     else if(was_pressed(&input->Key_ArrowRight))
     {
-        if(temp_mark->cursor_index < MAX_MARK_SIZE &&
-               temp_mark->cursor_index < temp_mark->view.count)
+        if(input->Key_Control.is_down)
         {
-            if(is_view_scrolling(temp_mark->view, temp_mark->view.count + 1) &&
-                   (temp_mark->cursor_index == get_view_range(temp_mark->view) - 1))
-            {
-                ++temp_mark->view.start;
-            }
+            b32 should_return = false;
             
-            ++temp_mark->cursor_index;
-            force_render_mark_cursor(temp_mark);
+                while(mark->cursor + 1 <= mark->view.count &&
+                      mark->array[mark->cursor] != ' ')
+            {
+                should_return = true;
+                    move_mark_cursor_right(mark);
+                }
+            
+            if(should_return) return;
+            
+                while(mark->cursor + 1 <= mark->view.count &&
+                      mark->array[mark->cursor] == ' ')
+                {
+                    move_mark_cursor_right(mark);
+                }
+        }
+        else
+        {
+            move_mark_cursor_right(mark);
         }
     }
     else if(was_pressed(&input->Key_Home))
     {
-        set_mark_view_and_cursor_to_start(temp_mark);
-        force_render_mark_cursor(temp_mark);
+        move_mark_to_start(mark);
+        force_render_mark_cursor(mark);
     }
     else if(was_pressed(&input->Key_End))
     {
-        set_mark_view_and_cursor_to_end(temp_mark);
-        force_render_mark_cursor(temp_mark);
+        move_mark_to_end(mark);
+        force_render_mark_cursor(mark);
     }
     else
     {
         char pressed = get_pressed_keyboard_char(input);
         if(pressed)
         {
-            add_mark_character(temp_mark, pressed);
+            add_mark_character(mark, pressed);
         }
     }
     
 #if 0
-    printf("mark->cursor_index: %u\n", mark->cursor_index);
-    printf("mark->view.count: %u\n", mark->view.count);
-    printf("mark->view.start: %u\n", mark->view.start);
-    printf("mark->view.end: %u\n\n", mark->view.end);
+    printf("mark->cursor: %u\n", mark->cursor);
+    ui_print_view("Mark View", mark->view);
 #endif
     
 }
@@ -1139,6 +1246,8 @@ update_item_marking(Input *input, Mark *temp_mark, Item *item, u32 *inventory_fl
 internal u32
 get_inventory_item_count(Inventory *inventory)
 {
+    assert(inventory);
+    
     u32 result = 0;
     
     for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
@@ -1155,6 +1264,9 @@ get_inventory_item_count(Inventory *inventory)
 internal void
 unset_item_selections(ItemState *items, u32 dungeon_level)
 {
+    assert(items);
+    assert(is_dungeon_level_valid(dungeon_level));
+    
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
@@ -1511,7 +1623,7 @@ add_weapon_item(Random *random,
             item->w.handedness = get_item_handedness(item->id);
             item->w.first_damage_type = DamageType_Physical;
             
-            // TODO(rami): Extra stats for mythical items.
+            // TODO(rami): Extra stats for mythical items
             switch(id)
             {
                 case ItemID_Dagger:
@@ -1985,6 +2097,8 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     
                     sprintf(item->description.s, "Restores your health for %u - %u.", info->value_range.min, info->value_range.max);
                     copy_consumable_info_to_item(item, &items->ration_info);
+                    
+                    set(item->flags, ItemFlag_IsIdentified);
                 } break;
                 
                 invalid_default_case;

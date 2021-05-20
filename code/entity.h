@@ -217,4 +217,5 @@ internal b32 move_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *u
 internal b32 is_entity_valid(Entity *entity);
 internal b32 is_entity_valid_and_player(Entity *entity);
 internal b32 heal_entity(Entity *entity, u32 value);
+internal b32 was_pressed_core(InputState *state);
 internal Entity *add_enemy_entity(EntityState *entities, Dungeon *dungeon, EntityID id, u32 x, u32 y);

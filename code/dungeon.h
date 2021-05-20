@@ -248,9 +248,6 @@ typedef enum
     DungeonTrapFlag_HasBeenSeen = (1 << 1)
 } DungeonTrapFlag;
 
-// Dungeon trap ideas:
-// Summoning multiple enemies
-// Traps with random effects
 struct DungeonTrap
 {
     u32 flags;
