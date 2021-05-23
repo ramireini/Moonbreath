@@ -1,17 +1,17 @@
-#define MAX_SELECT_LETTER_COUNT MAX_INVENTORY_SLOT_COUNT
+#define MAX_OWNER_COUNT MAX_INVENTORY_SLOT_COUNT
 #define MAX_LOG_MESSAGE_COUNT 1024
 #define MAX_DEFER_COUNT 128
 #define MAX_MARK_SIZE 64
 
 typedef enum
 {
-    LetterParentType_None,
+    OwnerType_None,
     
-    LetterParentType_Item,
-    LetterParentType_Spell,
-    LetterParentType_Entity,
-    LetterParentType_DungeonTrap
-    } LetterParentType;
+    OwnerType_Item,
+    OwnerType_Spell,
+    OwnerType_Entity,
+    OwnerType_Trap
+    } OwnerType;
 
 typedef enum
 {
@@ -36,7 +36,7 @@ typedef struct
 
 typedef struct
 {
-    LetterParentType parent_type;
+    OwnerType type;
     
     union
     {
@@ -47,7 +47,7 @@ typedef struct
     };
     
     char c;
-    } Letter;
+} Owner;
 
 typedef struct
 {
@@ -90,6 +90,8 @@ typedef struct
     f32 shared_step_multiplier;
     ViewMove move;
     ViewMove scrollbar_move;
+    
+    v4u clip_rect;
 } View;
 
 typedef struct
@@ -134,26 +136,27 @@ typedef struct
     Defer defers[MAX_DEFER_COUNT];
     
     u32 window_offset;
-    
     u32 window_scroll_start_y;
-    Letter select_letters[MAX_SELECT_LETTER_COUNT];
     
+    Owner mouse_highlight;
     f32 default_view_step_multiplier;
+    
+    Owner temp_owners[MAX_OWNER_COUNT];
     } UI;
 
 internal void ui_print_view(char *name, View view);
 internal void reset_all_view_moves(View *view);
 internal void render_scrollbar(Game *game, v4u rect, View *view, UI *ui);
-internal void clear_letter(Letter *letters, char *clear_c);
-internal void reset_letters(Letter *letters);
+internal void clear_owners(Owner *owners, char *clear_c);
+internal void reset_all_owner_select_letters(Owner *owners);
 internal void set_view_at_end(View *view);
 internal void set_view_at_start(View *view);
 internal void log_add(char *text, UI *ui, ...);
 internal void update_view_scroll(Input *input, View *view);
 internal void set_view_at_start_and_reset_all_view_moves(View *view);
 internal void pos_newline(v2u *pos, u32 font_size, u32 count);
-internal char set_letter(Letter *letters, Letter *letter, void *parent, LetterParentType parent_type);
-internal char get_new_letter(Letter *letters, void *parent, LetterParentType parent_type);
+internal char set_owner_src(Owner *owner, void *parent, OwnerType type);
+internal char add_new_char_to_owners(Owner *owners, void *parent, OwnerType type);
 internal u32 get_font_newline(u32 font_size);
 internal u32 get_view_end(View view);
 internal b32 is_view_scrolling(View view);
@@ -162,5 +165,5 @@ internal b32 is_entry_in_view(View view, u32 entry);
 internal b32 can_view_go_up(View view);
 internal b32 can_view_go_down(View view);
 internal u32 get_view_range(View view);
-internal Letter *get_letter(Letter *letters, char search_c);
+internal Owner *get_owner_from_letter(Owner *owners, char search_c);
 internal String8 get_item_letter_string(Item *item);

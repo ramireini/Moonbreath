@@ -1,3 +1,13 @@
+internal void
+start_item_examine(Inventory *inventory, Item *item)
+{
+    assert(inventory);
+    assert(item);
+    
+    set(inventory->flags, InventoryFlag_Examine);
+    inventory->examine_item = item;
+}
+
 internal b32
 item_fits_using_item_type(Item *item, UsedItemType type)
 {
@@ -305,35 +315,35 @@ update_item_adjust(Input *input,
     {
         if(pressed != item->inventory_letter)
         {
-            Letter *new_letter = get_letter(inventory->item_letters, pressed);
-            if(new_letter->parent_type)
+            Owner *new_owner = get_owner_from_letter(inventory->item_owners, pressed);
+            if(new_owner->type)
             {
-                Letter *current_letter = get_letter(inventory->item_letters, item->inventory_letter);
+                Owner *current_owner = get_owner_from_letter(inventory->item_owners, item->inventory_letter);
                 
                 // Swap can only happen between two items
-                assert(current_letter->parent_type == LetterParentType_Item);
-                assert(new_letter->parent_type == LetterParentType_Item);
+                assert(current_owner->type == OwnerType_Item);
+                assert(new_owner->type == OwnerType_Item);
                 
                 // temp = current
-                char temp_char = current_letter->item->inventory_letter;
-                Item *temp_item = current_letter->item;
+                char temp_letter = current_owner->item->inventory_letter;
+                Item *temp_item = current_owner->item;
                 
                 // current = new
-                current_letter->item->inventory_letter = new_letter->item->inventory_letter;
-                current_letter->item = new_letter->item;
+                current_owner->item->inventory_letter = new_owner->item->inventory_letter;
+                current_owner->item = new_owner->item;
                 
                 // new = temp
-                new_letter->item->inventory_letter = temp_char;
-                new_letter->item = temp_item;
+                new_owner->item->inventory_letter = temp_letter;
+                new_owner->item = temp_item;
             }
             else
             {
                 // Clear current letter
-                clear_letter(inventory->item_letters, &item->inventory_letter);
+                clear_owners(inventory->item_owners, &item->inventory_letter);
                 
                 // Set new letter
-                Letter *new_letter = get_letter(inventory->item_letters, pressed);
-                item->inventory_letter = set_letter(inventory->item_letters, new_letter, item, LetterParentType_Item);
+                Owner *new_letter = get_owner_from_letter(inventory->item_owners, pressed);
+                item->inventory_letter = set_owner_src(new_letter, item, OwnerType_Item);
             }
         }
         
@@ -461,7 +471,7 @@ add_item_to_inventory(Game *game,
             {
                 if(!item->inventory_letter)
                 {
-                    item->inventory_letter = get_new_letter(inventory->item_letters, item, LetterParentType_Item);
+                    item->inventory_letter = add_new_char_to_owners(inventory->item_owners, item, OwnerType_Item);
                 }
                 
                 unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
@@ -930,7 +940,7 @@ drop_item_from_inventory(Game *game,
         {
             item->pos = player->pos;
             item->dungeon_level = dungeon->level;
-            clear_letter(inventory->item_letters, &item->inventory_letter);
+            clear_owners(inventory->item_owners, &item->inventory_letter);
             
             inventory->dropped_item_type = item->type;
             remove_item_from_inventory(item, items, inventory, dungeon->level);

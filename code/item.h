@@ -249,9 +249,6 @@ typedef struct
     ConsumableInfo ration_info;
     } ItemState;
 
-// TODO(rami): Mouse highlight for inventory elements.
-// TODO(rami): Mouse left click for inventory item examine.
-
 typedef struct
 {
     u32 flags;
@@ -262,7 +259,7 @@ typedef struct
     
     Item *examine_item;
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
-    Letter item_letters[MAX_SELECT_LETTER_COUNT];
+    Owner item_owners[MAX_OWNER_COUNT];
 } Inventory;
 
 internal void remove_item_from_game(Item *item);

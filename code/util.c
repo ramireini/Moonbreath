@@ -235,6 +235,20 @@ make_uppercase(char c)
     return(result);
 }
 
+internal u32
+get_rect_width(v4u rect)
+{
+    u32 result = rect.x + rect.w;
+    return(result);
+}
+
+internal u32
+get_rect_height(v4u rect)
+{
+    u32 result = rect.y + rect.h;
+    return(result);
+}
+
 internal b32
 strings_match(char *a, char *b)
 {

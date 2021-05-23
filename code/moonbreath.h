@@ -1,7 +1,7 @@
 typedef enum
 {
     ExamineFlag_Open = (1 << 1),
-    ExamineFlag_CameraFollow = (1 << 2),
+    ExamineFlag_CameraOnExamine = (1 << 2),
     ExamineFlag_ReadyForKeypress = (1 << 3),
 } ExamineFlag;
 
@@ -63,8 +63,8 @@ struct Game
     b32 show_item_ground_outline;
     };
 
-internal void render_outline_rect(Game *game, v4u rect, Color color);
-internal void render_fill_rect(Game *game, v4u rect, Color color);
+internal void render_outline_rect(SDL_Renderer *renderer, v4u rect, Color color);
+internal void render_fill_rect(SDL_Renderer *renderer, v4u rect, Color color, b32 blend);
 internal void render_rect(Game *game, v4u rect, u32 border_size);
 internal void render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest, b32 is_flipped);
 internal char get_pressed_keyboard_char(Input *input);

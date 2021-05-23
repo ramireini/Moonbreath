@@ -553,7 +553,7 @@ internal void log_add_okay(UI *ui);
 internal void log_add_item_cursed_unequip(Item *item, UI *ui);
 internal void log_add_item_action_text(Item *item, UI *ui, ItemActionType action);
 internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, u32 dungeon_level, ItemID item_id, u32 x, u32 y);
-internal void set_render_color(Game *game, Color color);
+internal void set_render_color(SDL_Renderer *renderer, Color color);
 internal u32 potion_chance_index(ItemID id);
 internal u32 scroll_chance_index(ItemID id);
 internal u32 get_dungeon_pos_item_count(ItemState *items, u32 dungeon_level, v2u pos);

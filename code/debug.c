@@ -397,18 +397,18 @@ update_and_render_debug_state(Game *game,
             if(is_var_group(var->type))
             {
                         // Render text background
-                        render_fill_rect(game, background_rect, background_color);
+                        render_fill_rect(game->renderer, background_rect, background_color, false);
                         
                         if(is_first_group)
                         {
                         // Render move rect
-                            render_fill_rect(game, tree->move_rect, move_color);
+                            render_fill_rect(game->renderer, tree->move_rect, move_color, false);
                             
                             // Render delete rect
                             tree->delete_rect.x = tree->move_rect.x - (tree->move_rect.w * 2);
                             tree->delete_rect.y = tree->move_rect.y;
                             
-                            render_fill_rect(game, tree->delete_rect, delete_color);
+                            render_fill_rect(game->renderer, tree->delete_rect, delete_color, false);
                         }
             }
             

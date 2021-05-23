@@ -45,11 +45,11 @@ update_examine_mode(Examine *examine,
                 char pressed = get_pressed_alphabet_char(input);
                 if(pressed)
             {
-                    Letter *letter = get_letter(ui->select_letters, pressed);
-                    if(letter->parent_type)
+                Owner *owner = get_owner_from_letter(ui->temp_owners, pressed);
+                if(owner->type)
                            {
                         examine->type = ExamineType_Spell;
-                        examine->spell = letter->spell;
+                    examine->spell = owner->spell;
                            }
                     }
         }
@@ -167,13 +167,13 @@ update_examine_mode(Examine *examine,
                     // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
                     set(*inventory_flags, InventoryFlag_MultipleExamine);
-                    set_view_at_start(&items->examine_window.view);
+                    set_view_at_start_and_reset_all_view_moves(&items->examine_window.view);
                     
                     return;
                 }
                 else
                 {
-                    unset(examine->flags, ExamineFlag_CameraFollow);
+                    unset(examine->flags, ExamineFlag_CameraOnExamine);
                     
                     Item *item = get_dungeon_pos_item(items, dungeon->level, examine->pos, 0);
                     if(item)
@@ -259,14 +259,14 @@ load_texture(SDL_Renderer *renderer, char *path, v4u *color_key)
 }
 
 internal void
-set_render_color(Game *game, Color color)
+set_render_color(SDL_Renderer *renderer, Color color)
 {
     v4u value = get_color_value(color);
-    SDL_SetRenderDrawColor(game->renderer,
-                           value.r,
-                           value.g,
-                           value.b,
-                           value.a);
+        SDL_SetRenderDrawColor(renderer,
+                               value.r,
+                               value.g,
+                               value.b,
+                               value.a);
 }
 
 internal u32
@@ -604,7 +604,7 @@ update_camera(Game *game, v2u player_pos, v2u dungeon_size)
     v2u camera_follow_pos = {0};
     
     if(is_set(examine->flags, ExamineFlag_Open) &&
-           is_set(examine->flags, ExamineFlag_CameraFollow))
+           is_set(examine->flags, ExamineFlag_CameraOnExamine))
     {
         camera_follow_pos = examine->pos;
     }
@@ -910,28 +910,40 @@ internal void
 render_rect(Game *game, v4u rect, u32 border_size)
 {
     // Window border
-    render_fill_rect(game, rect, Color_WindowBorder);
+    render_fill_rect(game->renderer, rect, Color_WindowBorder, false);
     
     // Window background
     v4u background_rect = get_border_adjusted_rect(rect, border_size);
-    render_fill_rect(game, background_rect, Color_WindowBackground);
+    render_fill_rect(game->renderer, background_rect, Color_WindowBackground, false);
     
     // Window shadow
-    render_outline_rect(game, background_rect, Color_WindowShadow);
+    render_outline_rect(game->renderer, background_rect, Color_WindowShadow);
 }
 
 internal void
-render_outline_rect(Game *game, v4u rect, Color color)
+render_outline_rect(SDL_Renderer *renderer, v4u rect, Color color)
 {
-    set_render_color(game, color);
-    SDL_RenderDrawRect(game->renderer, (SDL_Rect *)&rect);
+    assert(renderer);
+    assert(!is_v4u_zero(rect));
+    assert(color);
+    
+    set_render_color(renderer, color);
+    SDL_RenderDrawRect(renderer, (SDL_Rect *)&rect);
 }
 
 internal void
-render_fill_rect(Game *game, v4u rect, Color color)
+render_fill_rect(SDL_Renderer *renderer, v4u rect, Color color, b32 blend)
 {
-    set_render_color(game, color);
-    SDL_RenderFillRect(game->renderer, (SDL_Rect *)&rect);
+    assert(renderer);
+    assert(!is_v4u_zero(rect));
+    assert(color);
+    
+    if(blend) SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    
+    set_render_color(renderer, color);
+    SDL_RenderFillRect(renderer, (SDL_Rect *)&rect);
+    
+    if(blend) SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }
 
 internal char
@@ -1216,7 +1228,7 @@ update_and_render_game(Game *game,
     if(game->mode == GameMode_MainMenu)
     {
         v4u rect = {50, 300, 200, 100};
-        render_fill_rect(game, rect, Color_Cyan);
+        render_fill_rect(game->renderer, rect, Color_Cyan, false);
         
         v2u pos = {100, 340};
         if(is_pos_inside_rect(rect, input->mouse_pos))
@@ -1446,7 +1458,7 @@ update_and_render_game(Game *game,
         render_dungeon(game, player->flags, dungeon, assets);
         render_items(game, player, items, dungeon, assets);
         render_entities(game, entities, inventory, dungeon, assets);
-        render_ui(game, input, entities, items, inventory, dungeon, assets, ui);
+        render_ui(game, input->mouse_pos, entities, items, inventory, dungeon, assets, ui);
         
 #if MOONBREATH_SLOW
         // Render cursor rectangle
@@ -1522,7 +1534,7 @@ int main(int argc, char *argv[])
         Assets *assets = push_memory_struct(&game->memory_arena, Assets);
         
         UI *ui = push_memory_struct(&game->memory_arena, UI);
-        init_letters(ui->select_letters);
+        init_all_owner_letters(ui->temp_owners);
         
         ui->window_offset = 12;
         ui->short_log_view.end = 9;
@@ -1535,7 +1547,7 @@ int main(int argc, char *argv[])
         init_view_scrolling_data(&items->examine_window.view, 32, ui->default_view_step_multiplier);
         
         Inventory *inventory = push_memory_struct(&game->memory_arena, Inventory);
-        init_letters(inventory->item_letters);
+        init_all_owner_letters(inventory->item_owners);
         init_view_scrolling_data(&inventory->window.view, 32, ui->default_view_step_multiplier);
         
 #if 0
@@ -1793,7 +1805,7 @@ int main(int argc, char *argv[])
                                 
                                 while(game->mode)
                                 {
-                                    set_render_color(game, Color_Black);
+                                    set_render_color(game->renderer, Color_Black);
                                     SDL_RenderClear(game->renderer);
                                     
                                     for(u32 index = 0; index < Button_Count; ++index)

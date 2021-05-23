@@ -59,7 +59,9 @@ typedef enum
     
     Color_WindowBorder,
     Color_WindowBackground,
-    Color_WindowShadow
+    Color_WindowShadow,
+    
+        Color_MouseSelect
 } Color;
 
 typedef struct

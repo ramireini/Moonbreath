@@ -1,3 +1,34 @@
+internal b32
+render_mouse_highlight(SDL_Renderer *renderer, v2u mouse_pos, v2u tile_pos, v4u clip_rect, u32 entry_size)
+{
+    assert(renderer);
+    assert(!is_v2u_zero(tile_pos));
+    assert(!is_v4u_zero(clip_rect));
+    assert(entry_size);
+    
+    b32 result = false;
+    
+        // This rect is what we render
+        u32 highlight_offset = 8;
+        v4u highlight_rect = {clip_rect.x + highlight_offset, tile_pos.y, clip_rect.w - highlight_offset, entry_size};
+        
+        // This rect is what the mouse position is tested against, it's vertically smaller
+        // so that the mouse can only highlight one thing at a time.
+        v4u test_highlight_rect = {highlight_rect.x, highlight_rect.y + 1, highlight_rect.w, highlight_rect.h - 1};
+        
+        if(is_pos_inside_rect(test_highlight_rect, mouse_pos) &&
+           is_pos_inside_rect(clip_rect, mouse_pos))
+    {
+        render_fill_rect(renderer, highlight_rect, Color_MouseSelect, true);
+        result = true;
+        }
+    
+    // Debug rect
+    //render_outline_rect(renderer, highlight_rect, Color_Yellow);
+    
+    return(result);
+}
+
 internal u32
 get_centering_offset(u32 total_size, u32 part_size)
 {
@@ -32,7 +63,7 @@ render_separator(Game *game, v2u pos, v4u rect, s32 fill_rect_y)
         1
     };
     
-    render_fill_rect(game, fill_rect, Color_WindowShadow);
+    render_fill_rect(game->renderer, fill_rect, Color_WindowShadow, false);
 }
 
 internal void
@@ -183,12 +214,13 @@ get_window_entry_name_pos(v2u pos, UI *ui)
 }
 
 internal void
-render_window_item(Game *game,
+render_window_items(Game *game,
   ItemState *items,
   View *view,
   v4u rect,
-  v2u pos,
-  v2u *window_pos,
+  v2u required_item_pos,
+                    v2u *window_pos,
+                    v2u mouse_pos,
   u32 dungeon_level,
   SDL_Texture *texture,
   UI *ui)
@@ -212,19 +244,19 @@ render_window_item(Game *game,
             
             b32 can_process = false;
             
-            if(!is_v2u_zero(pos) &&
-                   can_render_non_inventory_item(item, item_type, pos, dungeon_level))
+            if(!is_v2u_zero(required_item_pos) &&
+                   can_render_non_inventory_item(item, item_type, required_item_pos, dungeon_level))
             {
                 can_process = true;
             }
-            else if(is_v2u_zero(pos) &&
+            else if(is_v2u_zero(required_item_pos) &&
                         can_render_inventory_item(item, item_type, dungeon_level))
             {
                 can_process = true;
             }
                 
                 if(can_process)
-                {
+            {
                 if(render_item_type)
                 {
                     render_item_type = false;
@@ -245,14 +277,19 @@ render_window_item(Game *game,
                     render_examine_type_header(game, item_type_text, rect, window_pos, &item_header_pos, view->entry_size, ui);
                 }
                 
-                // Render item line
                 v2u item_tile_pos = get_tile_pos(*window_pos, view->move.offset);
                 render_tile(game->renderer, texture, item->tile_src, item_tile_pos);
                 
-                // Only update select letter if we're not in the inventory
-                if(!is_v2u_zero(pos) && !item->select_letter)
+                if(render_mouse_highlight(game->renderer, mouse_pos, item_tile_pos, view->clip_rect, view->entry_size))
                 {
-                    item->select_letter = get_new_letter(ui->select_letters, item, LetterParentType_Item);
+                    ui->mouse_highlight.type = OwnerType_Item;
+                    ui->mouse_highlight.item = item;
+                }
+                
+                // Only update select letter if we're not in the inventory
+                if(!is_v2u_zero(required_item_pos) && !item->select_letter)
+                {
+                    item->select_letter = add_new_char_to_owners(ui->temp_owners, item, OwnerType_Item);
                 }
                 
                 v2u item_name_pos = get_window_entry_name_pos(item_tile_pos, ui);
@@ -325,23 +362,27 @@ update_window_test_pos(v2u *test_pos, View *view, u32 window_scroll_start_y)
 }
 
 internal v4u
-get_and_set_window_clip_rect(SDL_Renderer *renderer, View *view, v4u rect, v2u pos)
+get_and_enable_clip_rect(SDL_Renderer *renderer, View *view, v4u window_rect, v2u pos)
 {
     assert(renderer);
     assert(view);
     assert(!is_v2u_zero(pos));
-    assert(!is_v4u_zero(rect));
+    assert(!is_v4u_zero(window_rect));
     
-    v4u result =
+    u32 dist_from_rect = pos.x - window_rect.x;
+    u32 width = window_rect.w - (dist_from_rect * 2);
+    u32 horizontal_offset = 8;
+    
+    v4u clip_rect =
     {
-        pos.x,
+        pos.x - horizontal_offset,
         pos.y,
-        rect.w - ((pos.x - rect.x) * 2),
-        view->end * view->entry_size
+        width + (horizontal_offset * 2),
+        (view->entry_size * view->end)
     };
     
-    SDL_RenderSetClipRect(renderer, (SDL_Rect *)&result);
-    return(result);
+    SDL_RenderSetClipRect(renderer, (SDL_Rect *)&clip_rect);
+    return(clip_rect);
 }
 
 internal b32
@@ -744,11 +785,11 @@ process_defers(Game *game, Texture tileset, UI *ui)
         }
         else if(defer->type == DeferType_FillRect)
         {
-            render_fill_rect(game, final_defer_rect, defer->rect_color);
+            render_fill_rect(game->renderer, final_defer_rect, defer->rect_color, false);
         }
         else if(defer->type == DeferType_OutlineRect)
         {
-            render_outline_rect(game, final_defer_rect, defer->rect_color);
+            render_outline_rect(game->renderer, final_defer_rect, defer->rect_color);
         }
     }
     
@@ -858,18 +899,18 @@ defer_window_separator(v4u rect, v2u pos, UI *ui)
 
 #if MOONBREATH_SLOW
 internal void
-print_letters(Letter *letters)
+print_owners(Owner *owners)
 {
-    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    for(u32 i = 0; i < MAX_OWNER_COUNT; ++i)
     {
-        Letter *letter = &letters[i];
+        Owner *owner = &owners[i];
         
-        if(letter->parent_type)
+        if(owner->type)
         {
-            printf("Letters[%u]\n", i);
-            printf("Parent Type: %u\n", letter->parent_type);
-            printf("Parent Name: %s\n", letter->item->name.s);
-            printf("Letter: %c\n\n", letter->c);
+            printf("owners[%u]\n", i);
+            printf("Parent Type: %u\n", owner->type);
+            printf("Parent Name: %s\n", owner->item->name.s);
+            printf("Owner Letter: %c\n\n", owner->c);
         }
     }
     
@@ -893,6 +934,8 @@ get_letter_string(char letter)
 internal String8
 get_item_letter_string(Item *item)
 {
+    assert(item);
+    
     String8 result = {0};
     
     if(item->select_letter)
@@ -915,90 +958,91 @@ get_item_letter_string(Item *item)
 }
 
 internal void
-reset_letters(Letter *letters)
+reset_all_owner_select_letters(Owner *owners)
 {
-    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    for(u32 i = 0; i < MAX_OWNER_COUNT; ++i)
     {
-        Letter *letter = &letters[i];
+        Owner *owner = &owners[i];
         
-        if(letter->parent_type)
+        if(owner->type)
         {
-            assert(letter->c);
+            assert(owner->c);
             
-            switch(letter->parent_type)
+            switch(owner->type)
             {
-                case LetterParentType_Item:
+                case OwnerType_Item:
                 {
-                    assert(letter->item->select_letter);
+                    assert(owner->item->select_letter);
                     
-                    letter->item->select_letter = 0;
+                    owner->item->select_letter = 0;
                 } break;
                 
-                case LetterParentType_Spell:
+                case OwnerType_Spell:
                 {
-                    assert(letter->spell->select_letter);
+                    assert(owner->spell->select_letter);
                     
-                    letter->spell->select_letter = 0;
+                    owner->spell->select_letter = 0;
                 } break;
                 
-                case LetterParentType_Entity:
+                case OwnerType_Entity:
                 {
-                    assert(letter->entity->select_letter);
+                    assert(owner->entity->select_letter);
                     
-                    letter->entity->select_letter = 0;
+                    owner->entity->select_letter = 0;
                 } break;
                 
-                case LetterParentType_DungeonTrap:
+                case OwnerType_Trap:
                 {
-                    assert(letter->trap->select_letter);
+                    assert(owner->trap->select_letter);
                     
-                    letter->trap->select_letter = 0;
+                    owner->trap->select_letter = 0;
                 } break;
                 
                 invalid_default_case;
             }
             
-            letter->parent_type = LetterParentType_None;
+            owner->type = OwnerType_None;
             }
     }
 }
 
 internal void
-init_letters(Letter *letters)
+init_all_owner_letters(Owner *owners)
 {
-    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    for(u32 i = 0; i < MAX_OWNER_COUNT; ++i)
     {
-        Letter *letter = &letters[i];
-        assert(!letter->parent_type);
-        assert(!letter->c);
+        Owner *owner = &owners[i];
+        
+        assert(!owner->type);
+        assert(!owner->c);
         
         u32 alphabet_size = 26;
         
         if(i < alphabet_size)
         {
-            letter->c = 97 + i;
+            owner->c = 97 + i;
         }
         else
         {
-            letter->c = 65 + (i - alphabet_size);
+            owner->c = 65 + (i - alphabet_size);
         }
         
-        assert(is_alpha(letter->c));
+        assert(is_alpha(owner->c));
         }
 }
 
 internal void
-clear_letter(Letter *letters, char *clear_c)
+clear_owners(Owner *owners, char *clear_c)
 {
     assert(is_alpha(*clear_c));
     
-    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    for(u32 i = 0; i < MAX_OWNER_COUNT; ++i)
     {
-        Letter *letter = &letters[i];
+        Owner *owner = &owners[i];
         
-        if(letter->parent_type && letter->c == *clear_c)
+        if(owner->type && owner->c == *clear_c)
         {
-            letter->parent_type = LetterParentType_None;
+            owner->type = OwnerType_None;
             *clear_c = 0;
             
             return;
@@ -1008,18 +1052,18 @@ clear_letter(Letter *letters, char *clear_c)
     assert(0);
 }
 
-internal Letter *
-get_letter(Letter *letters, char search_c)
+internal Owner *
+get_owner_from_letter(Owner *owners, char c)
 {
-    Letter *result = 0;
+    Owner *result = 0;
     
-    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    for(u32 i = 0; i < MAX_OWNER_COUNT; ++i)
     {
-        Letter *letter = &letters[i];
+        Owner *owner = &owners[i];
         
-        if(letter->c == search_c)
+        if(owner->c == c)
         {
-            result = letter;
+            result = owner;
             break;
         }
     }
@@ -1028,38 +1072,41 @@ get_letter(Letter *letters, char search_c)
 }
 
 internal char
-set_letter(Letter *letters, Letter *letter, void *parent, LetterParentType parent_type)
+set_owner_src(Owner *owner, void *parent, OwnerType type)
 {
-    assert(letters);
-    assert(letter);
-    assert(!letter->parent_type);
-    assert(letter->c);
+    assert(owner);
+    assert(!owner->type);
+    assert(owner->c);
     
-    letter->parent_type = parent_type;
+    owner->type = type;
     
-    switch(letter->parent_type)
+    switch(owner->type)
     {
-        case LetterParentType_Item: letter->item = parent; break;
-        case LetterParentType_Spell: letter->spell = parent; break;
-        case LetterParentType_Entity: letter->entity = parent; break;
-        case LetterParentType_DungeonTrap: letter->trap = parent; break;
+        case OwnerType_Item: owner->item = parent; break;
+        case OwnerType_Spell: owner->spell = parent; break;
+        case OwnerType_Entity: owner->entity = parent; break;
+        case OwnerType_Trap: owner->trap = parent; break;
         
         invalid_default_case;
     }
     
-    return(letter->c);
+    return(owner->c);
     }
 
 internal char
-get_new_letter(Letter *letters, void *parent, LetterParentType parent_type)
+add_new_char_to_owners(Owner *owners, void *parent, OwnerType type)
 {
-    for(u32 i = 0; i < MAX_SELECT_LETTER_COUNT; ++i)
+    assert(owners);
+    assert(parent);
+    assert(type);
+    
+    for(u32 i = 0; i < MAX_OWNER_COUNT; ++i)
     {
-        Letter *letter = &letters[i];
+        Owner *owner = &owners[i];
         
-        if(!letter->parent_type)
+        if(!owner->type)
         {
-            char result = set_letter(letters, letter, parent, parent_type);
+            char result = set_owner_src(owner, parent, type);
             return(result);
         }
     }
@@ -1294,14 +1341,14 @@ render_scrollbar(Game *game, v4u rect, View *view, UI *ui)
         
         // Render scrollbar gutter vertically in the center of the rect
     scrollbar_gutter.y += get_centering_offset(rect.h, scrollbar_gutter.h);
-    render_fill_rect(game, scrollbar_gutter, Color_WindowShadow);
+        render_fill_rect(game->renderer, scrollbar_gutter, Color_WindowShadow, false);
         
         v4u scrollbar = {0};
         scrollbar.x = scrollbar_gutter_x;
         scrollbar.y = scrollbar_gutter.y - scrollbar_move->offset;
     scrollbar.w = scrollbar_gutter.w;
         scrollbar.h = scrollbar_move->size * view->end;
-        render_fill_rect(game, scrollbar, Color_WindowBorder);
+        render_fill_rect(game->renderer, scrollbar, Color_WindowBorder, false);
 }
 }
 
@@ -1315,15 +1362,15 @@ update_all_view_moves(View *view)
 }
 
 internal void
-unset_window_clip_rect_and_render_scrollbar(Game *game, View *view, v4u rect, UI *ui)
+disable_clip_rect_and_render_scrollbar(Game *game, View *view, v4u window_rect, UI *ui)
 {
     assert(game);
     assert(view);
-    assert(!is_v4u_zero(rect));
+    assert(!is_v4u_zero(window_rect));
     assert(ui);
     
     SDL_RenderSetClipRect(game->renderer, 0);
-    render_scrollbar(game, rect, view, ui);
+    render_scrollbar(game, window_rect, view, ui);
 }
 
 internal v4u
@@ -1363,7 +1410,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
     }
     else
     {
-        defer_text("%s", &name_pos, 0, 1, ui, entity->name.s);
+        defer_text("%s%s", &name_pos, 0, 1, ui, get_letter_string(entity->select_letter).s, entity->name.s);
         defer_tile(pos, entity->tile_src, ui, true);
         
         defer_text("Max HP: %u", pos, 1, 1, ui, entity->max_hp);
@@ -1502,7 +1549,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
                 {
                     if(!spell->select_letter)
                     {
-                        spell->select_letter = get_new_letter(ui->select_letters, spell, LetterParentType_Spell);
+                        spell->select_letter = add_new_char_to_owners(ui->temp_owners, spell, OwnerType_Spell);
                     }
                     
                     defer_text("%s%s", pos, 0, 1, ui, get_letter_string(spell->select_letter).s, spell->name.s);
@@ -1528,7 +1575,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
                 Spell *spell = status->spell;
                 if(!spell->select_letter)
                 {
-                    spell->select_letter = get_new_letter(ui->select_letters, status->spell, LetterParentType_Spell);
+                    spell->select_letter = add_new_char_to_owners(ui->temp_owners, status->spell, OwnerType_Spell);
                 }
                 
                 defer_text("%s%s", pos, 0, 1, ui, get_letter_string(spell->select_letter).s, status->name.s);
@@ -1823,6 +1870,7 @@ log_add(char *text, UI *ui, ...)
 
 internal void
 render_multiple_pickup_window(Game *game,
+                              v2u mouse_pos,
                               v2u player_pos,
                               ItemState *items,
                               Inventory *inventory,
@@ -1893,11 +1941,11 @@ render_multiple_pickup_window(Game *game,
         v2u test_pos = pos;
     process_view_end_items(items, view, &test_pos, player_pos, dungeon_level, ui->window_scroll_start_y);
     
-    v4u pickup_clip_rect = get_and_set_window_clip_rect(game->renderer, view, pickup_rect, pos);
-    render_window_item(game, items, view, pickup_rect, player_pos, &pos, dungeon_level, assets->tileset.tex, ui);
+    view->clip_rect = get_and_enable_clip_rect(game->renderer, view, pickup_rect, pos);
+    render_window_items(game, items, view, pickup_rect, player_pos, &pos, mouse_pos, dungeon_level, assets->tileset.tex, ui);
     
-    //render_outline_rect(game, pickup_clip_rect, Color_Yellow);
-    unset_window_clip_rect_and_render_scrollbar(game, view, pickup_rect, ui);
+    //render_outline_rect(game->renderer, pickup_clip_rect, Color_Yellow);
+    disable_clip_rect_and_render_scrollbar(game, view, pickup_rect, ui);
     
 #if 0
     ui_print_view("Multiple Pickup View", *view);
@@ -1907,6 +1955,7 @@ render_multiple_pickup_window(Game *game,
 
 internal void
 render_inventory_window(Game *game,
+                        v2u mouse_pos,
                    ItemState *items,
                        Inventory *inventory,
                        u32 dungeon_level,
@@ -1929,6 +1978,7 @@ render_inventory_window(Game *game,
     render_rect(game, inventory_rect, 2);
     update_scrollbar_move_size(view, inventory_rect, get_font_newline(ui->font->size));
     
+    // Update view after dropping an inventory item
     if(inventory->dropped_item_type)
     {
         if(is_view_scrolling(*view))
@@ -1964,7 +2014,7 @@ render_inventory_window(Game *game,
             {
                 Item *item = inventory->slots[index];
                 
-                if(can_render_inventory_item(item, item_type, dungeon_level))
+            if(can_render_inventory_item(item, item_type, dungeon_level))
                 {
                 if(render_item_type &&
                    update_window_test_pos(&test_pos, view, ui->window_scroll_start_y))
@@ -1980,11 +2030,11 @@ render_inventory_window(Game *game,
             }
         }
     
-    v4u inventory_clip_rect = get_and_set_window_clip_rect(game->renderer, view, inventory_rect, pos);
-    render_window_item(game, items, view, inventory_rect, make_v2u(0, 0), &pos, dungeon_level, assets->tileset.tex, ui);
+    view->clip_rect = get_and_enable_clip_rect(game->renderer, view, inventory_rect, pos);
+    render_window_items(game, items, view, inventory_rect, make_v2u(0, 0), &pos, mouse_pos, dungeon_level, assets->tileset.tex, ui);
     
-    //render_outline_rect(game, inventory_clip_rect, Color_Yellow);
-    unset_window_clip_rect_and_render_scrollbar(game, view, inventory_rect, ui);
+    //render_outline_rect(game->renderer, view->clip_rect, Color_Yellow);
+    disable_clip_rect_and_render_scrollbar(game, view, inventory_rect, ui);
     
 #if 0
     ui_print_view("Inventory View", *view);
@@ -2019,6 +2069,7 @@ render_examine_window(Game *game, Assets *assets, UI *ui, v2u player_pos)
 
 internal void
 render_multiple_examine_window(Game *game,
+                               v2u mouse_pos,
                                EntityState *entities,
                                ItemState *items,
                                Inventory *inventory,
@@ -2110,7 +2161,7 @@ render_multiple_examine_window(Game *game,
         }
     }
     
-    v4u examine_clip_rect = get_and_set_window_clip_rect(game->renderer, view, examine_rect, pos);
+    view->clip_rect = get_and_enable_clip_rect(game->renderer, view, examine_rect, pos);
     
     // Render examine contents
     for(ExamineType examine_type = ExamineType_Entity;
@@ -2125,9 +2176,15 @@ render_multiple_examine_window(Game *game,
             v2u entity_tile_pos = get_tile_pos(pos, view->move.offset);
             render_tile(game->renderer, assets->tileset.tex, entity->tile_src, entity_tile_pos);
             
+            if(render_mouse_highlight(game->renderer, mouse_pos, entity_tile_pos, view->clip_rect, view->entry_size))
+            {
+                ui->mouse_highlight.type = OwnerType_Entity;
+                ui->mouse_highlight.entity = entity;
+            }
+            
             if(!entity->select_letter)
             {
-                entity->select_letter = get_new_letter(ui->select_letters, entity, LetterParentType_Entity);
+                entity->select_letter = add_new_char_to_owners(ui->temp_owners, entity, OwnerType_Entity);
             }
             
             v2u entity_name_pos = get_window_entry_name_pos(entity_tile_pos, ui);
@@ -2138,7 +2195,7 @@ render_multiple_examine_window(Game *game,
         }
         else if(examine_type == ExamineType_Item)
         {
-            render_window_item(game, items, view, examine_rect, examine->pos, &pos, dungeon->level, assets->tileset.tex, ui);
+            render_window_items(game, items, view, examine_rect, examine->pos, &pos, mouse_pos, dungeon->level, assets->tileset.tex, ui);
         }
         else if(examine_type == ExamineType_Trap && trap)
         {
@@ -2148,9 +2205,15 @@ render_multiple_examine_window(Game *game,
             v2u trap_tile_pos = get_tile_pos(pos, view->move.offset);
             render_tile(game->renderer, assets->tileset.tex, trap->tile_src, trap_tile_pos);
             
+            if(render_mouse_highlight(game->renderer, mouse_pos, trap_tile_pos, view->clip_rect, view->entry_size))
+            {
+                ui->mouse_highlight.type = OwnerType_Trap;
+                ui->mouse_highlight.trap = trap;
+            }
+            
             if(!trap->select_letter)
             {
-                trap->select_letter = get_new_letter(ui->select_letters, trap, LetterParentType_DungeonTrap);
+                trap->select_letter = add_new_char_to_owners(ui->temp_owners, trap, OwnerType_Trap);
             }
             
             v2u trap_name_pos = get_window_entry_name_pos(trap_tile_pos, ui);
@@ -2162,7 +2225,7 @@ render_multiple_examine_window(Game *game,
     }
     
     //render_outline_rect(game, examine_clip_rect, Color_Yellow);
-    unset_window_clip_rect_and_render_scrollbar(game, view, examine_rect, ui);
+    disable_clip_rect_and_render_scrollbar(game, view, examine_rect, ui);
     
 #if 0
     ui_print_view("Multiple Examine View", *view);
@@ -2199,8 +2262,8 @@ render_item_mark_window(Game *game, ItemState *items, Item *item, Assets *assets
     input_rect.x += get_centering_offset(mark_rect.w, input_rect.w);
     input_rect.y += get_font_newline(ui->font->size) * 3;
     
-    render_fill_rect(game, input_rect, Color_WindowShadow);
-    render_outline_rect(game, input_rect, Color_WindowBorder);
+    render_fill_rect(game->renderer, input_rect, Color_WindowShadow, false);
+    render_outline_rect(game->renderer, input_rect, Color_WindowBorder);
     
     // Update cursor
     Mark *temp_mark = &items->temp_mark;
@@ -2249,7 +2312,7 @@ render_item_mark_window(Game *game, ItemState *items, Item *item, Assets *assets
             input_rect.h - height_padding
         };
         
-        render_fill_rect(game, cursor_rect, Color_White);
+        render_fill_rect(game->renderer, cursor_rect, Color_White, false);
     }
     
 #if 0
@@ -2261,7 +2324,7 @@ render_item_mark_window(Game *game, ItemState *items, Item *item, Assets *assets
 
 internal void
 render_ui(Game *game,
-          Input *input,
+          v2u mouse_pos,
           EntityState *entities,
           ItemState *items,
           Inventory *inventory,
@@ -2269,6 +2332,9 @@ render_ui(Game *game,
           Assets *assets,
           UI *ui)
 {
+    assert(!ui->mouse_highlight.c); // We don't use this
+    ui->mouse_highlight.type = OwnerType_None;
+    
     Examine *examine = &game->examine;
     Entity *player = get_player_entity(entities);
     
@@ -2317,16 +2383,16 @@ render_ui(Game *game,
             
             // Healthbar border
             v4u healthbar_outside = {right.x, right.y, 204, 16};
-            render_fill_rect(game, healthbar_outside, Color_WindowBorder);
+            render_fill_rect(game->renderer, healthbar_outside, Color_WindowBorder, false);
             
             // Healthbar background
             v4u healthbar_inside = get_border_adjusted_rect(healthbar_outside, 1);
-            render_fill_rect(game, healthbar_inside, Color_WindowShadow);
+            render_fill_rect(game->renderer, healthbar_inside, Color_WindowShadow, false);
             
             if(player->hp > 0)
             {
                 healthbar_inside.w = get_ratio(player->hp, player->max_hp, healthbar_inside.w);
-                render_fill_rect(game, healthbar_inside, Color_DarkRed);
+                render_fill_rect(game->renderer, healthbar_inside, Color_DarkRed, false);
             }
         }
         
@@ -2411,7 +2477,7 @@ render_ui(Game *game,
             set_view_at_end(full_log_view);
                 }
         
-        v4u full_log_clip_rect = get_and_set_window_clip_rect(game->renderer, full_log_view, full_log_rect, full_log_pos);
+        full_log_view->clip_rect = get_and_enable_clip_rect(game->renderer, full_log_view, full_log_rect, full_log_pos);
         
         // Render full log contents
         for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
@@ -2436,7 +2502,7 @@ render_ui(Game *game,
         }
         
         //render_outline_rect(game, full_log_clip_rect, Color_Yellow);
-        unset_window_clip_rect_and_render_scrollbar(game, full_log_view, full_log_rect, ui);
+        disable_clip_rect_and_render_scrollbar(game, full_log_view, full_log_rect, ui);
         
         #if 0
         ui_print_view("Full Log View", *full_log_view);
@@ -2457,14 +2523,14 @@ render_ui(Game *game,
         }
     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
     {
-        render_multiple_examine_window(game, entities, items, inventory, dungeon, assets, ui);
+        render_multiple_examine_window(game, mouse_pos, entities, items, inventory, dungeon, assets, ui);
     }
     else if(is_set(inventory->flags, InventoryFlag_Open))
     {
-        render_inventory_window(game, items, inventory, dungeon->level, assets, ui);
+        render_inventory_window(game, mouse_pos, items, inventory, dungeon->level, assets, ui);
     }
     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
     {
-        render_multiple_pickup_window(game, player->pos, items, inventory, dungeon->level, assets, ui);
+        render_multiple_pickup_window(game, mouse_pos, player->pos, items, inventory, dungeon->level, assets, ui);
     }
 }

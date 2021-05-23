@@ -1,12 +1,48 @@
 internal void
-reset_inventory_multiple_pickup(ItemState *items, u32 *inventory_flags, u32 dungeon_level, Letter *select_letters)
+start_examine_from_owner(Examine *examine, Owner *owner)
+{
+    assert(examine);
+    assert(owner);
+    
+    set(examine->flags, ExamineFlag_Open);
+    unset(examine->flags, ExamineFlag_CameraOnExamine);
+    
+    switch(owner->type)
+    {
+        case OwnerType_Item:
+        {
+            examine->type = ExamineType_Item;
+            examine->item = owner->item;
+        } break;
+        
+        case OwnerType_Entity:
+        {
+            examine->type = ExamineType_Entity;
+            examine->entity = owner->entity;
+        } break;
+        
+        case OwnerType_Trap:
+        {
+            examine->type = ExamineType_Trap;
+            examine->trap = owner->trap;
+        } break;
+        
+        invalid_default_case;
+    }
+}
+
+internal void
+reset_inventory_multiple_pickup(ItemState *items,
+                                u32 *inventory_flags,
+                                u32 dungeon_level,
+                                Owner *temp_owners)
 {
     assert(items);
     assert(inventory_flags);
     assert(is_dungeon_level_valid(dungeon_level));
-    assert(select_letters);
+    assert(temp_owners);
     
-    reset_letters(select_letters);
+    reset_all_owner_select_letters(temp_owners);
     unset_item_selections(items, dungeon_level);
     unset(*inventory_flags, InventoryFlag_MultiplePickup);
 }
@@ -1769,9 +1805,9 @@ update_player_input(Game *game,
     game->should_update = false;
     reset_entity_action_time(&game->action_time);
     
-    set(player->flags, EntityFlag_NotifyAboutMultipleItems);
     player->new_pos = player->pos;
     player->new_direction = Direction_None;
+    set(player->flags, EntityFlag_NotifyAboutMultipleItems);
     
     if(is_set(player->flags, EntityFlag_IsPathfinding))
     {
@@ -1920,7 +1956,30 @@ update_player_input(Game *game,
             
             if(!was_direction_pressed)
         {
-            if(!is_set(inventory->flags, InventoryFlag_Open) &&
+            if(was_pressed(&input->Button_Left))
+            {
+                Owner *highlight = &ui->mouse_highlight;
+                if(highlight->type)
+                {
+                    assert(highlight->type == OwnerType_Item ||
+                               highlight->type == OwnerType_Entity ||
+                               highlight->type == OwnerType_Trap);
+                    
+                    if(is_set(inventory->flags, InventoryFlag_Open))
+                    {
+                        start_item_examine(inventory, highlight->item);
+                    }
+                    else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
+                    {
+                        toggle(highlight->item->flags, ItemFlag_IsSelected);
+                    }
+                    else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
+                    {
+                        start_examine_from_owner(examine, highlight);
+                    }
+                }
+                }
+            else if(!is_set(inventory->flags, InventoryFlag_Open) &&
                was_pressed(&input->GameKey_OpenInventory))
             {
                 if(other_windows_are_closed(examine, inventory, ui))
@@ -1947,7 +2006,7 @@ update_player_input(Game *game,
                             
                             if(examine->type == ExamineType_Entity)
                             {
-                                reset_letters(ui->select_letters);
+                                reset_all_owner_select_letters(ui->temp_owners);
                             }
                             
                             examine->type = ExamineType_None;
@@ -1973,11 +2032,11 @@ update_player_input(Game *game,
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultiplePickup))
                     {
-                        reset_inventory_multiple_pickup(items, &inventory->flags, dungeon->level, ui->select_letters);
+                        reset_inventory_multiple_pickup(items, &inventory->flags, dungeon->level, ui->temp_owners);
                     }
                     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
                     {
-                        reset_letters(ui->select_letters);
+                        reset_all_owner_select_letters(ui->temp_owners);
                         unset(inventory->flags, InventoryFlag_MultipleExamine);
                     }
                         else if(ui->full_log_open)
@@ -2077,7 +2136,7 @@ update_player_input(Game *game,
                 {
                 if(other_windows_are_closed(examine, inventory, ui))
                 {
-                    set(examine->flags, ExamineFlag_Open | ExamineFlag_CameraFollow);
+                    set(examine->flags, ExamineFlag_Open | ExamineFlag_CameraOnExamine);
                     examine->pos = player->pos;
                     }
                 }
@@ -2191,7 +2250,7 @@ update_player_input(Game *game,
                                 }
                                 else if(was_pressed(&input->Key_M))
                                 {
-                                // Start examine item mark
+                                // Start item marking
                                 set(inventory->flags, InventoryFlag_Mark);
                                 Mark *temp_mark = &items->temp_mark;
                                 
@@ -2232,14 +2291,12 @@ update_player_input(Game *game,
                                     else
                                 {
                                     // Examine item
-                                    Letter *letter = get_letter(inventory->item_letters, pressed);
+                                    Owner *letter = get_owner_from_letter(inventory->item_owners, pressed);
                                     
-                                    if(letter->parent_type)
+                                    if(letter->type)
                                     {
-                                        assert(letter->parent_type == LetterParentType_Item);
-                                        
-                                        set(inventory->flags, InventoryFlag_Examine);
-                                        inventory->examine_item = letter->item;
+                                        assert(letter->type == OwnerType_Item);
+                                        start_item_examine(inventory, letter->item);
                                     }
                                     }
                                 }
@@ -2264,16 +2321,16 @@ update_player_input(Game *game,
                                 }
                             }
                             
-                            reset_inventory_multiple_pickup(items, &inventory->flags, dungeon->level, ui->select_letters);
+                            reset_inventory_multiple_pickup(items, &inventory->flags, dungeon->level, ui->temp_owners);
                             }
                             else if(pressed)
                         {
                             // Select and unselect the item in the pickup window
-                            Letter *letter = get_letter(ui->select_letters, pressed);
+                            Owner *letter = get_owner_from_letter(ui->temp_owners, pressed);
                             
-                            if(letter->parent_type)
+                            if(letter->type)
                             {
-                                assert(letter->parent_type == LetterParentType_Item);
+                                assert(letter->type == OwnerType_Item);
                                 
                                 toggle(letter->item->flags, ItemFlag_IsSelected);
                             }
@@ -2285,34 +2342,10 @@ update_player_input(Game *game,
                     {
                         if(is_set(inventory->flags, InventoryFlag_ReadyForKeypress))
                         {
-                            Letter *letter = get_letter(ui->select_letters, pressed);
-                            if(letter->parent_type)
+                            Owner *letter = get_owner_from_letter(ui->temp_owners, pressed);
+                            if(letter->type)
                             {
-                                set(examine->flags, ExamineFlag_Open);
-                                unset(examine->flags, ExamineFlag_CameraFollow);
-                                
-                                switch(letter->parent_type)
-                                {
-                                    case LetterParentType_Entity:
-                                    {
-                                        examine->type = ExamineType_Entity;
-                                        examine->entity = letter->entity;
-                                    } break;
-                                    
-                                    case LetterParentType_Item:
-                                    {
-                                        examine->type = ExamineType_Item;
-                                        examine->item = letter->item;
-                                    } break;
-                                    
-                                    case LetterParentType_DungeonTrap:
-                                    {
-                                        examine->type = ExamineType_Trap;
-                                        examine->trap = letter->trap;
-                                    } break;
-                                    
-                                    invalid_default_case;
-                                }
+                                start_examine_from_owner(examine, letter);
                             }
                         }
                             else
@@ -2915,12 +2948,12 @@ render_entities(Game *game,
                     {
                         // HP Bar Outside
                         v4u hp_bar_outside = {dest.x, dest.y + 33, 32, 4};
-                            render_outline_rect(game, hp_bar_outside, Color_Black);
+                            render_outline_rect(game->renderer, hp_bar_outside, Color_Black);
                         
                         // HP Bar Inside
                         u32 hp_bar_inside_w = get_ratio(enemy->hp, enemy->max_hp, 30);
                         v4u hp_bar_inside = {dest.x + 1, dest.y + 34, hp_bar_inside_w, 2};
-                        render_fill_rect(game, hp_bar_inside, Color_DarkRed);
+                            render_fill_rect(game->renderer, hp_bar_inside, Color_DarkRed, false);
                     }
                 }
                 else

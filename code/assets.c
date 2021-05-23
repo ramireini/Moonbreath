@@ -122,6 +122,12 @@ get_color_value(Color color)
         case Color_WindowBorder: result = make_v4u(122, 138, 153, 255); break;
         case Color_WindowShadow: result = make_v4u(6, 13, 19, 255); break;
         
+        case Color_MouseSelect:
+        {
+            result = get_color_value(Color_WindowBorder);
+            result.a = 64;
+        } break;
+        
         invalid_default_case;
     }
     
