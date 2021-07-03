@@ -15,6 +15,8 @@ set_random_seed(u32 value)
 internal u32
 get_random_u32(Random *random)
 {
+    assert(random);
+    
     u32 result = random->seed;
     result ^= result << 13;
     result ^= result >> 17;
@@ -25,8 +27,9 @@ get_random_u32(Random *random)
 }
 
 internal s32
-get_random_number(Random *random, s32 min, s32 max)
+get_random(Random *random, s32 min, s32 max)
 {
+    assert(random);
     assert(min <= max);
     
     s32 result = min + (get_random_u32(random) % ((max + 1) - min));
@@ -34,22 +37,30 @@ get_random_number(Random *random, s32 min, s32 max)
 }
 
 internal u32
-get_random_number_from_v2u(Random *random, v2u a)
+get_random_from_v2u(Random *random, v2u a)
 {
-    u32 result = get_random_number(random, a.min, a.max);
+    assert(random);
+    assert(!is_v2u_zero(a));
+    
+    u32 result = get_random(random, a.min, a.max);
     return(result);
 }
 
 internal u32
 get_random_chance(Random *random)
 {
-    u32 result = get_random_number(random, 1, 100);
+    assert(random);
+    
+    u32 result = get_random(random, 1, 100);
     return(result);
 }
 
 internal b32
 hit_random_chance(Random *random, u32 value)
 {
+    assert(random);
+    assert(value);
+    
     b32 result = (get_random_chance(random) <= value);
     return(result);
 }

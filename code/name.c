@@ -44,20 +44,20 @@ internal char
 get_random_vowel(Random *random)
 {
     char vowels[5] = "aeiou";
-    return(vowels[get_random_number(random, 0, 4)]);
+    return(vowels[get_random(random, 0, 4)]);
 }
 
 internal char
 get_random_consonant(Random *random)
 {
     char consonants[21] = "bcdfghjklmnpqrstvxzwy";
-    return(consonants[get_random_number(random, 0, 20)]);
+    return(consonants[get_random(random, 0, 20)]);
 }
 
 internal char
 get_random_lower_char(Random *random)
 {
-    char result = ('a' + get_random_number(random, 0, 25));
+    char result = ('a' + get_random(random, 0, 25));
     return(result);
 }
 
@@ -77,12 +77,12 @@ get_random_name(Random *random, char *name, NameType type)
     
     if(type == NameType_Item)
     {
-        name_length = get_random_number(random, 3, 8);
+        name_length = get_random(random, 3, 8);
     }
     else if(type == NameType_NPC)
     {
-        name_length = get_random_number(random, 8, 12);
-        space_index = get_random_number(random, 3, name_length - 3);
+        name_length = get_random(random, 8, 12);
+        space_index = get_random(random, 3, name_length - 3);
     }
     
     while(name_index < name_length)
@@ -106,7 +106,7 @@ get_random_name(Random *random, char *name, NameType type)
                 name[name_index++] = get_random_consonant(random);
                 
                 if(!is_consonant(prev_prev) &&
-                       !get_random_number(random, 0, 2) &&
+                       !get_random(random, 0, 2) &&
                        name_index < name_length)
                 {
                     name[name_index++] = get_random_consonant(random);
@@ -117,7 +117,7 @@ get_random_name(Random *random, char *name, NameType type)
                 name[name_index++] = get_random_vowel(random);
                 
                 if(!is_vowel(prev_prev) &&
-                       !get_random_number(random, 0, 2) &&
+                       !get_random(random, 0, 2) &&
                    name_index < name_length)
                 {
                     name[name_index++] = get_random_vowel(random);

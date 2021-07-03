@@ -94,6 +94,8 @@ typedef struct
     v4u clip_rect;
 } View;
 
+// TODO(rami): Instead of {} for the mark indicator, test [] or even have the mark text be a darker gray,
+// making it look like a cool side comment.
 typedef struct
 {
     b32 render_cursor;
@@ -147,13 +149,13 @@ typedef struct
 internal void ui_print_view(char *name, View view);
 internal void reset_all_view_moves(View *view);
 internal void render_scrollbar(Game *game, v4u rect, View *view, UI *ui);
-internal void clear_owners(Owner *owners, char *clear_c);
+internal void clear_owner_from_character(Owner *owners, char *clear_c);
 internal void reset_all_owner_select_letters(Owner *owners);
 internal void set_view_at_end(View *view);
 internal void set_view_at_start(View *view);
 internal void log_add(char *text, UI *ui, ...);
 internal void update_view_scroll(Input *input, View *view);
-internal void set_view_at_start_and_reset_all_view_moves(View *view);
+internal void set_view_at_start_and_reset_view_moves(View *view);
 internal void pos_newline(v2u *pos, u32 font_size, u32 count);
 internal char set_owner_src(Owner *owner, void *parent, OwnerType type);
 internal char add_new_char_to_owners(Owner *owners, void *parent, OwnerType type);

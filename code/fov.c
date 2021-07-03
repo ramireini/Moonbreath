@@ -20,7 +20,7 @@ is_tile_seen(DungeonTiles tiles, v2u pos)
 }
 
 internal b32
-has_tile_been_seen(DungeonTiles tiles, v2u pos)
+tile_has_been_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
     return(result);
@@ -36,29 +36,23 @@ set_tile_is_seen_and_has_been_seen(DungeonTiles tiles, v2u pos, b32 value)
 internal b32
 is_tile_seen_or_has_been_seen(DungeonTiles tiles, v2u pos)
 {
-    b32 result = false;
-    
-    if(is_tile_seen(tiles, pos) || has_tile_been_seen(tiles, pos))
-    {
-        result = true;
-    }
-    
+    b32 result = (is_tile_seen(tiles, pos) || tile_has_been_seen(tiles, pos));
         return(result);
 }
 
 internal void
 cast_light(Dungeon *dungeon,
-           v2u start_pos,
-           u32 cast_range,
-           u32 start_row,
-            v2f slope,
-           v4u multiplier)
+                       v2u start_pos,
+                       u32 range,
+                       u32 start_row,
+                       v2f slope,
+                       v4u multiplier)
 {
     if(slope.start >= slope.end)
     {
         f32 next_start_slope = slope.start;
         
-        for(u32 row = start_row; row <= cast_range; ++row)
+        for(u32 row = start_row; row <= range; ++row)
         {
             b32 is_pos_blocked = false;
             
@@ -66,11 +60,12 @@ cast_light(Dungeon *dungeon,
             {
                 s32 y = -row;
                 
-                // Left and right extremities of the pos tile.
+                // Left and right extremities of the pos tile
+                f32 half = 0.5f;
                 v2f pos_slope =
                 {
-                    (x - 0.5f) / (y + 0.5f),
-                    (x + 0.5f) / (y - 0.5f)
+                    (x - half) / (y + half),
+                    (x + half) / (y - half)
                 };
                 
                 if(slope.start < pos_slope.right)
@@ -112,20 +107,14 @@ cast_light(Dungeon *dungeon,
                         is_pos_blocked = true;
                         next_start_slope = pos_slope.right;
                         
-                        // This position is blocking so start a child scan.
+                        // This position is blocking so start a child scan
                         v2f new_slope = {slope.start, pos_slope.left};
-                        
-                        cast_light(dungeon,
-                                       start_pos,
-                                       cast_range,
-                                       row + 1,
-                                       new_slope,
-                                   multiplier);
+                        cast_light(dungeon, start_pos, range, row + 1, new_slope, multiplier);
                     }
                 }
             }
             
-            // Don't scan the next row if the pos is blocked.
+            // Don't scan the next row if the pos is blocked
             if(is_pos_blocked)
             {
                 break;
@@ -135,41 +124,22 @@ cast_light(Dungeon *dungeon,
 }
 
 internal void
-update_fov(Entity *player, Dungeon *dungeon)
+update_player_view(Entity *player, Dungeon *dungeon)
 {
+    assert(is_entity_valid(player));
+    assert(dungeon);
     
-#if MOONBREATH_SLOW
-    if(fkey_active[1])
-    {
-        for(u32 y = 0; y < dungeon->size.h; ++y)
-        {
-            for(u32 x = 0; x < dungeon->size.w; ++x)
-            {
-                v2u pos = {x, y};
-                
-#if 1
-                set_tile_is_seen(dungeon->tiles, pos, true);
-#else
-                set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, true);
-#endif
-                
-            }
-        }
-        
-        return;
-    }
-#endif
-    
-    // Reset visibility
+    // Reset visiblity
     for(u32 y = 0; y < dungeon->size.h; ++y)
     {
         for(u32 x = 0; x < dungeon->size.w; ++x)
         {
-            set_tile_is_seen(dungeon->tiles, make_v2u(x, y), false);
+            v2u pos = {x, y};
+            set_tile_is_seen(dungeon->tiles, pos, false);
         }
     }
     
-    // Player is visible by default
+    // Entity position is visible by default
     set_tile_is_seen_and_has_been_seen(dungeon->tiles, player->pos, true);
     
     s32 multipliers[FOV_SECTOR_COUNT][4] = 
@@ -199,11 +169,6 @@ update_fov(Entity *player, Dungeon *dungeon)
             multipliers[sector][3]
         };
         
-        cast_light(dungeon,
-                   player->pos,
-                   player->fov,
-                   1,
-                   slope,
-                   multiplier);
+        cast_light(dungeon, player->pos, player->view_range, 1, slope, multiplier);
     }
 }

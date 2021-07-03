@@ -1,21 +1,21 @@
-#define MAX_DEBUG_TREE_COUNT 64
+#define MAX_DEBUG_TREE_COUNT 32
 
 typedef enum
 {
-    DebugVariableType_Newline,
-    DebugVariableType_Group,
-    DebugVariableType_Text,
+    DebugVarType_Newline,
+    DebugVarType_Group,
+    DebugVarType_Text,
     
-    DebugVariableType_S32,
-    DebugVariableType_U32,
-    DebugVariableType_B32,
-    DebugVariableType_F32,
-    DebugVariableType_V2U,
-    DebugVariableType_V4U,
-    DebugVariableType_String,
-    DebugVariableType_Enum,
-        DebugVariableType_Flag
-} DebugVariableType;
+    DebugVarType_S32,
+    DebugVarType_U32,
+    DebugVarType_B32,
+    DebugVarType_F32,
+    DebugVarType_V2U,
+    DebugVarType_V4U,
+    DebugVarType_String,
+    DebugVarType_Enum,
+    DebugVarType_Flag
+} DebugVarType;
 
 typedef enum
 {
@@ -28,28 +28,37 @@ typedef enum
 
 typedef enum
 {
-    DebugInteractionType_None,
+    DebugEventType_None,
     
-    DebugInteractionType_Move,
-        DebugInteractionType_Delete
-} DebugInteractionType;
+    DebugEventType_MoveTree,
+    DebugEventType_DeleteTree
+} DebugEventType;
 
-typedef struct DebugVariable DebugVariable;
+typedef enum
+{
+    DebugVarActionType_None,
+    
+    DebugVarActionType_DeleteItem,
+    DebugVarActionType_DeleteEntity,
+    DebugVarActionType_ShowEntityView
+} DebugVarActionType;
+
+typedef struct DebugVar DebugVar;
 typedef struct
 {
     b32 is_expanded;
     
-    DebugVariable *first_child;
-    DebugVariable *last_child;
-} DebugVariableGroup;
+    DebugVar *first_child;
+    DebugVar *last_child;
+} DebugVarGroup;
 
-struct DebugVariable
+struct DebugVar
 {
     String32 name;
     Color color;
     
-    DebugVariable *next;
-    DebugVariable *parent_group;
+    DebugVar *next;
+    DebugVar *parent_group;
     
     // Giving add_debug_enum() a function will make it be used as a callback function.
     // The enum value will be turned into a string by using that callback.
@@ -58,7 +67,7 @@ struct DebugVariable
     // The state of the flag in the union will be checked for from this flags pointer.
     u32 *flags;
     
-    DebugVariableType type;
+    DebugVarType type;
     union
     {
         b32 *b32;
@@ -70,9 +79,18 @@ struct DebugVariable
         char *string;
         u32 flag;
         
-        DebugVariableGroup group;
+        DebugVarGroup group;
     };
-};
+    
+    DebugVarActionType action;
+    union
+    {
+        Item *item;
+        Entity *entity;
+    };
+    
+    Status *status;
+    };
 
 typedef struct
 {
@@ -90,13 +108,13 @@ typedef struct
     
     v4u move_rect;
     v4u delete_rect;
+     char *delete_string;
     
     DebugColorPair move_color;
     DebugColorPair delete_color;
     DebugColorPair group_text_color;
-    Color text_color_active;
     
-    DebugVariable *root;
+    DebugVar *root;
 } DebugTree;
 
 typedef struct
@@ -104,32 +122,35 @@ typedef struct
     v2u pos;
     
     DebugHotType type;
-    union
-    {
-        DebugVariable *var;
-    };
+    DebugVar *var;
 } DebugHot;
 
 typedef struct
 {
-    DebugInteractionType type;
+    DebugEventType type;
     
     v2u *pos;
      DebugTree *tree;
-    } DebugInteraction;
+    } DebugEvent;
 
 typedef struct
 {
     b32 is_shown;
+    b32 should_update;
     
     Font *font;
     v2u text_offset;
+    
+    DebugHot hot;
+    DebugEvent event;
     
     memory_size memory_size;
     MemoryArena memory_arena;
     
      DebugTree trees[MAX_DEBUG_TREE_COUNT];
-    
-    DebugInteraction hot_interaction;
-    DebugHot hot;
-    } DebugState;
+} DebugState;
+
+internal void end_debug_group(DebugTree *tree);
+internal void reset_debug_event(DebugEvent *event);
+internal void add_debug_status_effect(DebugState *debug, DebugTree *tree, Status *status);
+internal DebugVar *start_debug_group(DebugState *debug, DebugTree *tree, char *name, b32 is_expanded);

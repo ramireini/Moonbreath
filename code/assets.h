@@ -1,6 +1,7 @@
 #define FONT_ATLAS_WIDTH 1920
 #define FONT_ATLAS_HEIGHT 1080
 #define FONT_START_GLYPH 32
+#define HEALTH_BAR_SECTION_COUNT 5
 
 // Font test
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~
@@ -37,6 +38,7 @@ typedef enum
     Color_LightRed,
     Color_DarkRed,
     
+    Color_Green,
     Color_LightGreen,
     Color_DarkGreen,
     
@@ -46,8 +48,11 @@ typedef enum
     Color_LightBrown,
     Color_DarkBrown,
     
-    Color_Cyan,
     Color_Yellow,
+    Color_LightYellow,
+    Color_EntityView,
+    
+    Color_Cyan,
     Color_Purple,
     Color_Orange,
     
@@ -94,12 +99,7 @@ typedef struct
     
     Texture tilemap;
     Texture tileset;
-    Texture ui;
     
-    v4u item_ground_outline_src;
-    v4u yellow_outline_src;
-    
+    v4u health_bar_sources[HEALTH_BAR_SECTION_COUNT];
     u32 stat_and_log_window_h;
 } Assets;
-
-internal v4u get_color_value(Color color);

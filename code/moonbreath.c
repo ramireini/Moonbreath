@@ -11,7 +11,6 @@
 
 #include "types.h"
 #include "memory.c"
-#include "util.c"
 #include "name.c"
 #include "fov.c"
 #include "dungeon.c"
@@ -39,7 +38,7 @@ update_examine_mode(Examine *examine,
     {
         if(examine->type == ExamineType_Entity)
         {
-            assert(is_entity_valid_and_enemy(examine->entity));
+            assert(is_enemy_entity_valid(examine->entity));
             
             // Begin entity spell examine
                 char pressed = get_pressed_alphabet_char(input);
@@ -119,7 +118,7 @@ update_examine_mode(Examine *examine,
                     if(passage->type == passage_search_type)
                     {
                         //if(is_tile_seen(dungeon->tiles, passage->pos)) // For debugging
-                        if(has_tile_been_seen(dungeon->tiles, passage->pos))
+                        if(tile_has_been_seen(dungeon->tiles, passage->pos))
                         {
                             if((passage_index > examine->selected_passage) ||
                                    is_dungeon_passage_last(&dungeon->passages, passage_search_type, examine->selected_passage))
@@ -137,28 +136,31 @@ update_examine_mode(Examine *examine,
             }
             else if(was_pressed(&input->GameKey_AutoExplore))
             {
+                if(can_player_auto_explore(&examine->flags, entities, dungeon, ui))
+                {
                     // Pathfind to passage
                     for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
                     {
                         DungeonPassage *passage = &passages->array[index];
                         if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                         {
-                        unset(examine->flags, ExamineFlag_Open);
-                        make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
-                        
+                            unset(examine->flags, ExamineFlag_Open);
+                            make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
+                            
                             return;
                         }
                     }
                     
                     // Pathfind to tile
                     if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, examine->pos) &&
-                       has_tile_been_seen(dungeon->tiles, examine->pos))
+                       tile_has_been_seen(dungeon->tiles, examine->pos))
                     {
-                    unset(examine->flags, ExamineFlag_Open);
-                    make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
-                    
+                        unset(examine->flags, ExamineFlag_Open);
+                        make_entity_pathfind(player, items, dungeon, &entities->player_pathfind_map, examine->pos);
+                        
                         return;
                     }
+                }
             }
             else if(was_pressed(&input->GameKey_Yes))
             {
@@ -167,7 +169,7 @@ update_examine_mode(Examine *examine,
                     // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
                     set(*inventory_flags, InventoryFlag_MultipleExamine);
-                    set_view_at_start_and_reset_all_view_moves(&items->examine_window.view);
+                    set_view_at_start_and_reset_view_moves(&items->examine_window.view);
                     
                     return;
                 }
@@ -261,12 +263,22 @@ load_texture(SDL_Renderer *renderer, char *path, v4u *color_key)
 internal void
 set_render_color(SDL_Renderer *renderer, Color color)
 {
+    assert(renderer);
+    assert(color);
+    
     v4u value = get_color_value(color);
         SDL_SetRenderDrawColor(renderer,
                                value.r,
                                value.g,
                                value.b,
                                value.a);
+}
+
+internal b32
+is_zero(s32 value)
+{
+    b32 result = (value <= 0);
+    return(result);
 }
 
 internal u32
@@ -276,7 +288,7 @@ tile_div(u32 value)
     
     if(value)
     {
-        result = value / 32;
+        result = value / TILE_SIZE;
     }
     
     return(result);
@@ -289,7 +301,7 @@ tile_mul(u32 value)
     
     if(value)
     {
-        result = value * 32;
+        result = value * TILE_SIZE;
     }
     
     return(result);
@@ -379,20 +391,59 @@ get_random_direction(Random *random)
 {
     assert(random);
     
-    Direction result = get_random_number(random, Direction_Up, Direction_DownRight);
+    Direction result = get_random(random, Direction_Up, Direction_DownRight);
     return(result);
 }
 
 internal v4u
-get_game_dest(Game *game, v2u pos)
+get_pos_tile_rect(v2u pos)
 {
     v4u result =
     {
-        tile_mul(pos.x) - game->camera.x,
-        tile_mul(pos.y) - game->camera.y,
-        32,
-        32
+        pos.x,
+        pos.y,
+        TILE_SIZE,
+        TILE_SIZE
     };
+    
+    return(result);
+}
+
+internal v4u
+get_pos_tile_mul_rect(v2u pos)
+{
+    v4u result =
+    {
+        tile_mul(pos.x),
+        tile_mul(pos.y),
+        TILE_SIZE,
+        TILE_SIZE
+    };
+    
+    return(result);
+}
+
+internal v4u
+get_game_dest(v4s camera, v2u pos)
+{
+    assert(!is_v4s_zero(camera));
+    
+    v4u result = get_pos_tile_mul_rect(pos);
+    result.x -= camera.x;
+    result.y -= camera.y;
+    
+    return(result);
+}
+
+internal v4u
+render_game_dest_tile(Game *game, SDL_Texture *texture, v4u tile_src, v2u pos)
+{
+    assert(game);
+    assert(texture);
+    assert(!is_v4u_zero(tile_src));
+    
+    v4u result = get_game_dest(game->camera, pos);
+    SDL_RenderCopy(game->renderer, texture, (SDL_Rect *)&tile_src, (SDL_Rect *)&result);
     
     return(result);
 }
@@ -408,6 +459,7 @@ render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src,
 internal void
 render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
 {
+    // Clear tilemap
     SDL_SetRenderTarget(game->renderer, assets->tilemap.tex);
     SDL_RenderClear(game->renderer);
     
@@ -433,6 +485,7 @@ render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
     
     //print_v4u(render_area);
     
+    // Render to tilemap
     for(u32 y = render_area.y; y < render_area.h; ++y)
     {
         for(u32 x = render_area.x; x < render_area.w; ++x)
@@ -532,7 +585,7 @@ render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&trap->tile_src, (SDL_Rect *)&tile_dest);
                 }
             }
-            else if(has_tile_been_seen(dungeon->tiles, tile_pos))
+            else if(tile_has_been_seen(dungeon->tiles, tile_pos))
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, tile_src, tile_dest, false);
                 if(has_remains)
@@ -549,6 +602,7 @@ render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
     
     SDL_SetRenderTarget(game->renderer, 0);
     
+    // Render tilemap to screen
     v4u src = {game->camera.x, game->camera.y, game->camera.w, game->camera.h};
     v4u dest = {0, 0, game->camera.w, game->camera.h};
     SDL_RenderCopy(game->renderer, assets->tilemap.tex, (SDL_Rect *)&src, (SDL_Rect *)&dest);
@@ -562,13 +616,6 @@ get_sdl_ticks_difference(u32 start_time)
 }
 
 internal b32
-is_zero(s32 value)
-{
-    b32 result = (value <= 0);
-    return(result);
-}
-
-internal b32
 is_value_in_range(s32 value, s32 start, s32 end)
 {
     b32 result = ((value > start) && (value < end));
@@ -578,7 +625,7 @@ is_value_in_range(s32 value, s32 start, s32 end)
 internal b32
 is_chance_valid(u32 chance)
 {
-    b32 result = chance <= 100;
+    b32 result = (chance >= 1 && chance <= 100);
     return(result);
 }
 
@@ -724,7 +771,7 @@ internal void
 update_events(Game *game, Input *input)
 {
     // Update mouse
-    u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
+    u32 mouse_state = SDL_GetMouseState(&input->mouse.x, &input->mouse.y);
     update_input(&input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
     update_input(&input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
     update_input(&input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
@@ -907,7 +954,7 @@ update_events(Game *game, Input *input)
 }
 
 internal void
-render_rect(Game *game, v4u rect, u32 border_size)
+render_window(Game *game, v4u rect, u32 border_size)
 {
     // Window border
     render_fill_rect(game->renderer, rect, Color_WindowBorder, false);
@@ -949,6 +996,8 @@ render_fill_rect(SDL_Renderer *renderer, v4u rect, Color color, b32 blend)
 internal char
 get_char(char c, b32 is_upper)
 {
+    assert(is_alpha(c));
+    
     char result = c;
     
     if(is_upper)
@@ -1225,15 +1274,27 @@ update_and_render_game(Game *game,
                        Assets *assets,
                        UI *ui)
 {
+    assert(game);
+    assert(input);
+    assert(player);
+    assert(entities);
+    assert(dungeons);
+    assert(items);
+    assert(inventory);
+    assert(assets);
+    assert(ui);
+    
+    Random *random = &game->random;
+    
     if(game->mode == GameMode_MainMenu)
     {
         v4u rect = {50, 300, 200, 100};
         render_fill_rect(game->renderer, rect, Color_Cyan, false);
         
         v2u pos = {100, 340};
-        if(is_pos_inside_rect(rect, input->mouse_pos))
+        if(is_pos_inside_rect(rect, input->mouse))
         {
-            render_text(game, "%sNew Game", &pos, ui->font, start_color(Color_Yellow));
+            render_string(game, "%sNew Game", &pos, ui->font, start_color(Color_LightYellow));
             
             if(was_pressed(&input->Button_Left))
             {
@@ -1242,7 +1303,7 @@ update_and_render_game(Game *game,
         }
         else
         {
-            render_text(game, "New Game", &pos, ui->font);
+            render_string(game, "New Game", &pos, ui->font);
         }
     }
     else if(game->mode == GameMode_Playing)
@@ -1274,11 +1335,11 @@ update_and_render_game(Game *game,
             b32 potion_color_set[Potion_Count] = {0};
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                ConsumableInfo *info = &items->potion_info[index];
+                ItemInfo *info = &items->potion_info[index];
                 
                 while(is_v4u_zero(info->tile_src))
                 {
-                    u32 potion_index = get_random_number(&game->random, 0, Potion_Count - 1);
+                    u32 potion_index = get_random(random, 0, Potion_Count - 1);
                     if(!potion_color_set[potion_index])
                     {
                         potion_color_set[potion_index] = true;
@@ -1286,7 +1347,7 @@ update_and_render_game(Game *game,
                         // Add a random not already taken adjective to the potion depiction
                         for(;;)
                         {
-                            u32 adjective_index = get_random_number(&game->random, 0, 15);
+                            u32 adjective_index = get_random(random, 0, 15);
                             if(!potion_adjective_taken[adjective_index])
                             {
                                 potion_adjective_taken[adjective_index] = true;
@@ -1351,11 +1412,11 @@ update_and_render_game(Game *game,
             b32 scroll_color_set[Scroll_Count] = {0};
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                ConsumableInfo *info = &items->scroll_info[index];
+                ItemInfo *info = &items->scroll_info[index];
                 
                 while(is_v4u_zero(info->tile_src))
                 {
-                    u32 scroll_index = get_random_number(&game->random, 0, Scroll_Count - 1);
+                    u32 scroll_index = get_random(random, 0, Scroll_Count - 1);
                     if(!scroll_color_set[scroll_index])
                     {
                         scroll_color_set[scroll_index] = true;
@@ -1411,29 +1472,32 @@ update_and_render_game(Game *game,
             items->ration_info.tile_src = get_dungeon_tile_rect(make_v2u(12, 2));
             
 #if 0
-            // Print randomized potion and scroll tiles.
+            // Print randomized potion tiles
             printf("\nRandomized Potion Tiles\n");
+            
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                ConsumableInfo *info = &items->potion_info[index];
+                ItemInfo *info = &items->potion_info[index];
                 
-                printf("[%u]: %u, %u\n", index, info->tile.x, info->tile.y);
+                printf("[%u]: %u, %u\n", index, info->tile_src.x, info->tile_src.y);
             }
             
+            // Print randomized scroll tiles
             printf("\nRandomized Scroll Tiles\n");
+            
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                ConsumableInfo *info = &items->scroll_info[index];
-                printf("[%u]: %u, %u\n", index, info->tile.x, info->tile.y);
+                ItemInfo *info = &items->scroll_info[index];
+                printf("[%u]: %u, %u\n", index, info->tile_src.x, info->tile_src.y);
             }
 #endif
             
+            log_add("%sWelcome, %s!", ui, start_color(Color_LightYellow), player->name.s);
+            log_add("%sFind and destroy the underworld portal,", ui, start_color(Color_LightYellow));
+            log_add("%swhich is located somewhere in the depths.", ui, start_color(Color_LightYellow));
+            
             add_player_entity(player);
             create_dungeon(game, player, entities, dungeons, items, inventory, ui, 1);
-            
-            log_add("%sWelcome, %s!", ui, start_color(Color_Yellow), player->name.s);
-            log_add("%sFind and destroy the underworld portal,", ui, start_color(Color_Yellow));
-            log_add("%swhich is located somewhere in the depths.", ui, start_color(Color_Yellow));
             
             game->is_set = true;
         }
@@ -1441,14 +1505,104 @@ update_and_render_game(Game *game,
         Examine *examine = &game->examine;
         Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
         
-        #if 0
-        print_dungeon_items(items, dungeon);
-        print_all_dungeon_level_occupancies(dungeons);
+#if 0
+        printf("\nDungeon Level %u Items:\n", dungeon->level);
+        
+        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+        {
+            Item *item = &items->array[index];
+            
+            if(is_item_valid_and_not_in_inventory(item, dungeon->level))
+            {
+                printf("%s at %u, %u\n", item->name.s, item->pos.x, item->pos.y);
+            }
+        }
         #endif
+        
+        #if 0
+        for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
+        {
+            Dungeon *dungeon = &dungeons->levels[index];
+            
+            for(u32 y = 0; y < dungeon->size.h; ++y)
+            {
+                for(u32 x = 0; x < dungeon->size.w; ++x)
+                {
+                    v2u pos = {x, y};
+                    
+                    if(is_dungeon_pos_occupied(dungeon->tiles, pos))
+                    {
+                        printf("Dungeon Level %u (Index %u): %u, %u is occupied\n", index + 1, index, pos.x, pos.y);
+                    }
+                }
+            }
+        }
+        #endif
+        
+#if 0
+        for(u32 i = 0; i < MAX_OWNER_COUNT; ++i)
+        {
+            Owner *owner = &inventory->item_owners[i];
+            
+            if(owner->type)
+            {
+                printf("owner->type: %u\n", owner->type);
+                printf("owner->item: %p\n", owner->item);
+                printf("owner->c: %c\n\n", owner->c);
+            }
+        }
+#endif
         
         #if 0
         printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
         printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
+        #endif
+        
+#if MOONBREATH_SLOW
+        // Just makes sure all inventory items are valid and in inventory.
+        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+        {
+            Item *item = inventory->slots[index];
+            if(item) assert(is_item_valid_and_in_inventory(item));
+        }
+        #endif
+        
+#if MOONBREATH_SLOW
+        if(fkey_active[1] && !fov_toggle_array_set)
+        {
+            fov_toggle_array_set = true;
+            
+            for(u32 y = 0; y < dungeon->size.h; ++y)
+            {
+                for(u32 x = 0; x < dungeon->size.w; ++x)
+                {
+                    fov_toggle_array[(y * dungeon->tiles.width) + x].is_seen = dungeon->tiles.array[(y * dungeon->tiles.width) + x].is_seen;
+                    fov_toggle_array[(y * dungeon->tiles.width) + x].has_been_seen = dungeon->tiles.array[(y * dungeon->tiles.width) + x].has_been_seen;
+                }
+            }
+            
+            for(u32 y = 0; y < dungeon->size.h; ++y)
+            {
+                for(u32 x = 0; x < dungeon->size.w; ++x)
+                {
+                    v2u pos = {x, y};
+                    set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, true);
+                }
+            }
+        }
+        else if(!fkey_active[1] && fov_toggle_array_set)
+        {
+            fov_toggle_array_set = false;
+            
+            for(u32 y = 0; y < dungeon->size.h; ++y)
+            {
+                for(u32 x = 0; x < dungeon->size.w; ++x)
+                {
+                    dungeon->tiles.array[(y * dungeon->tiles.width) + x].is_seen = fov_toggle_array[(y * dungeon->tiles.width) + x].is_seen;
+                    dungeon->tiles.array[(y * dungeon->tiles.width) + x].has_been_seen = fov_toggle_array[(y * dungeon->tiles.width) + x].has_been_seen;
+                }
+            }
+        }
         #endif
         
         update_examine_mode(examine, input, player, entities, items, &inventory->flags, dungeon, ui);
@@ -1458,36 +1612,34 @@ update_and_render_game(Game *game,
         render_dungeon(game, player->flags, dungeon, assets);
         render_items(game, player, items, dungeon, assets);
         render_entities(game, entities, inventory, dungeon, assets);
-        render_ui(game, input->mouse_pos, entities, items, inventory, dungeon, assets, ui);
+        render_ui(game, input->mouse, entities, items, inventory, dungeon, assets, ui);
         
-#if MOONBREATH_SLOW
-        // Render cursor rectangle
+        // Render mouse tile
         if(other_windows_are_closed(examine, inventory, ui))
         {
-        // Render cursor rect on mouse tile
-        v2u tile_pos =
-        {
-            tile_div(input->mouse_pos.x),
-            tile_div(input->mouse_pos.y)
-        };
-        
-        v2u camera_offset =
-        {
-            tile_div(game->camera.x),
-            tile_div(game->camera.y)
-        };
-        
-        input->mouse_tile_pos.x = tile_pos.x + camera_offset.x;
-        input->mouse_tile_pos.y = tile_pos.y + camera_offset.y;
-        
-        if(tile_pos.y < tile_div(game->camera.h))
-        {
-            v4u dest = get_game_dest(game, input->mouse_tile_pos);
-            SDL_RenderCopy(game->renderer, assets->ui.tex, (SDL_Rect *)&assets->yellow_outline_src, (SDL_Rect *)&dest);
+            if(input->mouse.x > 0 &&
+                   input->mouse.y > 0 &&
+                   input->mouse.x < game->window_size.w - 1 && // The - 1 is because the mouse can't be exactly window width
+                   input->mouse.y < game->window_size.h - assets->stat_and_log_window_h)
+            {
+                v2u tile_pos =
+                {
+                    tile_div(input->mouse.x),
+                    tile_div(input->mouse.y)
+                };
+                
+                v2u camera_offset =
+                {
+                    tile_div(game->camera.x),
+                    tile_div(game->camera.y)
+                };
+                
+                input->mouse_tile.x = tile_pos.x + camera_offset.x;
+                input->mouse_tile.y = tile_pos.y + camera_offset.y;
+                render_outline_rect(game->renderer, get_game_dest(game->camera, input->mouse_tile), Color_Yellow);
             }
         }
-    #endif
-    }
+        }
     }
 
 internal f32
@@ -1522,17 +1674,18 @@ int main(int argc, char *argv[])
                        (megabytes(28)) - sizeof(Game));
         
         EntityState *entities = push_memory_struct(&game->memory_arena, EntityState);
-        Entity *player = get_player_entity(entities);
+        Entity *player = get_player_entity();
         
         Dungeons *dungeons = push_memory_struct(&game->memory_arena, Dungeons);
-        
         for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
         {
             dungeons->levels[index].tiles.array = push_memory(&game->memory_arena, MAX_DUNGEON_SIZE_SQUARED * sizeof(DungeonTile));
         }
         
-        Assets *assets = push_memory_struct(&game->memory_arena, Assets);
+#if MOONBREATH_SLOW
+        #endif
         
+        Assets *assets = push_memory_struct(&game->memory_arena, Assets);
         UI *ui = push_memory_struct(&game->memory_arena, UI);
         init_all_owner_letters(ui->temp_owners);
         
@@ -1549,6 +1702,7 @@ int main(int argc, char *argv[])
         Inventory *inventory = push_memory_struct(&game->memory_arena, Inventory);
         init_all_owner_letters(inventory->item_owners);
         init_view_scrolling_data(&inventory->window.view, 32, ui->default_view_step_multiplier);
+        init_view_scrolling_data(&inventory->interact_window.view, 32, ui->default_view_step_multiplier);
         
 #if 0
         // Config Example
@@ -1704,7 +1858,7 @@ int main(int argc, char *argv[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 1602811425;
+                                u64 seed = 312454;
                                 printf("Seed: %lu\n\n", seed);
                                 
                                 game->random = set_random_seed(seed);
@@ -1726,7 +1880,7 @@ int main(int argc, char *argv[])
                                 
                                 for(u32 index = 0; index < Button_Count; ++index)
                                 {
-                                    old_input->mouse[index].has_been_up = true;
+                                    old_input->mouse_buttons[index].has_been_up = true;
                                 }
                                 
                                 for(u32 index = Key_None + 1; index < Key_Count; ++index)
@@ -1760,47 +1914,48 @@ int main(int argc, char *argv[])
                                                memory.storage + memory.size - game->debug.memory_size,
                                                game->debug.memory_size);
                                 
-                                DebugTree *vars_tree = add_debug_tree(debug, 50, 25);
-                                DebugTree *colors_tree = add_debug_tree(debug, 300, 25);
+                                DebugTree *var_tree = add_debug_tree(debug, 50, 25);
+                                DebugTree *color_tree = add_debug_tree(debug, 300, 25);
                                 
-                                start_debug_group(debug, vars_tree, "Variables", true);
+                                start_debug_group(debug, var_tree, "Variables", false);
                                 {
-                                    add_debug_variable(vars_tree, "Frame MS", full_ms_per_frame, DebugVariableType_F32);
-                                    add_debug_variable(vars_tree, "Work MS", work_ms_per_frame, DebugVariableType_F32);
-                                    add_debug_variable(vars_tree, "Frame DT", new_input->frame_dt, DebugVariableType_F32);
-                                    add_debug_newline(debug, vars_tree);
+                                    add_debug_variable(var_tree, "Frame MS", full_ms_per_frame, DebugVarType_F32);
+                                    add_debug_variable(var_tree, "Work MS", work_ms_per_frame, DebugVarType_F32);
+                                    add_debug_variable(var_tree, "Frame DT", new_input->frame_dt, DebugVarType_F32);
+                                    add_debug_newline(debug, var_tree);
                                     
-                                    add_debug_variable(vars_tree, "Mouse", new_input->mouse_pos, DebugVariableType_V2U);
-                                    add_debug_variable(vars_tree, "Mouse Tile", new_input->mouse_tile_pos, DebugVariableType_V2U);
-                                    add_debug_variable(vars_tree, "Player Tile", player->pos, DebugVariableType_V2U);
-                                    add_debug_newline(debug, vars_tree);
+                                    add_debug_variable(var_tree, "Mouse", new_input->mouse, DebugVarType_V2U);
+                                    add_debug_variable(var_tree, "Mouse Tile", new_input->mouse_tile, DebugVarType_V2U);
+                                    add_debug_variable(var_tree, "Player Tile", player->pos, DebugVarType_V2U);
+                                    add_debug_newline(debug, var_tree);
                                     
-                                    add_debug_variable(vars_tree, "FOV Toggle", fkey_active[1], DebugVariableType_B32);
-                                    add_debug_variable(vars_tree, "Traversable Toggle", fkey_active[2], DebugVariableType_B32);
-                                    add_debug_variable(vars_tree, "Has Been Up Toggle", fkey_active[3], DebugVariableType_B32);
-                                    add_debug_variable(vars_tree, "Hit Test Toggle", fkey_active[4], DebugVariableType_B32);
+                                    add_debug_variable(var_tree, "View Toggle", fkey_active[1], DebugVarType_B32);
+                                    add_debug_variable(var_tree, "Traversable Toggle", fkey_active[2], DebugVarType_B32);
+                                    add_debug_variable(var_tree, "Has Been Up Toggle", fkey_active[3], DebugVarType_B32);
+                                    add_debug_variable(var_tree, "Hit Test Toggle", fkey_active[4], DebugVarType_B32);
                                 }
-                                end_debug_group(vars_tree);
+                                end_debug_group(var_tree);
                                 
-                                start_debug_group(debug, colors_tree, "Colors", true);
+                                start_debug_group(debug, color_tree, "Colors", false);
                                 {
-                                    add_debug_text(colors_tree, "White", Color_White);
-                                    add_debug_text(colors_tree, "Light Gray", Color_LightGray);
-                                    add_debug_text(colors_tree, "Dark Gray", Color_DarkGray);
-                                    add_debug_text(colors_tree, "Light Red", Color_LightRed);
-                                    add_debug_text(colors_tree, "Dark Red", Color_DarkRed);
-                                    add_debug_text(colors_tree, "Light Green", Color_LightGreen);
-                                    add_debug_text(colors_tree, "Dark Green", Color_DarkGreen);
-                                    add_debug_text(colors_tree, "Light Blue", Color_LightBlue);
-                                    add_debug_text(colors_tree, "Dark Blue", Color_DarkBlue);
-                                    add_debug_text(colors_tree, "Light Brown", Color_LightBrown);
-                                    add_debug_text(colors_tree, "Dark Brown", Color_DarkBrown);
-                                    add_debug_text(colors_tree, "Cyan", Color_Cyan);
-                                    add_debug_text(colors_tree, "Yellow", Color_Yellow);
-                                    add_debug_text(colors_tree, "Purple", Color_Purple);
-                                    add_debug_text(colors_tree, "Orange", Color_Orange);
+                                    add_debug_string(color_tree, get_color_string(Color_White), Color_White);
+                                    add_debug_string(color_tree, get_color_string(Color_LightGray), Color_LightGray);
+                                    add_debug_string(color_tree, get_color_string(Color_DarkGray), Color_DarkGray);
+                                    add_debug_string(color_tree, get_color_string(Color_LightRed), Color_LightRed);
+                                    add_debug_string(color_tree, get_color_string(Color_DarkRed), Color_DarkRed);
+                                    add_debug_string(color_tree, get_color_string(Color_Green), Color_Green);
+                                    add_debug_string(color_tree, get_color_string(Color_LightGreen), Color_LightGreen);
+                                    add_debug_string(color_tree, get_color_string(Color_DarkGreen), Color_DarkGreen);
+                                    add_debug_string(color_tree, get_color_string(Color_LightBlue), Color_LightBlue);
+                                    add_debug_string(color_tree, get_color_string(Color_DarkBlue), Color_DarkBlue);
+                                    add_debug_string(color_tree, get_color_string(Color_LightBrown), Color_LightBrown);
+                                    add_debug_string(color_tree, get_color_string(Color_DarkBrown), Color_DarkBrown);
+                                    add_debug_string(color_tree, get_color_string(Color_Cyan), Color_Cyan);
+                                    add_debug_string(color_tree, get_color_string(Color_LightYellow), Color_LightYellow);
+                                    add_debug_string(color_tree, get_color_string(Color_Purple), Color_Purple);
+                                    add_debug_string(color_tree, get_color_string(Color_Orange), Color_Orange);
                                 }
-                                end_debug_group(colors_tree);
+                                end_debug_group(color_tree);
                                 #endif
                                 
                                 while(game->mode)
@@ -1810,7 +1965,7 @@ int main(int argc, char *argv[])
                                     
                                     for(u32 index = 0; index < Button_Count; ++index)
                                     {
-                                        new_input->mouse[index] = old_input->mouse[index];
+                                        new_input->mouse_buttons[index] = old_input->mouse_buttons[index];
                                     }
                                     
                                     for(u32 index = Key_None + 1; index < Key_Count; ++index)
@@ -1873,7 +2028,7 @@ int main(int argc, char *argv[])
                                     full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
                                     
                                     update_and_render_debug_state(game, new_input, entities, items, dungeons);
-#endif
+                                    #endif
                                     
                                     Input *temp = new_input;
                                     new_input = old_input;

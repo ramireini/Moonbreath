@@ -1,10 +1,26 @@
 #define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
-#define print_v2u(name) printf("\n%s: %u, %u\n", #name, name.x, name.y);
-#define print_v2s(name) printf("\n%s: %d, %d\n", #name, name.x, name.y);
+#define toggle(flags, new_flag) \
+{ \
+if(is_set(flags, new_flag)) \
+{ \
+unset(flags, new_flag); \
+} \
+else \
+{ \
+set(flags, new_flag); \
+} \
+}
 
-#define print_v4u(name) printf("\n%s: %u, %u, %u, %u\n", #name, name.x, name.y, name.w, name.h);
-#define print_v4s(name) printf("\n%s: %d, %d, %d, %d\n", #name, name.x, name.y, name.w, name.h);
+#define set(flags, new_flags) (flags |= (new_flags))
+#define unset(flags, new_flags) (flags &= ~(new_flags))
+#define is_set(flags, new_flags) ((flags & (new_flags)) == (new_flags))
+
+#define print_v2u(name) printf("%s: %u, %u\n", #name, name.x, name.y);
+#define print_v2s(name) printf("%s: %d, %d\n", #name, name.x, name.y);
+
+#define print_v4u(name) printf("%s: %u, %u, %u, %u\n", #name, name.x, name.y, name.w, name.h);
+#define print_v4s(name) printf("%s: %d, %d, %d, %d\n", #name, name.x, name.y, name.w, name.h);
 
 internal v2u
 make_v2u(u32 a, u32 b)
@@ -32,6 +48,17 @@ is_v2u_equal(v2u a, v2u b)
 {
     b32 result = (a.x == b.x &&
                   a.y == b.y);
+    
+    return(result);
+}
+
+internal b32
+is_v4s_zero(v4s a)
+{
+    b32 result = (a.x == 0 &&
+                  a.y == 0 &&
+                  a.w == 0 &&
+                  a.h == 0);
     
     return(result);
 }
@@ -70,63 +97,63 @@ get_string_length(char *string)
 }
 
 internal char
-get_sign(s32 value)
+sign(s32 value)
 {
     char result = (value < 0) ? '-' : '+';
     return(result);
 }
 
 internal u32
-get_absolute(s32 value)
+absolute(s32 value)
 {
     u32 result = (value < 0) ? -value : value;
     return(result);
 }
 
 internal f32
-get_slope(f32 x1, f32 y1, f32 x2, f32 y2)
+slope(f32 x1, f32 y1, f32 x2, f32 y2)
 {
     f32 result = (x1 - x2) / (y1 - y2);
     return(result);
 }
 
 internal f32
-get_distance(u32 x1, u32 y1, u32 x2, u32 y2)
+distance(u32 x1, u32 y1, u32 x2, u32 y2)
 {
     f32 result = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
     return(result);
 }
 
 internal u32
-get_cardinal_distance(v2u a, v2u b)
+cardinal_distance(v2u a, v2u b)
 {
-    u32 result = get_absolute(a.x - b.x) + get_absolute(a.y - b.y);
+    u32 result = absolute(a.x - b.x) + absolute(a.y - b.y);
     return(result);
 }
 
 internal u32
-get_cardinal_and_ordinal_distance(v2u a, v2u b)
+cardinal_and_ordinal_distance(v2u pos, v2u target)
 {
     u32 result = 0;
     
-    while(!is_v2u_equal(a, b))
+    while(!is_v2u_equal(pos, target))
     {
-        if(a.x < b.x)
+        if(pos.x < target.x)
         {
-            ++a.x;
+            ++pos.x;
         }
-        else if(a.x > b.x)
+        else if(pos.x > target.x)
         {
-            --a.x;
+            --pos.x;
         }
         
-        if(a.y < b.y)
+        if(pos.y < target.y)
         {
-            ++a.y;
+            ++pos.y;
         }
-        else if(a.y > b.y)
+        else if(pos.y > target.y)
         {
-            --a.y;
+            --pos.y;
         }
         
         ++result;
@@ -136,44 +163,30 @@ get_cardinal_and_ordinal_distance(v2u a, v2u b)
 }
 
 internal u32
-get_ratio(f32 min, f32 max, f32 width)
+ratio(f32 min, f32 max, f32 width)
 {
     u32 result = (u32)((min / max) * width);
     return(result);
 }
 
-internal v2u
-get_v2u_from_index(u32 index, u32 width)
+internal u32
+area_size(v2u size)
 {
-    v2u result = {index, 0};
-    
-    if(index >= width)
-    {
-        result.x = index % width;
-        result.y = index / width;
-    }
-    
+    u32 result = size.w * size.h;
     return(result);
 }
 
 internal u32
-get_size_area(v2u size)
-{
-    u32 result = (size.w * size.h);
-    return(result);
-}
-
-internal u32
-get_rect_area(v4u rect)
+rect_area(v4u rect)
 {
     v2u rect_size = {rect.w, rect.h};
-    u32 result = get_size_area(rect_size);
+    u32 result = area_size(rect_size);
     
     return(result);
 }
 
 internal v2u
-get_rect_center(v4u rect)
+rect_center(v4u rect)
 {
     v2u result =
     {
@@ -228,10 +241,7 @@ make_uppercase(char c)
 {
     assert(is_lowercase(c));
     
-    char result = (c - 32);
-    
-    assert(is_uppercase(result));
-    
+    char result = c - 32;
     return(result);
 }
 
@@ -284,19 +294,3 @@ f32_to_u32_rounded_up(f32 value)
     u32 result = (u32)(value + 0.5f);
     return(result);
 }
-
-#define toggle(flags, new_flag) \
-{ \
-if(is_set(flags, new_flag)) \
-{ \
-unset(flags, new_flag); \
-} \
-else \
-{ \
-set(flags, new_flag); \
-} \
-}
-
-#define set(flags, new_flags) (flags |= (new_flags))
-#define unset(flags, new_flags) (flags &= ~(new_flags))
-#define is_set(flags, new_flags) ((flags & (new_flags)) == (new_flags))

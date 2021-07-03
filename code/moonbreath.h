@@ -5,16 +5,31 @@ typedef enum
     ExamineFlag_ReadyForKeypress = (1 << 3),
 } ExamineFlag;
 
+typedef enum
+{
+    ExamineType_None,
+    
+    ExamineType_Spell,
+    ExamineType_Entity,
+    ExamineType_Item,
+    ExamineType_Trap,
+    ExamineType_Tile,
+    
+    ExamineType_Count
+} ExamineType;
+
 typedef struct
 {
     u32 flags;
+    ExamineType type;
     
     b32 key_pressed[GameKey_Count];
     u32 key_pressed_start[GameKey_Count];
     u32 key_hold_duration;
     v2u pos;
     
-    ExamineType type;
+    // We don't put these in a union because we want to be able to do things like going back from inspecting
+    // an entity spell to inspecting the entity without having to set the pointer again.
         Item *item;
         Spell *spell;
         Entity *entity;
@@ -65,7 +80,7 @@ struct Game
 
 internal void render_outline_rect(SDL_Renderer *renderer, v4u rect, Color color);
 internal void render_fill_rect(SDL_Renderer *renderer, v4u rect, Color color, b32 blend);
-internal void render_rect(Game *game, v4u rect, u32 border_size);
+internal void render_window(Game *game, v4u rect, u32 border_size);
 internal void render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest, b32 is_flipped);
 internal char get_pressed_keyboard_char(Input *input);
 internal char get_pressed_alphabet_char(Input *input);
@@ -78,8 +93,11 @@ internal b32 is_chance_valid(u32 chance);
 internal b32 is_zero(s32 value);
 internal b32 was_pressed(InputState *state);
 internal b32 is_value_in_range(s32 value, s32 start, s32 end);
+internal v4u get_pos_tile_rect(v2u pos);
+internal v4u get_pos_tile_mul_rect(v2u pos);
 internal v4u get_dungeon_tile_rect(v2u tile);
-internal v4u get_game_dest(Game *game, v2u pos);
+internal v4u get_game_dest(v4s camera, v2u pos);
+internal v4u render_game_dest_tile(Game *game, SDL_Texture *texture, v4u tile_src, v2u pos);
 internal v2u get_direction_pos(v2u pos, Direction direction);
 internal String8 get_printable_key(Input *input, Key key);
 internal Direction get_random_direction(Random *random);

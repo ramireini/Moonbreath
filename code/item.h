@@ -67,7 +67,7 @@ typedef enum
     InventoryFlag_Adjust = (1 << 5),
     InventoryFlag_Mark = (1 << 6),
     InventoryFlag_AskingPlayer = (1 << 7),
-    InventoryFlag_ReadyForKeypress = (1 << 8),
+    InventoryFlag_ReadyForKeypress = (1 << 8)
 } InventoryFlag;
 
 typedef enum
@@ -99,11 +99,11 @@ typedef enum
 typedef enum
 {
     Scroll_Identify,
+    Scroll_Uncurse,
     Scroll_EnchantWeapon,
     Scroll_EnchantArmor,
     Scroll_MagicMapping,
     Scroll_Teleport,
-    Scroll_Uncurse,
     
     Scroll_Count
 } Scroll;
@@ -143,19 +143,35 @@ typedef enum
 
 typedef enum
 {
-    UsedItemType_None,
+    InteractType_None,
     
-    UsedItemType_Identify,
-    UsedItemType_EnchantWeapon,
-    UsedItemType_EnchantArmor,
-    UsedItemType_Uncurse
-} UsedItemType;
+    InteractType_Identify,
+    InteractType_EnchantWeapon,
+    InteractType_EnchantArmor,
+    InteractType_Uncurse
+} InteractType;
+
+typedef enum
+{
+    StatusType_None,
+    
+    StatusType_Damage,
+    StatusType_Heal,
+    StatusType_Stat,
+    StatusType_Poisoned,
+    StatusType_Bound,
+    StatusType_Bleeding,
+    StatusType_BrokenArmor,
+    StatusType_Sightless,
+    StatusType_Confused,
+    StatusType_Summon
+} StatusType;
 
 typedef enum
 {
     ItemActionType_None,
     
-    ItemActionType_PickUp,
+    ItemActionType_Pickup,
     ItemActionType_Drop,
     ItemActionType_Equip,
     ItemActionType_Unequip
@@ -163,34 +179,109 @@ typedef enum
 
 typedef enum
 {
-    LetterType_Letter,
-    LetterType_SelectLetter
-} LetterType;
+    StatType_None,
+    
+    StatType_Str,
+    StatType_Int,
+    StatType_Dex,
+    StatType_Def,
+    StatType_EV,
+    StatType_StrIntDex
+} StatType;
+
+typedef enum
+{
+    DamageType_None,
+    
+    DamageType_Physical,
+    DamageType_Fire,
+    DamageType_Ice,
+    DamageType_Lightning,
+    DamageType_Poison,
+    DamageType_Holy,
+    DamageType_Dark,
+    
+    DamageType_Count
+} DamageType;
+
+typedef struct
+{
+    s32 min;
+    s32 max;
+    DamageType type;
+    DamageType second_type;
+} Damage;
+
+typedef struct
+{
+    b32 stat_value_applied;
+    b32 print_end_on_last_status;
+    
+    String32 name;
+    
+    String64 player_hp_max;
+    String64 player_start;
+    String64 player_end;
+    String64 player_active;
+    
+    b32 is_player_active_custom;
+    Color player_active_color;
+    String32 player_active_target;
+    
+    String64 enemy_start;
+    String64 enemy_end;
+    String64 enemy_active;
+    
+    StatusType type;
+    StatType stat_type;
+    
+    union
+    {
+        Damage value;
+        Damage damage;
+    };
+    
+    u32 duration;
+    u32 chance;
+    
+    // Sometimes we want to store the original value of something and need it when the status ends.
+    u32 stored_value;
+    
+    Spell *spell;
+    ItemInfo *item_info;
+} Status;
+
+struct ItemInfo
+{
+    b32 is_known;
+    
+    v2u value_range;
+    v4u tile_src;
+    String32 depiction;
+};
 
 typedef struct
 {
     ItemHandedness handedness;
-    DamageType first_damage_type;
-    DamageType second_damage_type;
-    
-    s32 damage;
-    s32 accuracy;
+    Damage damage;
     f32 speed;
-} ItemWeapon;
+    s32 accuracy;
+} WeaponItem;
 
 typedef struct
 {
     s32 defence;
     s32 weight;
-} ItemArmor;
+} ArmorItem;
 
 typedef struct
 {
-    u32 stack_count;
-    String32 depiction;
+    ItemInfo *info;
     
     Status status;
-} ItemConsumable;
+    u32 stack_count;
+    String32 depiction;
+} ConsumableItem;
 
 struct Item
 {
@@ -215,24 +306,15 @@ struct Item
     ItemType type;
     union
     {
-        ItemWeapon w;
-        ItemArmor a;
-        ItemConsumable c;
+        WeaponItem w;
+        ArmorItem a;
+        ConsumableItem c;
     };
     
-    // TODO(rami): Extra stats for mythical items.
-    s32 enchantment_level;
+    // TODO(rami): Extra stats for mythical items
+    s32 enchant_level;
     u32 extra_stat_count;
 };
-
-typedef struct
-{
-    b32 is_known;
-    
-    v2u value_range;
-    v4u tile_src;
-    String32 depiction;
-} ConsumableInfo;
 
 typedef struct
 {
@@ -244,30 +326,33 @@ typedef struct
     Entity *examine_window_entity;
      DungeonTrap *examine_window_trap;
     
-    ConsumableInfo potion_info[Potion_Count];
-    ConsumableInfo scroll_info[Scroll_Count];
-    ConsumableInfo ration_info;
+    ItemInfo potion_info[Potion_Count];
+    ItemInfo scroll_info[Scroll_Count];
+    ItemInfo ration_info;
     } ItemState;
 
 typedef struct
 {
     u32 flags;
-    
-    ItemType dropped_item_type;
-    UsedItemType used_item_type;
     DeferWindow window;
+    
+    ItemType drop_type;
+    b32 update_view_after_interact;
+    InteractType interact_type;
+    DeferWindow interact_window;
     
     Item *examine_item;
     Item *slots[MAX_INVENTORY_SLOT_COUNT];
     Owner item_owners[MAX_OWNER_COUNT];
 } Inventory;
 
-internal void remove_item_from_game(Item *item);
+internal void remove_item_from_game(Item *item, Owner *item_owners);
+internal char *get_damage_type_string(DamageType damage_type);
 internal s32 get_index(s32 value);
-internal b32 is_item_valid_and_not_in_inventory(Item *item, u32 dungeon_level);
-internal ItemType random_item_type(Random *random);
+internal b32 is_item_valid_and_not_in_inventory(Item *item);
+internal ItemType get_random_item_type(Random *random);
 internal Item *get_dungeon_pos_item(ItemState *items, u32 dungeon_level, v2u pos, ItemID id);
 internal Item *add_armor_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, b32 is_cursed);
 internal Item *add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, u32 stack_count);
 internal Item *add_weapon_item(Random *random, ItemState *items, ItemID id, u32 dungeon_level, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
-internal DamageType get_random_damage_type(Random *random);
+internal DamageType get_random_damage_type(Random *random, DamageType exclude_type);

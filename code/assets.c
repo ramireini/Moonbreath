@@ -1,4 +1,43 @@
- internal v2u
+internal char *
+get_color_string(Color color)
+{
+    char *result = 0;
+    
+    switch(color)
+    {
+        case Color_Black: result = "Black"; break;
+        case Color_White: result = "White"; break;
+        
+        case Color_LightGray: result = "Light Gray"; break;
+        case Color_DarkGray: result = "Dark Gray"; break;
+        
+        case Color_LightRed: result = "Light Red"; break;
+        case Color_DarkRed: result = "Dark Red"; break;
+        
+        case Color_Green: result = "Green"; break;
+        case Color_LightGreen: result = "Light Green"; break;
+        case Color_DarkGreen: result = "Dark Green"; break;
+        
+        case Color_LightBlue: result = "Light Blue"; break;
+        case Color_DarkBlue: result = "Dark Blue"; break;
+        
+        case Color_LightBrown: result = "Light Brown"; break;
+        case Color_DarkBrown: result = "Dark Brown"; break;
+        
+        case Color_Yellow: result = "Yellow"; break;
+        case Color_LightYellow: result = "Light Yellow"; break;
+        
+        case Color_Cyan: result = "Cyan"; break;
+        case Color_Purple: result = "Purple"; break;
+        case Color_Orange: result = "Orange"; break;
+        
+         invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal v2u
 get_next_line(v2u pos, u32 start_x, u32 font_size)
 {
     v2u result =
@@ -37,8 +76,8 @@ get_glyph_width(char c, Font *font)
 internal u32
 get_text_width(char *text, Font *font, b32 strip_color_codes)
 {
-    assert(font);
     assert(text);
+    assert(font);
     
     u32 result = 0;
     
@@ -91,24 +130,37 @@ get_color_value(Color color)
         case Color_Black: result = make_v4u(0, 0, 0, 255); break;
         case Color_White: result = make_v4u(255, 255, 255, 255); break;
         
-        case Color_LightGray: result = make_v4u(183, 186, 179, 255); break;
+        case Color_LightGray: result = make_v4u(179, 179, 179, 255); break;
         case Color_DarkGray: result = make_v4u(84, 85, 82, 255); break;
         
-        case Color_LightRed: result = make_v4u(232, 39, 39, 255); break;
+        case Color_LightRed: result = make_v4u(240, 36, 36, 255); break;
         case Color_DarkRed: result = make_v4u(162, 0, 0, 255); break;
         
-        case Color_LightGreen: result = make_v4u(138, 226, 52, 255); break;
-        case Color_DarkGreen: result = make_v4u(95, 135, 0, 255); break;
+        case Color_Green: result = make_v4u(0, 180, 0, 255); break;
+        case Color_LightGreen: result = make_v4u(0, 230, 0, 255); break;
+        case Color_DarkGreen: result = make_v4u(0, 128, 0, 255); break;
         
         case Color_LightBlue: result = make_v4u(114, 159, 207, 255); break;
         case Color_DarkBlue: result = make_v4u(0, 106, 212, 255); break;
         
-        // TODO(rami): Remove if not necessary
         case Color_LightBrown: result = make_v4u(0, 0, 0, 255); break;
         case Color_DarkBrown: result = make_v4u(0, 0, 0, 255); break;
         
+        case Color_Yellow: result = make_v4u(255, 230, 0, 255); break;
+        
+        case Color_LightYellow:
+        {
+            result = get_color_value(Color_Yellow);
+            result.b = 80;
+        } break;
+        
+        case Color_EntityView:
+        {
+            result = get_color_value(Color_Yellow);
+            result.a = 16;
+        } break;
+        
         case Color_Cyan: result = make_v4u(0, 180, 180, 255); break;
-        case Color_Yellow: result = make_v4u(252, 233, 79, 255); break;
         case Color_Purple: result = make_v4u(92, 53, 102, 255); break;
         case Color_Orange: result = make_v4u(215, 95, 0, 255); break;
         
@@ -150,21 +202,24 @@ start_color(Color color)
         case Color_LightRed: result = "##4"; break;
         case Color_DarkRed: result = "##5"; break;
         
-        case Color_LightGreen: result = "##6"; break;
-        case Color_DarkGreen: result = "##7"; break;
+        case Color_Green: result = "##6"; break;
+        case Color_LightGreen: result = "##7"; break;
+        case Color_DarkGreen: result = "##8"; break;
         
-        case Color_LightBlue: result = "##8"; break;
-        case Color_DarkBlue: result = "##9"; break;
+        case Color_LightBlue: result = "##9"; break;
+        case Color_DarkBlue: result = "##A"; break;
         
-        case Color_LightBrown: result = "##A"; break;
-        case Color_DarkBrown: result = "##B"; break;
+        case Color_LightBrown: result = "##B"; break;
+        case Color_DarkBrown: result = "##C"; break;
         
-        case Color_Cyan: result = "##C"; break;
         case Color_Yellow: result = "##D"; break;
-        case Color_Purple: result = "##E"; break;
-        case Color_Orange: result = "##F"; break;
+        case Color_LightYellow: result = "##E"; break;
         
-        case Color_AlmostWhite: result = "##G"; break;
+        case Color_Cyan: result = "##F"; break;
+        case Color_Purple: result = "##G"; break;
+        case Color_Orange: result = "##H"; break;
+        
+        case Color_AlmostWhite: result = "##I"; break;
         
         invalid_default_case;
     }
@@ -330,15 +385,16 @@ initialize_assets(Game *game, Assets *assets)
                                             assets->tilemap.h);
     
     assets->tileset = load_texture(game->renderer, "data/images/tileset.png", 0);
-    assets->ui = load_texture(game->renderer, "data/images/ui.png", 0);
     
-    assets->item_ground_outline_src = make_v4u(1696, 96, 32, 32);
-    assets->yellow_outline_src = make_v4u(1728, 96, 32, 32);
+    assets->health_bar_sources[0] = get_pos_tile_mul_rect(make_v2u(1, 16));
+    assets->health_bar_sources[1] = get_pos_tile_mul_rect(make_v2u(2, 16));
+    assets->health_bar_sources[2] = get_pos_tile_mul_rect(make_v2u(3, 16));
+    assets->health_bar_sources[3] = get_pos_tile_mul_rect(make_v2u(4, 16));
+    assets->health_bar_sources[4] = get_pos_tile_mul_rect(make_v2u(5, 16));
     
     assets->stat_and_log_window_h = 176;
     
-    if(!assets->tileset.tex ||
-       !assets->ui.tex)
+    if(!assets->tileset.tex)
     {
         // TODO(rami): Logging
         textures_success = false;
@@ -362,22 +418,24 @@ free_assets(Assets *assets)
     
     SDL_DestroyTexture(assets->tilemap.tex);
     SDL_DestroyTexture(assets->tileset.tex);
-    SDL_DestroyTexture(assets->ui.tex);
     }
 
 internal void
 set_texture_color(SDL_Texture *texture, Color color)
 {
+    assert(texture);
+    assert(color);
+    
     v4u color_value = get_color_value(color);
     SDL_SetTextureColorMod(texture, color_value.r, color_value.g, color_value.b);
     SDL_SetTextureAlphaMod(texture, color_value.a);
 }
 
-#define render_text_and_move(game, text, pos, lines_before, lines_after, font, ...) render_text_full(game->renderer, text, pos, lines_before, lines_after, font, 0, ##__VA_ARGS__)
-#define render_text(game, text, pos, font, ...) render_text_full(game->renderer, text, pos, 0, 0, font, 0, ##__VA_ARGS__)
+#define render_string_and_move(game, text, pos, lines_before, lines_after, font, ...) render_string_full(game->renderer, text, pos, lines_before, lines_after, font, 0, ##__VA_ARGS__)
+#define render_string(game, string, pos, font, ...) render_string_full(game->renderer, string, pos, 0, 0, font, 0, ##__VA_ARGS__)
 internal void
-render_text_full(SDL_Renderer *renderer,
-                 char *text,
+render_string_full(SDL_Renderer *renderer,
+                 char *string,
                  v2u *start_pos,
                  u32 lines_before,
                  u32 lines_after,
@@ -385,14 +443,14 @@ render_text_full(SDL_Renderer *renderer,
                  u32 wrap_x, ...)
 {
     assert(renderer);
-    assert(text);
+    assert(string);
     assert(font);
     assert(font->is_valid);
     
     String256 text_format = {0};
     va_list arg_list;
     va_start(arg_list, wrap_x);
-    vsnprintf(text_format.s, sizeof(text_format), text, arg_list);
+    vsnprintf(text_format.s, sizeof(text_format), string, arg_list);
     va_end(arg_list);
     
     if(lines_before)
@@ -440,21 +498,24 @@ render_text_full(SDL_Renderer *renderer,
                         case '4': color = Color_LightRed; break;
                         case '5': color = Color_DarkRed; break;
                         
-                        case '6': color = Color_LightGreen; break;
-                        case '7': color = Color_DarkGreen; break;
+                        case '6': color = Color_Green; break;
+                        case '7': color = Color_LightGreen; break;
+                        case '8': color = Color_DarkGreen; break;
                         
-                        case '8': color = Color_LightBlue; break;
-                        case '9': color = Color_DarkBlue; break;
+                        case '9': color = Color_LightBlue; break;
+                        case 'A': color = Color_DarkBlue; break;
                         
-                        case 'A': color = Color_LightBrown; break;
-                        case 'B': color = Color_DarkBrown; break;
+                        case 'B': color = Color_LightBrown; break;
+                        case 'C': color = Color_DarkBrown; break;
                         
-                        case 'C': color = Color_Cyan; break;
                         case 'D': color = Color_Yellow; break;
-                        case 'E': color = Color_Purple; break;
-                        case 'F': color = Color_Orange; break;
+                        case 'E': color = Color_LightYellow; break;
                         
-                        case 'G': color = Color_AlmostWhite; break;
+                        case 'F': color = Color_Cyan; break;
+                        case 'G': color = Color_Purple; break;
+                        case 'H': color = Color_Orange; break;
+                        
+                        case 'I': color = Color_AlmostWhite; break;
                         
                         invalid_default_case;
                     }

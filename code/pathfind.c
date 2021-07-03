@@ -1,6 +1,8 @@
 internal u32
 get_pathfind_value(PathfindMap *pathfind_map, v2u pos)
 {
+    assert(pathfind_map);
+    
     u32 result = pathfind_map->array[(pos.y * pathfind_map->width) + pos.x];
     return(result);
 }
@@ -8,12 +10,17 @@ get_pathfind_value(PathfindMap *pathfind_map, v2u pos)
 internal void
 set_pathfind_value(PathfindMap *pathfind_map, v2u pos, u32 value)
 {
+    assert(pathfind_map);
+    
     pathfind_map->array[(pos.y * pathfind_map->width) + pos.x] = value;
 }
 
 internal v2u
 get_pathfind_pos(PathfindMap *pathfind_map, DungeonTiles tiles, v2u origin_pos, v2u target_pos)
 {
+    assert(pathfind_map);
+    assert(!is_v2u_zero(origin_pos));
+    assert(!is_v2u_zero(target_pos));
     assert(get_pathfind_value(pathfind_map, origin_pos));
     
     v2u result = origin_pos;
@@ -52,6 +59,9 @@ get_pathfind_pos(PathfindMap *pathfind_map, DungeonTiles tiles, v2u origin_pos, 
 internal void
 print_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map)
 {
+    assert(dungeon);
+    assert(pathfind_map);
+    
     printf("\n\nPathfind Map\n");
     
     for(u32 y = 0; y < dungeon->size.h; ++y)
@@ -75,8 +85,10 @@ print_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map)
 internal b32
 is_pos_pathfind(Dungeon *dungeon, v2u pos)
 {
-    b32 result = (is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos) &&
-                      !is_dungeon_pos_trap(&dungeon->traps, pos));
+    assert(dungeon);
+    
+    b32 result = (is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos) ||
+                      is_dungeon_pos_trap(&dungeon->traps, pos));
     
     return(result);
 }
@@ -84,6 +96,9 @@ is_pos_pathfind(Dungeon *dungeon, v2u pos)
 internal b32
 pathfind_map_has_default_values(Dungeon *dungeon, PathfindMap *pathfind_map)
 {
+    assert(dungeon);
+    assert(pathfind_map);
+    
     for(u32 y = 0; y < dungeon->size.h; ++y)
     {
         for(u32 x = 0; x < dungeon->size.w; ++x)
@@ -105,6 +120,10 @@ pathfind_map_has_default_values(Dungeon *dungeon, PathfindMap *pathfind_map)
 internal void
 update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
 {
+    assert(dungeon);
+    assert(pathfind_map);
+    assert(!is_v2u_zero(start_pos));
+    
     //printf("start_pos: %u, %u\n", start_pos.x, start_pos.y);
     //printf("dungeon->ready_for_pathfinding: %u\n", dungeon->ready_for_pathfinding);
     
@@ -166,6 +185,10 @@ update_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u start_pos)
 internal void
 init_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map, v2u pos)
 {
+    assert(dungeon);
+    assert(pathfind_map);
+    assert(!is_v2u_zero(pos));
+    
     pathfind_map->width = dungeon->size.w;
     update_pathfind_map(dungeon, pathfind_map, pos);
 }

@@ -314,11 +314,11 @@ typedef struct
     f32 frame_dt;
     InputState fkeys[13];
     
-    v2u mouse_pos;
-    v2u mouse_tile_pos;
+    v2u mouse;
+    v2u mouse_tile;
     union
     {
-        InputState mouse[Button_Count];
+        InputState mouse_buttons[Button_Count];
         struct
         {
             InputState Button_Left;
@@ -444,126 +444,42 @@ typedef struct
     u32 temporary_memory_count;
 } MemoryArena;
 
-typedef enum
-{
-    ExamineType_None,
-    
-    ExamineType_Spell,
-    ExamineType_Entity,
-    ExamineType_Item,
-    ExamineType_Trap,
-    ExamineType_Tile,
-    
-    ExamineType_Count
-} ExamineType;
-
-typedef enum
-{
-    DamageType_None,
-    
-    DamageType_Physical,
-    DamageType_Fire,
-    DamageType_Ice,
-    DamageType_Lightning,
-    DamageType_Poison,
-    DamageType_Holy,
-    DamageType_Dark,
-    
-    DamageType_Count
-} DamageType;
-
-typedef enum
-{
-    StatusType_None,
-    
-    StatusType_Damage,
-    StatusType_Heal,
-    StatusType_Stat,
-    StatusType_Bind,
-    StatusType_Confusion,
-    StatusType_Poison
-} StatusType;
-
-typedef enum
-{
-    StatType_None,
-    
-    StatType_Str,
-    StatType_Int,
-    StatType_Dex,
-    StatType_Def,
-    StatType_EV,
-    StatType_StrIntDex
-} StatType;
-
-typedef struct
-{
-    String32 name;
-    String64 description;
-    char select_letter;
-    
-    StatusType type;
-    DamageType damage_type;
-    StatType stat_type;
-    
-    u32 value;
-    u32 chance;
-    u32 duration;
-    u32 range;
-} Spell;
-
-typedef struct
-{
-    String32 name;
-    String64 description;
-    
-    String64 max_message;
-    String64 start_message;
-    String64 end_message;
-    
-    StatusType type;
-    DamageType damage_type;
-     StatType stat_type;
-    
-    Spell *spell;
-    
-    b32 was_value_used;
-    s32 value;
-    u32 chance;
-    u32 duration;
-} Status;
-
 #define MAX_INVENTORY_SLOT_COUNT 52
 
 typedef struct Game Game;
 typedef struct Item Item;
+typedef struct ItemInfo ItemInfo;
 typedef struct Entity Entity;
 typedef struct DungeonTrap DungeonTrap;
+typedef struct Spell Spell;
 
+#include "util.c"
+#include "random.c"
 #include "assets.h"
 #include "ui.h"
-#include "random.c"
 #include "item.h"
 #include "dungeon.h"
-#include "entity.h"
 #include "debug.h"
+#include "entity.h"
 #include "moonbreath.h"
 
 internal void log_add_okay(UI *ui);
-internal void log_add_item_cursed_unequip(Item *item, UI *ui);
-internal void log_add_item_action_text(Item *item, UI *ui, ItemActionType action);
+internal void log_add_item_action_string(Item *item, UI *ui, ItemActionType action);
 internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, u32 dungeon_level, ItemID item_id, u32 x, u32 y);
 internal void set_render_color(SDL_Renderer *renderer, Color color);
-internal u32 potion_chance_index(ItemID id);
-internal u32 scroll_chance_index(ItemID id);
+internal u32 get_potion_chance_index(ItemID id);
+internal u32 get_scroll_chance_index(ItemID id);
 internal u32 get_dungeon_pos_item_count(ItemState *items, u32 dungeon_level, v2u pos);
 internal b32 is_item_equipment(ItemType type);
-internal ItemID random_leather_armor(Random *random);
-internal ItemID random_steel_armor(Random *random);
-internal ItemID random_weapon(Random *random);
-internal ItemID random_potion(Random *random);
-internal ItemID random_scroll(Random *random);
+internal ItemID get_random_leather_armor(Random *random);
+internal ItemID get_random_steel_armor(Random *random);
+internal ItemID get_random_weapon(Random *random);
+internal ItemID get_random_potion(Random *random);
+internal ItemID get_random_scroll(Random *random);
 
 #if MOONBREATH_SLOW
+global b32 fov_toggle_array_set;
+global DungeonTile fov_toggle_array[MAX_DUNGEON_SIZE_SQUARED];
+
 global b32 fkey_active[13];
 #endif

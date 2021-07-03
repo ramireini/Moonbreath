@@ -5,6 +5,7 @@
 #define MAX_DUNGEON_ROOM_COUNT 256
 #define MAX_DUNGEON_TRAP_COUNT 128
 #define MAX_DUNGEON_PASSAGE_COUNT 8
+#define TILE_SIZE 32
 
 typedef enum
 {
@@ -73,6 +74,10 @@ typedef enum
     DungeonTileID_SummonTrap,
     DungeonTileID_TeleportTrap,
     
+    DungeonTileID_Water1,
+    DungeonTileID_Water2,
+    DungeonTileID_Water3,
+    
     // Red Blood
     DungeonTileID_RedBloodGroundSmall1,
     DungeonTileID_RedBloodGroundSmall2,
@@ -125,15 +130,13 @@ typedef enum
     
     DungeonTileID_GreenBloodWallRight1,
     DungeonTileID_GreenBloodWallRight2,
-    DungeonTileID_GreenBloodWallRight3,
-    
-    DungeonTileID_Water1,
-        DungeonTileID_Water2,
-        DungeonTileID_Water3
+    DungeonTileID_GreenBloodWallRight3
 } DungeonTileID;
 
 typedef enum
 {
+    DungeonTileType_None,
+    
     DungeonTileType_Floor,
     DungeonTileType_Water,
     DungeonTileType_Torch,
@@ -142,6 +145,8 @@ typedef enum
 
 typedef enum
 {
+    DungeonRandomPosType_None,
+    
     DungeonRandomPosType_Traversable,
     DungeonRandomPosType_TraversableUnoccupied,
     DungeonRandomPosType_TraversableRect,
@@ -159,6 +164,8 @@ typedef enum
 
 typedef enum
 {
+    DungeonRoomFeatureType_None,
+    
     DungeonRoomFeatureType_Item,
     DungeonRoomFeatureType_Enemy
 } DungeonRoomFeatureType;
@@ -203,9 +210,9 @@ typedef enum
     DungeonTrapType_Arrow,
     DungeonTrapType_Magic,
     DungeonTrapType_Bind,
-    DungeonTrapType_Shaft,
     DungeonTrapType_Summon,
     DungeonTrapType_Teleport,
+    DungeonTrapType_Shaft,
         
     DungeonTrapType_Count
 } DungeonTrapType;
@@ -229,18 +236,18 @@ typedef struct
 
 typedef struct
 {
-    DungeonTileID tile;
-    DungeonTileID remains;
-    
-    b32 is_occupied;
     b32 is_seen;
     b32 has_been_seen;
+    b32 is_occupied;
+    
+    DungeonTileID tile;
+    DungeonTileID remains;
     } DungeonTile;
 
 typedef struct
 {
     u32 width;
-    DungeonTile *array;
+    DungeonTile *array; // This is allocated separately because it's used by more than one thing.
 } DungeonTiles;
 
 typedef enum
@@ -251,8 +258,8 @@ typedef enum
 struct DungeonTrap
 {
     u32 flags;
-    
     DungeonTrapType type;
+    
     String32 name;
     String128 description;
     char select_letter;
@@ -300,17 +307,24 @@ typedef struct
     v2u size;
     u32 area;
     
-    // Flood
-    f32 flood_traversable_min;
+    // Flood Fill
+    f32 flood_fill_area_min;
     
     // Water
     b32 has_water;
     f32 water_min_total_area;
     u32 water_placement_min_floor_count;
     
-    // Torches and Doors
+    // Torch
     u32 torch_count;
+    u32 torches_generated_count;
+    u32 torch_retry_count;
+    u32 torch_min_spacing;
+    
+    // Door
     u32 door_count;
+    u32 doors_generated_count;
+    u32 door_retry_count;
     u32 door_min_spacing;
     
     // Room
@@ -334,11 +348,13 @@ typedef struct
     
     // Trap
     u32 trap_count;
+    u32 trap_minimum_distance;
     
-    v2u spike_trap_value;
-    v2u sword_trap_value;
-    v2u arrow_trap_value;
-    v2u magic_trap_value;
+    Damage spike_trap_damage;
+    Damage sword_trap_damage;
+    Damage arrow_trap_damage;
+    Damage magic_trap_damage;
+    
     v2u bind_trap_value;
     v2u shaft_trap_value;
     
@@ -384,7 +400,9 @@ internal void dungeon_automaton_room_step(Random *random, DungeonTiles src_tiles
 internal void set_dungeon_pos_wall(Random *random, DungeonTiles tiles, v2u pos);
 internal void set_dungeon_pos_floor(Random *random, DungeonTiles tiles, v2u pos);
 internal void set_dungeon_pos_water(Random *random, DungeonTiles tiles, v2u pos);
+internal b32 is_dungeon_level_valid(u32 dungeon_level);
 internal u32 get_dungeon_pos_trap_count(DungeonTiles tiles, DungeonTraps *traps, v2u pos);
+internal b32 is_dungeon_pos_trap(DungeonTraps *traps, v2u pos);
 internal b32 is_dungeon_pos_closed_door(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_occupied(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos);
@@ -395,7 +413,6 @@ internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile
 internal b32 is_pos_inside_dungeon(v2u dungeon_size, v2u pos);
 internal b32 is_dungeon_pos_water(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_traversable_and_unoccupied(DungeonTiles tiles, v2u pos);
-internal b32 can_place_dungeon_feature_on_pos(Dungeon *dungeon, ItemState *items, v2u pos);
 internal v2u get_random_dungeon_pos(Random *random, v2u dungeon_size);
 internal v2u get_random_dungeon_rect_pos(Random *random, v4u rect);
 internal v4u get_dungeon_tileset_rect(DungeonTileID tile);
