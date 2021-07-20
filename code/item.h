@@ -158,12 +158,13 @@ typedef enum
     StatusType_Damage,
     StatusType_Heal,
     StatusType_Stat,
-    StatusType_Poisoned,
-    StatusType_Bound,
-    StatusType_Bleeding,
+    StatusType_Poison,
+    StatusType_Burn,
+    StatusType_Bind,
+    StatusType_Bleed,
     StatusType_BrokenArmor,
     StatusType_Sightless,
-    StatusType_Confused,
+    StatusType_Confusion,
     StatusType_Summon
 } StatusType;
 
@@ -210,20 +211,20 @@ typedef struct
     s32 max;
     DamageType type;
     DamageType second_type;
-} Damage;
+} DamageInfo;
 
 typedef struct
 {
+    b32 test_bool;
     b32 stat_value_applied;
     b32 print_end_on_last_status;
     
     String32 name;
     
-    String64 player_hp_max;
+    String64 player_max_hp;
     String64 player_start;
     String64 player_end;
     String64 player_active;
-    
     b32 is_player_active_custom;
     Color player_active_color;
     String32 player_active_target;
@@ -235,17 +236,16 @@ typedef struct
     StatusType type;
     StatType stat_type;
     
+    u32 stored_value; // Store value of something and use it when status ends.
+    b32 is_value_percentage;
     union
     {
-        Damage value;
-        Damage damage;
+        DamageInfo value;
+        DamageInfo damage;
     };
     
     u32 duration;
     u32 chance;
-    
-    // Sometimes we want to store the original value of something and need it when the status ends.
-    u32 stored_value;
     
     Spell *spell;
     ItemInfo *item_info;
@@ -263,7 +263,7 @@ struct ItemInfo
 typedef struct
 {
     ItemHandedness handedness;
-    Damage damage;
+    DamageInfo damage;
     f32 speed;
     s32 accuracy;
 } WeaponItem;
@@ -311,7 +311,21 @@ struct Item
         ConsumableItem c;
     };
     
-    // TODO(rami): Extra stats for mythical items
+    // TODO(rami): Items need extra things to them.
+    // The higher the rarity of the item, the more stats it can have and those stats will be higher
+    // in their value.
+    
+    // Percentage health
+    // Strength
+    // Intelligence
+    // Dexterity
+    // Evasion
+    // Defence
+    // Weight reduction
+    // Damage resistance
+    // Changing view range
+    // Trap invulnerability
+    
     s32 enchant_level;
     u32 extra_stat_count;
 };

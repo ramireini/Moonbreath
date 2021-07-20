@@ -59,7 +59,6 @@ internal b32
 hit_random_chance(Random *random, u32 value)
 {
     assert(random);
-    assert(value);
     
     b32 result = (get_random_chance(random) <= value);
     return(result);

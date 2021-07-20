@@ -11,17 +11,17 @@ fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
 #define assert(expression)
 #endif
 
-#define invalid_default_case default: {assert(0);} break;
+#define internal static
+#define global static
+#define persist static
+#define U32_MAX UINT32_MAX
 
 #define kilobytes(value) ((value) * 1024)
 #define megabytes(value) (kilobytes(value) * 1024)
 #define gigabytes(value) (megabytes(value) * 1024)
+#define is_zero(value) ((s32)value <= 0)
 
-#define internal static
-#define global static
-#define persist static
-
-#define U32_MAX UINT32_MAX
+#define invalid_default_case default: {assert(0);} break;
 
 typedef int8_t s8;
 typedef int16_t s16;
@@ -198,6 +198,7 @@ typedef enum
     
     GameKey_Back,
     GameKey_Wait,
+    GameKey_Rest,
     GameKey_Yes,
     GameKey_No,
     
@@ -356,6 +357,7 @@ typedef struct
             
             InputState GameKey_Back;
             InputState GameKey_Wait;
+            InputState GameKey_Rest;
             InputState GameKey_Yes;
             InputState GameKey_No;
         };

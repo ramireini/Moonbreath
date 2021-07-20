@@ -129,7 +129,11 @@ update_player_view(Entity *player, Dungeon *dungeon)
     assert(is_entity_valid(player));
     assert(dungeon);
     
-    // Reset visiblity
+#if MOONBREATH_SLOW
+    if(fkey_active[1]) return;
+    #endif
+    
+    // Reset visibility
     for(u32 y = 0; y < dungeon->size.h; ++y)
     {
         for(u32 x = 0; x < dungeon->size.w; ++x)
@@ -139,7 +143,7 @@ update_player_view(Entity *player, Dungeon *dungeon)
         }
     }
     
-    // Entity position is visible by default
+    // Player is visible by default
     set_tile_is_seen_and_has_been_seen(dungeon->tiles, player->pos, true);
     
     s32 multipliers[FOV_SECTOR_COUNT][4] = 

@@ -133,8 +133,8 @@ get_color_value(Color color)
         case Color_LightGray: result = make_v4u(179, 179, 179, 255); break;
         case Color_DarkGray: result = make_v4u(84, 85, 82, 255); break;
         
-        case Color_LightRed: result = make_v4u(240, 36, 36, 255); break;
-        case Color_DarkRed: result = make_v4u(162, 0, 0, 255); break;
+        case Color_LightRed: result = make_v4u(217, 22, 22, 255); break;
+        case Color_DarkRed: result = make_v4u(128, 0, 0, 255); break;
         
         case Color_Green: result = make_v4u(0, 180, 0, 255); break;
         case Color_LightGreen: result = make_v4u(0, 230, 0, 255); break;

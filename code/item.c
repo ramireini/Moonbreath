@@ -89,11 +89,7 @@ copy_consumable_info_to_item(Item *item, ItemInfo *info)
     
     item->tile_src = info->tile_src;
     strcpy(item->c.depiction.s, info->depiction.s);
-    
-    if(info->is_known)
-    {
-        set(item->flags, ItemFlag_IsIdentified);
-    }
+    if(info->is_known) set(item->flags, ItemFlag_IsIdentified);
 }
 
 internal char *
@@ -205,11 +201,7 @@ internal char *
 get_item_status_prefix(u32 item_flags)
 {
     char *result = "";
-    
-    if(is_item_identified_and_cursed(item_flags))
-    {
-        result = "Cursed ";
-    }
+    if(is_item_identified_and_cursed(item_flags)) result = "Cursed ";
     
     return(result);
 }
@@ -312,14 +304,14 @@ get_full_item_name(Item *item)
         }
         else
         {
-            sprintf(result.s, "%s", get_item_id_string(item->id));
+            strcpy(result.s, get_item_id_string(item->id));
         }
     }
     else
     {
         if(is_set(item->flags, ItemFlag_IsIdentified))
         {
-            sprintf(result.s, "%s", item->name.s);
+            strcpy(result.s, item->name.s);
         }
         else
         {
@@ -392,12 +384,14 @@ internal void
 set_potion_or_scroll_as_known(ItemState *items, ItemID id)
 {
     assert(items);
+    assert(id);
+    
+    assert(items);
     assert(is_item_id_potion(id) || is_item_id_scroll(id));
     
     ItemInfo *potion_info = items->potion_info;
     ItemInfo *scroll_info = items->scroll_info;
     
-    // Mark the ID as known for future item generation
     switch(id)
     {
         case ItemID_MightPotion: potion_info[Potion_Might].is_known = true; break;
@@ -540,7 +534,7 @@ add_item_to_inventory(Game *game,
             remove_item_from_game(item, inventory->item_owners);
         }
         
-        game->action_time += player->p.turn_action_time;
+        game->passed_time += player->p.action_time;
     }
     else
     {
@@ -778,10 +772,13 @@ unequip_item(Game *game, Entity *player, Item *item, UI *ui, b32 came_from_drop_
         else
         {
             unset(item->flags, ItemFlag_IsEquipped);
-            game->action_time = player->p.turn_action_time;
+            game->passed_time = player->p.action_time;
             
-            assert(player->p.weapon);
-            player->p.weapon = 0;
+            if(item->type == ItemType_Weapon)
+            {
+                assert(player->p.weapon);
+                    player->p.weapon = 0;
+            }
             
             result = true;
         }
@@ -818,7 +815,7 @@ equip_item(Game *game, Entity *player, Item *item, Inventory *inventory, UI *ui,
             if(item->type == ItemType_Weapon) player->p.weapon = item;
             if(add_to_log) log_add_item_action_string(item, ui, ItemActionType_Equip);
             
-            game->action_time += player->p.turn_action_time;
+            game->passed_time += player->p.action_time;
         }
     }
 }
@@ -851,13 +848,9 @@ drop_item_from_inventory(Game *game,
         
         // We use was_unequipped because we want a single player turn to advance if we drop or unequip
         // an item, without we would advance two player turns if we dropped an equipped item.
-        if(!was_unequipped)
-        {
-        game->action_time += player->p.turn_action_time;
-        }
+        if(!was_unequipped) game->passed_time += player->p.action_time;
         
         b32 was_item_removed_from_game = false;
-        
         if(is_item_consumable(item->type))
             {
             // If the same item exists on the drop position then combine their stacks
@@ -1533,7 +1526,7 @@ render_items(Game *game,
                 
                 if(game->show_item_ground_outline)
                 {
-                    render_outline_rect(game->renderer, dest, Color_Green);
+                    render_outline_rect(game->renderer, dest, Color_DarkGreen);
                 }
             }
         }
@@ -1924,6 +1917,8 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
             item->rarity = ItemRarity_Common;
             item->c.stack_count = stack_count;
             
+            u32 potion_duration = get_random(random, 10, 20);
+            
             switch(id)
             {
                 case ItemID_MightPotion:
@@ -1934,7 +1929,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     status->type = StatusType_Stat;
                     status->stat_type = StatType_Str;
                         status->value.max = 2;
-                    status->duration = 40;
+                    status->duration = potion_duration;
                     strcpy(status->name.s, "Might");
                     
                     sprintf(status->player_start.s, "You drink the %s, you feel more mighty.", item->name.s);
@@ -1952,7 +1947,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     status->type = StatusType_Stat;
                     status->stat_type = StatType_Int;
                     status->value.max = 2;
-                    status->duration = 40;
+                    status->duration = potion_duration;
                     strcpy(status->name.s, "Wisdom");
                     
                     sprintf(status->player_start.s, "You drink the %s, you feel more wise.", item->name.s);
@@ -1970,7 +1965,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     status->type = StatusType_Stat;
                     status->stat_type = StatType_Dex;
                     status->value.max = 2;
-                    status->duration = 40;
+                    status->duration = potion_duration;
                     strcpy(status->name.s, "Agility");
                     
                     sprintf(status->player_start.s, "You drink the %s, you feel more dexterous.", item->name.s);
@@ -1988,7 +1983,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     status->type = StatusType_Stat;
                     status->stat_type = StatType_EV;
                     status->value.max = 2;
-                    status->duration = 40;
+                    status->duration = potion_duration;
                     strcpy(status->name.s, "Elusion");
                     
                     sprintf(status->player_start.s, "You drink the %s, you feel more evasive.", item->name.s);
@@ -2005,11 +2000,14 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     
                     Status *status = &item->c.status;
                     status->type = StatusType_Heal;
-                    status->value.max = get_random_from_v2u(random, info->value_range);
-                    sprintf(status->player_active.s, "%sYou drink the %s, it heals you for %u hitpoints.", start_color(Color_LightGreen), item->name.s, status->value.max);
-                    sprintf(status->player_hp_max.s, "You drink the %s, you feel no different.", item->name.s);
+                    status->is_value_percentage = true;
+                    sprintf(status->player_max_hp.s, "You drink the %s, you feel no different.", item->name.s);
+                    strcpy(status->player_active.s, "%sYou drink the %s, it heals you for %u hitpoints.");
+                    status->player_active_color = Color_Green;
+                    status->player_active_target = item->name;
+                    status->item_info = info;
                     
-                    sprintf(item->description.s, "Restores %u - %u of your hitpoints.", info->value_range.min, info->value_range.max);
+                    sprintf(item->description.s, "Restores %u - %u%% of your hitpoints.", info->value_range.min, info->value_range.max);
                     copy_consumable_info_to_item(item, info);
                 } break;
                 
@@ -2021,13 +2019,13 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     status->type = StatusType_Stat;
                     status->stat_type = StatType_StrIntDex;
                     status->value.max = -2;
-                    status->duration = 40;
+                    status->duration = potion_duration;
                     strcpy(status->name.s, "Decay");
                     
                     sprintf(status->player_start.s, "You drink the %s, you feel much weaker.", item->name.s);
                     sprintf(status->player_end.s, "%sYou don't feel as weak anymore.", start_color(Color_LightGray));
                     
-                    sprintf(item->description.s, "Reduces Strength, Intelligence and Dexterity by %u for %u turns.", status->value.max, status->duration);
+                    sprintf(item->description.s, "Reduces Strength, Intelligence and Dexterity by %u for %u turns.", absolute(status->value.max), status->duration);
                     copy_consumable_info_to_item(item, &items->potion_info[Potion_Decay]);
                 } break;
                 
@@ -2036,9 +2034,9 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     strcpy(item->name.s, "Potion of Confusion");
                     Status *status = &item->c.status;
                     
-                    status->type = StatusType_Confused;
+                    status->type = StatusType_Confusion;
                     status->chance = 33;
-                    status->duration = 40;
+                    status->duration = potion_duration;
                     strcpy(status->name.s, "Confusion");
                     
                     sprintf(status->player_start.s, "You drink the %s, you feel confused.", item->name.s);
@@ -2092,21 +2090,22 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                 
                 case ItemID_Ration:
                 {
-                    item->c.info = &items->ration_info;
+                    // TODO(rami): Random ration eating adjectives, this could be in the depiction array.
+                    
                     strcpy(item->name.s, "Ration");
-                    sprintf(item->description.s, "Restores %u - %u of your hitpoints.", item->c.info->value_range.min, item->c.info->value_range.max);
-                    copy_consumable_info_to_item(item, item->c.info);
+                    item->c.info = &items->ration_info;
                     
                     Status *status = &item->c.status;
                     status->type = StatusType_Heal;
-                    status->item_info = item->c.info;
-                    
-                    // TODO(rami): Random ration eating adjectives.
-                    sprintf(status->player_hp_max.s, "You eat the %s, you feel no different.", item->name.s);
+                    status->is_value_percentage = true;
+                    sprintf(status->player_max_hp.s, "You eat the %s, you feel no different.", item->name.s);
                     strcpy(status->player_active.s, "%sYou eat the %s, it heals you for %u hitpoints.");
                     status->player_active_color = Color_Green;
                     status->player_active_target = item->name;
+                    status->item_info = item->c.info;
                     
+                    sprintf(item->description.s, "Restores %u - %u%% of your hitpoints.", item->c.info->value_range.min, item->c.info->value_range.max);
+                    copy_consumable_info_to_item(item, item->c.info);
                     set(item->flags, ItemFlag_IsIdentified);
                 } break;
                 

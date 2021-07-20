@@ -22,6 +22,24 @@
 #include "debug.c"
 #include "config.c"
 
+internal u32
+tile_div(u32 value)
+{
+    u32 result = 0;
+    if(value) result = value / TILE_SIZE;
+    
+    return(result);
+}
+
+internal u32
+tile_mul(u32 value)
+{
+    u32 result = 0;
+    if(value) result = value * TILE_SIZE;
+    
+    return(result);
+}
+
 internal void
 update_examine_mode(Examine *examine,
                     Input *input,
@@ -151,8 +169,8 @@ update_examine_mode(Examine *examine,
                         }
                     }
                     
-                    // Pathfind to tile
-                    if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, examine->pos) &&
+                    // Start manual player pathfind
+                    if(is_pos_pathfindable(dungeon, examine->pos) &&
                        tile_has_been_seen(dungeon->tiles, examine->pos))
                     {
                         unset(examine->flags, ExamineFlag_Open);
@@ -275,33 +293,18 @@ set_render_color(SDL_Renderer *renderer, Color color)
 }
 
 internal b32
-is_zero(s32 value)
+is_diagonal(Direction direction)
 {
-    b32 result = (value <= 0);
-    return(result);
-}
-
-internal u32
-tile_div(u32 value)
-{
-    u32 result = 0;
+        assert(direction);
     
-    if(value)
+    b32 result = false;
+    
+    switch(direction)
     {
-        result = value / TILE_SIZE;
-    }
-    
-    return(result);
-}
-
-internal u32
-tile_mul(u32 value)
-{
-    u32 result = 0;
-    
-    if(value)
-    {
-        result = value * TILE_SIZE;
+        case Direction_UpLeft:
+        case Direction_UpRight:
+        case Direction_DownLeft:
+        case Direction_DownRight: result = true; break;
     }
     
     return(result);
@@ -335,9 +338,6 @@ get_direction_string(Direction direction)
 internal Direction
 get_direction_moved_from(v2u old_pos, v2u new_pos)
 {
-    assert(!is_v2u_zero(old_pos));
-    assert(!is_v2u_zero(new_pos));
-    
     Direction result = Direction_None;
     
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
@@ -355,8 +355,6 @@ get_direction_moved_from(v2u old_pos, v2u new_pos)
 internal v2u
 get_direction_pos(v2u pos, Direction direction)
 {
-    assert(!is_v2u_zero(pos));
-    
     v2u result = {0};
     
     switch(direction)
@@ -436,23 +434,23 @@ get_game_dest(v4s camera, v2u pos)
 }
 
 internal v4u
-render_game_dest_tile(Game *game, SDL_Texture *texture, v4u tile_src, v2u pos)
+render_game_dest_tile(Game *game, SDL_Texture *texture, v4u src, v2u pos, b32 flipped)
 {
     assert(game);
     assert(texture);
-    assert(!is_v4u_zero(tile_src));
+    assert(!is_v4u_zero(src));
     
-    v4u result = get_game_dest(game->camera, pos);
-    SDL_RenderCopy(game->renderer, texture, (SDL_Rect *)&tile_src, (SDL_Rect *)&result);
+    v4u dest = get_game_dest(game->camera, pos);
+    SDL_RenderCopyEx(game->renderer, texture, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, flipped);
     
-    return(result);
+    return(dest);
 }
 
 internal void
-render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest, b32 is_flipped)
+render_texture_half_color(SDL_Renderer *renderer, SDL_Texture *texture, v4u src, v4u dest, b32 flipped)
 {
     SDL_SetTextureColorMod(texture, 127, 127, 127);
-    SDL_RenderCopyEx(renderer, texture, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, is_flipped);
+    SDL_RenderCopyEx(renderer, texture, (SDL_Rect *)&src, (SDL_Rect *)&dest, 0, 0, flipped);
     SDL_SetTextureColorMod(texture, 255, 255, 255);
 }
 
@@ -492,6 +490,7 @@ render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
         {
             v2u tile_pos = {x, y};
             
+            //printf("%u, %u: %u\n", x, y, get_dungeon_pos_tile(dungeon->tiles, tile_pos));
             assert(get_dungeon_pos_tile(dungeon->tiles, tile_pos));
             
             v2u tileset_pos = get_dungeon_tileset_pos(dungeon->tiles, tile_pos);
@@ -760,8 +759,11 @@ get_key_from_keycode(SDL_Keycode keycode)
         
         case SDLK_ESCAPE: result = Key_Escape; break;
         case SDLK_v: result = Key_V; break;
+        case SDLK_b: result = Key_B; break;
         case SDLK_h: result = Key_H; break;
         case SDLK_j: result = Key_J; break;
+        
+        // Don't use invalid_default_case.
     }
     
     return(result);
@@ -1467,7 +1469,7 @@ update_and_render_game(Game *game,
                 }
             }
             
-            items->potion_info[Potion_Healing].value_range = make_v2u(20, 40);
+            items->potion_info[Potion_Healing].value_range = make_v2u(30, 50);
             items->ration_info.value_range = make_v2u(10, 20);
             items->ration_info.tile_src = get_dungeon_tile_rect(make_v2u(12, 2));
             
@@ -1742,8 +1744,8 @@ int main(int argc, char *argv[])
         }
         
         ConfigValue window_size = get_config_uint(&config, "window_size");
-        if(window_size.uint)
-        {
+        assert(window_size.uint == 1 || window_size.uint == 2);
+        
             if(window_size.uint == 1)
             {
                 game->window_size = make_v2u(1920, 1080);
@@ -1752,11 +1754,6 @@ int main(int argc, char *argv[])
             {
                 game->window_size = make_v2u(1280, 720);
             }
-        }
-        else
-        {
-            assert(0);
-        }
         
 #if 0
         for(u32 index = 0; index < GameKey_Count; ++index)
@@ -1824,6 +1821,7 @@ int main(int argc, char *argv[])
         
         game->keybinds[GameKey_Back] = Key_Escape;
         game->keybinds[GameKey_Wait] = Key_V;
+        game->keybinds[GameKey_Rest] = Key_B;
         game->keybinds[GameKey_Yes] = Key_H;
         game->keybinds[GameKey_No] = Key_J;
 #endif
@@ -1858,7 +1856,7 @@ int main(int argc, char *argv[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 312454;
+                                u64 seed = 1626810441;
                                 printf("Seed: %lu\n\n", seed);
                                 
                                 game->random = set_random_seed(seed);
@@ -2027,7 +2025,7 @@ int main(int argc, char *argv[])
                                     fps = (f32)performance_frequency / (f32)elapsed_counter;
                                     full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
                                     
-                                    update_and_render_debug_state(game, new_input, entities, items, dungeons);
+                                    update_and_render_debug_state(game, new_input, entities, items, get_dungeon_from_level(dungeons, dungeons->current_level));
                                     #endif
                                     
                                     Input *temp = new_input;

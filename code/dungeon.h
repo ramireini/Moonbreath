@@ -313,7 +313,6 @@ typedef struct
     // Water
     b32 has_water;
     f32 water_min_total_area;
-    u32 water_placement_min_floor_count;
     
     // Torch
     u32 torch_count;
@@ -350,10 +349,10 @@ typedef struct
     u32 trap_count;
     u32 trap_minimum_distance;
     
-    Damage spike_trap_damage;
-    Damage sword_trap_damage;
-    Damage arrow_trap_damage;
-    Damage magic_trap_damage;
+    DamageInfo spike_trap_damage;
+    DamageInfo sword_trap_damage;
+    DamageInfo arrow_trap_damage;
+    DamageInfo magic_trap_damage;
     
     v2u bind_trap_value;
     v2u shaft_trap_value;
@@ -375,7 +374,7 @@ typedef struct
 
 typedef struct
 {
-    b32 ready_for_pathfinding;
+    b32 can_pathfind;
     
     u32 level;
     v2u size;
@@ -395,6 +394,10 @@ typedef struct
     u32 current_level;
     Dungeon levels[MAX_DUNGEON_LEVEL];
 } Dungeons;
+
+// TODO(rami): Doors look stupid when they're in water, especially because when we open the door the
+// opened door tile does not have water on it, do we choose to not place doors in water like we do with
+// dungeon traps?
 
 internal void dungeon_automaton_room_step(Random *random, DungeonTiles src_tiles, DungeonTiles dest_tiles, v4u rect);
 internal void set_dungeon_pos_wall(Random *random, DungeonTiles tiles, v2u pos);

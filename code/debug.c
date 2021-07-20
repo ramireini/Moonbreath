@@ -294,7 +294,7 @@ update_and_render_debug_state(Game *game,
                     Input *input,
                     EntityState *entities,
                     ItemState *items,
-                              Dungeons *dungeons)
+                              Dungeon *dungeon)
 {
     DebugState *debug = &game->debug;
     if(debug->is_shown)
@@ -539,7 +539,7 @@ update_and_render_debug_state(Game *game,
                         switch(hot_var->action)
                             {
                             case DebugVarActionType_DeleteItem: zero_struct(*hot_var->item); break;
-                            case DebugVarActionType_DeleteEntity: zero_struct(*hot_var->entity); break;
+                            case DebugVarActionType_DeleteEntity: remove_entity_from_game(hot_var->entity, dungeon->tiles); break;
                             case DebugVarActionType_ShowEntityView: toggle(hot_var->entity->flags, EntityFlag_ShowViewRange); break;
                         }
                     } break;
@@ -564,8 +564,7 @@ update_and_render_debug_state(Game *game,
         else
         {
             DebugTree *new_tree = add_debug_tree(debug, game->window_size.x / 2, 50);
-            Dungeon *dungeon = get_dungeon_from_level(dungeons, dungeons->current_level);
-            
+                
                 Entity *entity = get_dungeon_pos_entity(entities, dungeon->level, input->mouse_tile, false);
                 if(entity && is_tile_seen_or_has_been_seen(dungeon->tiles, entity->pos))
                 {
@@ -619,7 +618,8 @@ update_and_render_debug_state(Game *game,
                     add_debug_newline(debug, new_tree);
                     
                     start_debug_group(debug, new_tree, "Stats", false);
-                    {
+                        {
+                            add_debug_variable(new_tree, "Hit Chance", entity->hit_chance, DebugVarType_U32);
                             add_debug_variable(new_tree, "View Range", entity->view_range, DebugVarType_U32);
                             add_debug_variable(new_tree, "Action Time", entity->action_time, DebugVarType_F32);
                         add_debug_newline(debug, new_tree);
@@ -801,7 +801,7 @@ update_and_render_debug_state(Game *game,
                             }
                             else if(!var->status->type)
                             {
-                                sprintf(var->name.s, "%s", empty_status_string);
+                                strcpy(var->name.s, empty_status_string);
                             }
                         }
                         

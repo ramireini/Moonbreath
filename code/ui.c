@@ -340,7 +340,7 @@ render_window_items(Game *game,
                         
                         if(is_set(item->flags, ItemFlag_IsEquipped))
                         {
-                            sprintf(equipped_string.s, " (equipped)");
+                            strcpy(equipped_string.s, " (equipped)");
                         }
                         
                         render_string(game, "%s%s%s%s%s", &item_name_pos, ui->font,
@@ -363,7 +363,7 @@ render_window_items(Game *game,
 }
 
 internal b32
-update_window_test_pos(View *view, v2u *test_pos, u32 window_scroll_start_y)
+update_window_test_poss(View *view, v2u *test_pos, u32 window_scroll_start_y)
 {
     assert(test_pos);
     assert(view);
@@ -374,7 +374,30 @@ update_window_test_pos(View *view, v2u *test_pos, u32 window_scroll_start_y)
     
     if(can_fit_view_entry(test_pos->y, view->entry_size, window_scroll_start_y))
     {
-        ++view->end;
+        view->end += 2;
+        next_defer_window_entry(test_pos, view->entry_size);
+    }
+    else
+    {
+        should_break = true;
+    }
+    
+    return(should_break);
+}
+
+internal b32
+update_window_test_pos(View *view, v2u *test_pos, u32 window_scroll_start_y, u32 view_end_add)
+{
+    assert(test_pos);
+    assert(view);
+    assert(view->entry_size);
+    assert(window_scroll_start_y);
+    
+    b32 should_break = false;
+    
+    if(can_fit_view_entry(test_pos->y, view->entry_size, window_scroll_start_y))
+    {
+        view->end += view_end_add;
         next_defer_window_entry(test_pos, view->entry_size);
     }
     else
@@ -427,13 +450,13 @@ set_view_end_from_inventory_items(Inventory *inventory,
                 {
                     render_item_type = false;
                     
-                    if(update_window_test_pos(view, &test_pos, window_scroll_start_y))
+                    if(update_window_test_pos(view, &test_pos, window_scroll_start_y, 1))
                     {
                         return(true);
                     }
                 }
                 
-                if(update_window_test_pos(view, &test_pos, window_scroll_start_y))
+                if(update_window_test_pos(view, &test_pos, window_scroll_start_y, 1))
                 {
                     return(true);
                 }
@@ -496,17 +519,10 @@ set_view_end_from_items(ItemState *items,
                 if(render_item_type)
                 {
                     render_item_type = false;
-                    
-                    if(update_window_test_pos(view, test_pos, window_scroll_start_y))
-                    {
-                        return(true);
-                    }
+                    if(update_window_test_pos(view, test_pos, window_scroll_start_y, 1)) return(true);
                 }
                 
-                if(update_window_test_pos(view, test_pos, window_scroll_start_y))
-                {
-                    return(true);
-                }
+                if(update_window_test_pos(view, test_pos, window_scroll_start_y, 1)) return(true);
             }
         }
     }
@@ -874,7 +890,7 @@ process_defers(Game *game, Texture tileset, UI *ui)
         
         if(defer->type == DeferType_Text)
         {
-            render_string(game, defer->text.s, &final_defer_pos, ui->font);
+            render_string(game, "%s", &final_defer_pos, ui->font, defer->text.s);
         }
         else if(defer->type == DeferType_Tile)
         {
@@ -1117,8 +1133,8 @@ init_all_owner_letters(Owner *owners)
         assert(!owner->type);
         assert(!owner->c);
         
+        // Set the letter for all owner elements based on index.
         u32 alphabet_size = 26;
-        
         if(i < alphabet_size)
         {
             owner->c = 97 + i;
@@ -1145,7 +1161,7 @@ clear_owner_from_character(Owner *owners, char *character)
         if(owner->type && owner->c == *character)
         {
             owner->type = OwnerType_None;
-            *character = 0; // Clear this here so the caller doesn't have to
+            *character = 0; // Clear so the caller doesn't have to.
             
             return;
         }
@@ -1519,14 +1535,14 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         defer_string("Something", &name_pos, 0, 1, ui);
         defer_tile(pos, get_dungeon_tileset_rect(DungeonTileID_EntityInvisible), ui, true);
         
-        defer_string("An unseen being.", pos, 3, 1, ui);
+        defer_string("There's something here that you can't see.", pos, 1, 1, ui);
     }
     else
     {
         defer_string("%s%s", &name_pos, 0, 1, ui, get_letter_string(entity->select_letter).s, entity->name.s);
         defer_tile(pos, entity->tile_src, ui, true);
         
-        defer_string("Max HP: %u", pos, 1, 1, ui, entity->max_hp);
+        defer_string("Health: %u/%u", pos, 1, 1, ui, entity->hp, entity->max_hp);
         
         if(entity->e.damage.min &&
            entity->e.damage.max)
@@ -1758,7 +1774,7 @@ render_spell_examine_window(Game *game,
         char in_spell_range_text[32] = {0};
         if(is_in_spell_range(attacker_pos, defender_pos, spell->range))
         {
-            sprintf(in_spell_range_text, " (You are in range)");
+            strcpy(in_spell_range_text, " (You are in range)");
         }
         
         defer_string("%s%s", pos, 0, 1, ui, spell_range_text, in_spell_range_text);
@@ -1868,7 +1884,7 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
         else if(is_item_consumable(item->type))
         {
             if(is_set(item->flags, ItemFlag_IsIdentified))
-            {
+        {
             defer_string("%s", pos, 3, 0, ui, item->description.s);
             }
             else
@@ -2294,10 +2310,7 @@ render_multiple_examine_window(Game *game,
             {
                 // Add entity to view count
                 items->examine_window_entity = get_dungeon_pos_entity(entities, dungeon->level, examine->pos, true);
-                if(items->examine_window_entity)
-                {
-                    view->count += 2;
-                }
+                if(items->examine_window_entity) view->count += 2;
             }
             else if(examine_type == ExamineType_Item)
             {
@@ -2307,10 +2320,7 @@ render_multiple_examine_window(Game *game,
             {
                 // Add dungeon trap to view count
                 items->examine_window_trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
-                if(items->examine_window_trap)
-                {
-                    view->count += 2;
-                }
+                if(items->examine_window_trap) view->count += 2;
                 }
             }
     }
@@ -2335,11 +2345,11 @@ render_multiple_examine_window(Game *game,
     for(ExamineType examine_type = ExamineType_Entity;
             examine_type <= ExamineType_Trap;
         ++examine_type)
-    {
+        {
         if(entity &&
                examine_type == ExamineType_Entity &&
-                   update_window_test_pos(view, &test_pos, ui->window_scroll_start_y))
-        {
+                   update_window_test_pos(view, &test_pos, ui->window_scroll_start_y, 2))
+            {
             break;
             }
             else if(examine_type == ExamineType_Item &&
@@ -2349,13 +2359,13 @@ render_multiple_examine_window(Game *game,
             }
         else if(trap &&
                 examine_type == ExamineType_Trap &&
-                        update_window_test_pos(view, &test_pos, ui->window_scroll_start_y))
+                        update_window_test_pos(view, &test_pos, ui->window_scroll_start_y, 2))
         {
             break;
         }
+        }
     }
-    }
-        
+    
     view->clip_rect = get_and_enable_clip_rect(game->renderer, view, examine_rect, pos);
     
     // Render examine contents
@@ -2423,7 +2433,7 @@ render_multiple_examine_window(Game *game,
     
     disable_clip_rect_and_render_scrollbar(game, view, examine_rect, ui);
     
-#if 0
+#if 1
     ui_print_view("Multiple Examine View", *view);
 #endif
     
@@ -2581,8 +2591,24 @@ render_ui(Game *game,
             
             if(player->hp > 0)
             {
+                EntityRegen *regen = &player->regen;
+                if(regen->next_turn)
+                {
+                    // Regen indicator
+                    u32 hp_after_regen = player->hp + regen->hp_increase;
+                    if(hp_after_regen > player->max_hp)
+                    {
+                        hp_after_regen = player->max_hp;
+                    }
+                    
+                    v4u regen_rect = healthbar_inside;
+                    regen_rect.w = ratio(hp_after_regen, player->max_hp, healthbar_inside.w);
+                    render_fill_rect(game->renderer, regen_rect, Color_DarkRed, false);
+                }
+                
+                // Healthbar foreground
                 healthbar_inside.w = ratio(player->hp, player->max_hp, healthbar_inside.w);
-                render_fill_rect(game->renderer, healthbar_inside, Color_DarkRed, false);
+                render_fill_rect(game->renderer, healthbar_inside, Color_LightRed, false);
             }
         }
         
@@ -2655,10 +2681,7 @@ render_ui(Game *game,
             {
                 LogMessage *message = &ui->log_messages[index];
                 
-                if(update_window_test_pos(full_log_view, &test_pos, ui->window_scroll_start_y))
-                {
-                    break;
-                }
+                if(update_window_test_pos(full_log_view, &test_pos, ui->window_scroll_start_y, 1)) break;
             }
         }
         
