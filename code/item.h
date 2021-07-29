@@ -1,4 +1,5 @@
 #define MAX_ITEM_COUNT 1024
+#define MAX_ITEM_STAT_COUNT (ItemStatType_Count - 1)
 
 typedef enum
 {
@@ -72,6 +73,16 @@ typedef enum
 
 typedef enum
 {
+    ArmorItemType_None,
+    
+    ArmorItemType_Leather,
+    ArmorItemType_Steel,
+    
+    ArmorItemType_Count
+} ArmorItemType;
+
+typedef enum
+{
     ItemType_None,
     
     ItemType_Weapon,
@@ -114,7 +125,9 @@ typedef enum
     
     ItemRarity_Common,
     ItemRarity_Magical,
-    ItemRarity_Mythical
+    ItemRarity_Mythical,
+    
+        ItemRarity_Count
 } ItemRarity;
 
 typedef enum
@@ -264,14 +277,15 @@ typedef struct
 {
     ItemHandedness handedness;
     DamageInfo damage;
-    f32 speed;
     s32 accuracy;
+    u32 weight;
+    f32 speed;
 } WeaponItem;
 
 typedef struct
 {
-    s32 defence;
-    s32 weight;
+    u32 defence;
+    u32 weight;
 } ArmorItem;
 
 typedef struct
@@ -282,6 +296,42 @@ typedef struct
     u32 stack_count;
     String32 depiction;
 } ConsumableItem;
+
+typedef enum
+{
+    ItemStatType_None,
+    
+    // We render these on items in this order.
+    ItemStatType_Health,
+    ItemStatType_Strength,
+    ItemStatType_Intelligence,
+    ItemStatType_Dexterity,
+    ItemStatType_Evasion,
+    ItemStatType_Defence,
+    
+    ItemStatType_PhysicalResistance,
+    ItemStatType_FireResistance,
+    ItemStatType_IceResistance,
+    ItemStatType_LightningResistance,
+    ItemStatType_PoisonResistance,
+    ItemStatType_HolyResistance,
+    ItemStatType_DarkResistance,
+    
+    ItemStatType_ViewRange,
+    ItemStatType_InvulnerableToTraps,
+    
+    ItemStatType_Count
+} ItemStatType;
+
+typedef struct
+{
+    ItemStatType type;
+    
+    b32 set;
+    s32 value;
+    DamageType resistance;
+     String64 description;
+    } ItemStat;
 
 struct Item
 {
@@ -300,6 +350,8 @@ struct Item
     
     ItemSlot slot;
     ItemRarity rarity;
+    s32 enchant_level;
+    
     v4u tile_src;
     v4u equip_tile_src;
     
@@ -311,23 +363,7 @@ struct Item
         ConsumableItem c;
     };
     
-    // TODO(rami): Items need extra things to them.
-    // The higher the rarity of the item, the more stats it can have and those stats will be higher
-    // in their value.
-    
-    // Percentage health
-    // Strength
-    // Intelligence
-    // Dexterity
-    // Evasion
-    // Defence
-    // Weight reduction
-    // Damage resistance
-    // Changing view range
-    // Trap invulnerability
-    
-    s32 enchant_level;
-    u32 extra_stat_count;
+    ItemStat stats[MAX_ITEM_STAT_COUNT];
 };
 
 typedef struct
@@ -362,6 +398,7 @@ typedef struct
 
 internal void remove_item_from_game(Item *item, Owner *item_owners);
 internal char *get_damage_type_string(DamageType damage_type);
+internal char *get_item_rarity_string(ItemRarity rarity);
 internal s32 get_index(s32 value);
 internal b32 is_item_valid_and_not_in_inventory(Item *item);
 internal ItemType get_random_item_type(Random *random);

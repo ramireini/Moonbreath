@@ -592,6 +592,7 @@ update_and_render_debug_state(Game *game,
                         add_debug_flag(new_tree, "GhostFlipped", entity->flags, EntityFlag_GhostFlipped);
                             add_debug_flag(new_tree, "Invisible", entity->flags, EntityFlag_Invisible);
                             add_debug_flag(new_tree, "NormalWaterMovement", entity->flags, EntityFlag_NormalWaterMovement);
+                            add_debug_flag(new_tree, "InvulnerableToTraps", entity->flags, EntityFlag_InvulnerableToTraps);
                             add_debug_flag(new_tree, "Undead", entity->flags, EntityFlag_Undead);
                     }
                     end_debug_group(new_tree);
@@ -637,7 +638,7 @@ update_and_render_debug_state(Game *game,
                     {
                         for(u32 index = DamageType_None + 1; index < DamageType_Count; ++index)
                         {
-                                add_debug_variable(new_tree, get_damage_type_string(index), entity->resistances[index], DebugVarType_S32);
+                                add_debug_variable(new_tree, get_damage_type_string(index), entity->resists[index], DebugVarType_S32);
                         }
                     }
                     end_debug_group(new_tree);
@@ -711,7 +712,6 @@ update_and_render_debug_state(Game *game,
                             add_debug_enum(new_tree, "First Damage Type", item->type, get_damage_type_string);
                             add_debug_enum(new_tree, "Second Damage Type", item->type, get_damage_type_string);
                             add_debug_variable(new_tree, "Enchant Level", item->enchant_level, DebugVarType_S32);
-                        add_debug_variable(new_tree, "Extra Stat Count", item->extra_stat_count, DebugVarType_S32);
                     }
                     else if(item->type == ItemType_Armor)
                     {
@@ -790,13 +790,12 @@ update_and_render_debug_state(Game *game,
                            var->type == DebugVarType_Group)
                         {
                             char *empty_status_string = "Empty Status";
-                            
                             if(strings_match(var->name.s, empty_status_string))
                             {
-                                StatusType type = *var->group.first_child->u32;
-                                if(type)
+                                StatusType status_type = *var->group.first_child->u32;
+                                if(status_type)
                                 {
-                                    sprintf(var->name.s, "%s Status", get_status_type_string(type));
+                                    sprintf(var->name.s, "%s Status", get_status_type_string(status_type));
                                 }
                             }
                             else if(!var->status->type)

@@ -310,7 +310,7 @@ get_token(Tokenizer *tokenizer)
         {
             token.value = TokenValue_Uint;
             
-            // Turn string to number
+            // String to number
             while(tokenizer->at[0] && is_numeric(tokenizer->at[0]))
             {
                 token.uint = (tokenizer->at[0] - '0') + (token.uint * 10);

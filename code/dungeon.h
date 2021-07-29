@@ -217,6 +217,17 @@ typedef enum
     DungeonTrapType_Count
 } DungeonTrapType;
 
+typedef enum
+{
+    DungeonTrapFlag_HasBeenSeen = (1 << 1)
+} DungeonTrapFlag;
+
+typedef struct
+{
+    b32 valid;
+    u32 chance;
+} ItemTypeInfo;
+
 typedef struct
 {
     b32 success;
@@ -249,11 +260,6 @@ typedef struct
     u32 width;
     DungeonTile *array; // This is allocated separately because it's used by more than one thing.
 } DungeonTiles;
-
-typedef enum
-{
-    DungeonTrapFlag_HasBeenSeen = (1 << 1)
-} DungeonTrapFlag;
 
 struct DungeonTrap
 {

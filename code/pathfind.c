@@ -194,14 +194,12 @@ pathfind_map_has_default_values(Dungeon *dungeon, PathfindMap *map)
 internal void
 update_pathfind_map(Dungeon *dungeon, PathfindMap *map, v2u start_pos)
 {
-    map->width = dungeon->size.w;
-    
     assert(dungeon);
     assert(map);
-    assert(!is_v2u_zero(start_pos));
     
     //printf("start_pos: %u, %u\n", start_pos.x, start_pos.y);
     //printf("dungeon->ready_for_pathfinding: %u\n", dungeon->ready_for_pathfinding);
+    map->width = dungeon->size.w;
     
     if(dungeon->can_pathfind &&
            is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, start_pos))

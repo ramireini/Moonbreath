@@ -36,6 +36,22 @@ get_random(Random *random, s32 min, s32 max)
     return(result);
 }
 
+internal s32
+get_random_no_zero(Random *random, s32 min, s32 max)
+{
+    assert(random);
+    assert(min <= max);
+    
+    s32 result = 0;
+    for(;;)
+    {
+        result = get_random(random, min, max);
+        if(result != 0) break;
+    }
+    
+    return(result);
+}
+
 internal u32
 get_random_from_v2u(Random *random, v2u a)
 {

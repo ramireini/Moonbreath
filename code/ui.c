@@ -784,10 +784,7 @@ defer_string(char *string, v2u *pos, u32 lines_before, u32 lines_after, UI *ui, 
     vsnprintf(string_format.s, sizeof(string_format), string, arg_list);
     va_end(arg_list);
     
-    if(lines_before)
-    {
-        pos_newline(pos, ui->font->size, lines_before);
-    }
+    if(lines_before) pos_newline(pos, ui->font->size, lines_before);
     
     for(u32 index = 0; index < MAX_DEFER_COUNT; ++index)
     {
@@ -1547,7 +1544,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         if(entity->e.damage.min &&
            entity->e.damage.max)
         {
-            defer_string("Damage: %u - %u", pos, 0, 1, ui, entity->e.damage.min, entity->e.damage.max);
+            defer_string("Damage: %u-%u", pos, 0, 1, ui, entity->e.damage.min, entity->e.damage.max);
         }
         
         defer_string("Defence: %u", pos, 0, 1, ui, entity->def);
@@ -1590,7 +1587,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         
         for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
         {
-            s32 resistance = entity->resistances[damage_type_index];
+            s32 resistance = entity->resists[damage_type_index];
             if(resistance != 0)
             {
                 char *damage_type_text = get_damage_type_string(damage_type_index);
@@ -1636,11 +1633,9 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         
         // Render entity statuses
         b32 render_status_header = true;
-        
         for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
         {
             Status *status = &entity->statuses[index];
-            
             if(status->type && status->spell)
             {
                 if(render_status_header)
@@ -1650,10 +1645,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
                 }
                 
                 Spell *spell = status->spell;
-                if(!spell->select_letter)
-                {
-                    spell->select_letter = add_new_char_to_owners(ui->temp_owners, status->spell, OwnerType_Spell);
-                }
+                if(!spell->select_letter) spell->select_letter = add_new_char_to_owners(ui->temp_owners, status->spell, OwnerType_Spell);
                 
                 defer_string("%s%s", pos, 0, 1, ui, get_letter_string(spell->select_letter).s, status->name.s);
             }
@@ -1672,7 +1664,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         
         for(u32 damage_type_index = 0; damage_type_index < DamageType_Count; ++damage_type_index)
         {
-            s32 resistance = entity->resistances[damage_type_index];
+            s32 resistance = entity->resists[damage_type_index];
             if(resistance != 0)
             {
                 if(render_prefix_text)
@@ -1732,10 +1724,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
             }
         }
         
-        if(entity->e.spell_count)
-        {
-            defer_string("Press the key next to a spell to view it.", pos, 1, 1, ui);
-        }
+        if(entity->e.spell_count) defer_string("Press the key next to a spell to view it.", pos, 1, 1, ui);
         }
     
     end_defer_window(game, &window, assets, ui);
@@ -1750,7 +1739,7 @@ render_spell_examine_window(Game *game,
                             v2u defender_pos)
 {
     assert(game);
-    assert(is_spell_valid(spell));
+    assert(is_entity_spell_valid(spell));
     assert(assets);
     assert(ui);
     assert(!is_v2u_zero(attacker_pos));
@@ -1857,13 +1846,13 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
         {
             if(is_set(item->flags, ItemFlag_IsIdentified))
         {
-            defer_string("Damage: %u - %u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max + item->enchant_level);
+            defer_string("Damage: %u-%u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max + item->enchant_level);
             defer_string("Accuracy: %d", pos, 1, 0, ui, item->w.accuracy + item->enchant_level);
             defer_string("Attack Speed: %.1f", pos, 1, 0, ui, item->w.speed);
             }
             else
         {
-            defer_string("Base Damage: %u - %u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max);
+            defer_string("Base Damage: %u-%u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max);
             defer_string("Base Accuracy: %d", pos, 1, 0, ui, item->w.accuracy);
             defer_string("Base Attack Speed: %.1f", pos, 1, 0, ui, item->w.speed);
             }
@@ -1887,9 +1876,7 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
         {
             defer_string("%s", pos, 3, 0, ui, item->description.s);
             }
-            else
-            {
-                if(item->type == ItemType_Potion)
+            else if(item->type == ItemType_Potion)
                 {
                 defer_string("Consuming potions will bestow you with different effects.", pos, 3, 0, ui);
                 defer_string("Some of these effects will be helpful, while others harmful.", pos, 1, 0, ui);
@@ -1898,24 +1885,33 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
                 {
                 defer_string("Reading scrolls will bring out different magical effects.", pos, 3, 0, ui);
             }
-        }
             }
     
-    u32 newlines_before_inventory_options = 0;
+    // Render item stats
+    if(is_set(item->flags, ItemFlag_IsIdentified))
+    {
+        u32 stat_lines_before = 2;
+        
+        for(ItemStatType stat_type = ItemStatType_None; stat_type < MAX_ITEM_STAT_COUNT; ++stat_type)
+        {
+            ItemStat *stat = &item->stats[stat_type];
+            if(stat->set)
+            {
+                defer_string("%s", pos, stat_lines_before, 0, ui, stat->description.s);
+                stat_lines_before = 1;
+            }
+        }
+    }
     
     if(is_item_equipment(item->type))
     {
         pos_newline(pos, ui->font->size, 2);
-        newlines_before_inventory_options = 2;
         
-        b32 is_cursed_and_identified = false;
-        if(is_item_identified_and_cursed(item->flags))
-        {
-            is_cursed_and_identified = true;
-            defer_string("It is a cursed item.", pos, 0, 0, ui);
-        }
+        b32 is_identified_and_cursed = is_item_identified_and_cursed(item->flags);
+        if(is_identified_and_cursed) defer_string("It is a cursed item.", pos, 0, 0, ui);
         
-        defer_string("It is of %s rarity.", pos, is_cursed_and_identified, 0, ui, get_item_rarity_string(item->rarity));
+        // We move one line down before deferring this if is_identified_and_cursed is set.
+        defer_string("It is of %s rarity.", pos, is_identified_and_cursed, 0, ui, get_item_rarity_string(item->rarity));
         
             if(item->type == ItemType_Weapon)
         {
@@ -2556,7 +2552,7 @@ render_ui(Game *game,
     };
     render_window(game, short_log_rect, 2);
     
-    { // Render stats
+    { // Render player stats
         v2u left =
         {
             ui->window_offset,
@@ -2575,7 +2571,7 @@ render_ui(Game *game,
         render_string_and_move(game, "Intelligence: %u", &left, 0, 1, ui->font, player->intel);
         render_string_and_move(game, "Dexterity:    %u", &left, 0, 1, ui->font, player->dex);
         render_string_and_move(game, "Evasion:      %u", &left, 0, 1, ui->font, player->ev);
-        render_string_and_move(game, "Defence:      %u", &left, 0, 1, ui->font, player->def);
+        render_string_and_move(game, "Defence:      %u", &left, 0, 1, ui->font, is_entity_under_status(player, StatusType_BrokenArmor) ? player->def / 2: player->def);
         render_string_and_move(game, "Weight:       %u", &left, 0, 1, ui->font, player->p.weight);
     
         { // Render healthbar

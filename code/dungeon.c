@@ -1,3 +1,12 @@
+internal b32
+is_type_info_valid(Random *random, ItemTypeInfo info)
+{
+    assert(random);
+    
+    b32 result = (info.valid && hit_random_chance(random, info.chance));
+    return(result);
+}
+
 internal void
 render_tile_on_dest(SDL_Renderer *renderer, SDL_Texture *texture, v4u dest, DungeonTileID tile_id)
 {
@@ -2056,6 +2065,7 @@ create_dungeon(Game *game,
     //add_enemy_entity(entities, dungeon, EntityID_Zarimahar, 16, 8);
     //add_enemy_entity(entities, dungeon, EntityID_AbyssalHexmaster, 16, 8);
     //add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 16, 8);
+    //add_enemy_entity(entities, dungeon, EntityID_DwarfTinkerer, 14, 14);
     move_entity(random, &entities->enemy_pathfind_map, player, dungeon, ui, make_v2u(14, 8));
     
 #if 0
@@ -2562,7 +2572,7 @@ create_dungeon(Game *game,
                         }
                     }
                     
-                    // No passage should be left unconnected
+            // All passages should be connected
                     assert(!is_v2u_zero(up_passage.dest_pos));
                 }
                 
@@ -2649,81 +2659,102 @@ create_dungeon(Game *game,
         }
 #endif
     
-#if 0
+#if 1
+    //dungeon_level = 1;
+    
     // Place items
+    u32 percent_progress = ((f32)dungeon_level / (f32)MAX_DUNGEON_LEVEL) * 100;
+    u32 chance_per_level = 100 / MAX_DUNGEON_LEVEL;
+    u32 level_chance = dungeon_level * chance_per_level;
+    
+    // TODO(rami): The prints at the end of this function and for item rarity info is pretty spammy.
+    // We should change it. Like we fill the rarity info struct when it would be nicer to have a debug
+    // tab or something and have all the information there.
+    
+    ItemRarity item_rarity_counts[ItemRarity_Count] = {0};
+    ItemTypeInfo item_rarity_info[ItemRarity_Count] = {0};
+    
+    item_rarity_info[ItemRarity_Magical].valid = percent_progress >= 30;
+    item_rarity_info[ItemRarity_Magical].chance = level_chance * 0.5f;
+    assert(item_rarity_info[ItemRarity_Magical].chance);
+    
+    item_rarity_info[ItemRarity_Mythical].valid = percent_progress >= 60;
+    item_rarity_info[ItemRarity_Mythical].chance = level_chance * 0.2f;
+    assert(item_rarity_info[ItemRarity_Mythical].chance);
+    
+    ItemTypeInfo armor_type_info[ArmorItemType_Count] = {0};
+    armor_type_info[ArmorItemType_Steel].valid = percent_progress >= 40;
+    armor_type_info[ArmorItemType_Steel].chance = level_chance * 0.5f;
+    
     for(u32 count = 0; count < spec->item_count; ++count)
     {
+            b32 add_item = true;
             v2u pos = get_random_dungeon_feature_pos(random, dungeon, items, true);
-            
-                b32 add_item = true;
-                
                 DungeonRoom *room = get_dungeon_room_from_pos(&dungeon->rooms, pos);
                 if(room)
                 {
-                    add_item = add_dungeon_room_feature(room,
-                                                            spec->room_max_items,
-                                                            DungeonRoomFeatureType_Item);
+                    add_item = add_dungeon_room_feature(room, spec->room_max_items, DungeonRoomFeatureType_Item);
                     }
                 
                 if(add_item)
                 {
-                    b32 is_item_cursed = false;
-                    ItemType item_type = get_random_with_chances(random, spec->item_type_chances, 0, 0, RandomChanceType_ItemType);
+            ItemType item_type = get_random_with_chances(random, spec->item_type_chances, 0, 0, RandomChanceType_ItemType);
                     
-                    if(is_item_equipment(item_type) &&
-                           hit_random_chance(random, spec->item_curse_chance))
+                    b32 is_item_cursed = false;
+                    if(is_item_equipment(item_type) && hit_random_chance(random, spec->item_curse_chance))
                     {
                         is_item_cursed = true;
-                        
-                        //printf("Cursed item at %u, %u.\n", pos.x, pos.y);
                         }
-                    
+            
+#if 0
+            // Test item type
+            //item_type = ItemType_Weapon;
+            item_type = ItemType_Armor;
+            is_item_cursed = false;
+#endif
+            
                     switch(item_type)
                     {
                         case ItemType_Weapon:
-                        {
-                            ItemRarity rarity = ItemRarity_Common;
-                            
-                            if(dungeon->level >= 4)
-                            {
-                                b32 is_mythical = false;
-                                u32 rarity_chance = get_random_chance(random);
-                                
-                                if(dungeon->level >= 8)
-                                {
-                                    if(rarity_chance <= 10)
-                                    {
-                                        is_mythical = true;
-                                        rarity = ItemRarity_Mythical;
-                                    }
-                                }
-                                
-                                if(!is_mythical)
-                                {
-                                    if(rarity_chance <= 20)
-                                    {
-                                        rarity = ItemRarity_Magical;
-                                    }
-                                }
-                            }
-                            assert(rarity);
-                            
+                {
+                    // TODO(rami):
+                    // You want the chances to increase, but you also want to say we only use the chance if we're at a certain
+                    // dungeon level, this way we'd have chances and we wouldn't have unwanted rarities too early.
+                    // Print out total item rarities so we can tweak the values.
+                    
+                    // Set item rarity
+                    ItemRarity item_rarity = ItemRarity_None;
+                    
+                    if(is_type_info_valid(random, item_rarity_info[ItemRarity_Magical]))
+                    {
+                        item_rarity = ItemRarity_Magical;
+                        ++item_rarity_counts[ItemRarity_Magical];
+                        }
+                    else if(is_type_info_valid(random, item_rarity_info[ItemRarity_Mythical]))
+                    {
+                        item_rarity = ItemRarity_Mythical;
+                        ++item_rarity_counts[ItemRarity_Mythical];
+                    }
+                    else
+                    {
+                        item_rarity = ItemRarity_Common;
+                        ++item_rarity_counts[ItemRarity_Common];
+                    }
+                    
                     ItemID weapon_id = get_random_weapon(random);
-                            add_weapon_item(random, items, dungeon_level, weapon_id, rarity, pos.x, pos.y, is_item_cursed);
+                    add_weapon_item(random, items, dungeon_level, weapon_id, item_rarity, pos.x, pos.y, is_item_cursed);
                         } break;
                         
                         case ItemType_Armor:
-                        {
+                {
+                    // Set armor type
                     ItemID armor_id = get_random_leather_armor(random);
-                            
-                            if(dungeon->level >= 4)
-                            {
-                                if(hit_random_chance(random, 50))
-                                {
-                            armor_id = get_random_steel_armor(random);
-                                }
-                            }
-                            
+                    
+                    if(is_type_info_valid(random, armor_type_info[ArmorItemType_Steel]))
+                    {
+                        armor_id = get_random_steel_armor(random);
+                    }
+                    
                             assert(is_value_in_range(armor_id, ItemID_ArmorStart, ItemID_ArmorEnd));
                             add_armor_item(random, items, dungeon_level, armor_id, pos.x, pos.y, is_item_cursed);
                         } break;
@@ -2752,8 +2783,8 @@ create_dungeon(Game *game,
                         invalid_default_case;
                     }
                 }
-            }
-#endif
+    }
+    #endif
     
 #if 0
     // Place enemies
@@ -2791,6 +2822,23 @@ create_dungeon(Game *game,
     printf("spec->doors_generated_count: %u\n", spec->doors_generated_count);
     printf("spec->door_retry_count: %u\n", spec->door_retry_count);
     printf("spec->door_min_spacing: %u\n\n", spec->door_min_spacing);
+    
+    // Print item rarity information
+    printf("Dungeon Level: %u\n", dungeon_level);
+    printf("Max Dungeon Level: %u\n", MAX_DUNGEON_LEVEL);
+    printf("Level %u out of %u is %u%% progress\n\n", dungeon_level, MAX_DUNGEON_LEVEL, percent_progress);
+    
+    for(ItemRarity item_rarity = ItemRarity_Common + 1; item_rarity < ItemRarity_Count; ++item_rarity)
+    {
+        printf("%s Rarity: Valid %s, Chance: %u\n", get_item_rarity_string(item_rarity), item_rarity_info[item_rarity].valid ? "True" : "False", item_rarity_info[item_rarity].chance);
+    }
+    printf("\n");
+    
+    for(ItemRarity item_rarity = ItemRarity_None + 1; item_rarity < ItemRarity_Count; ++item_rarity)
+    {
+        printf("%s Item Rarity Count: %u\n", get_item_rarity_string(item_rarity), item_rarity_counts[item_rarity]);
+    }
+    printf("\n");
     
     // Print room types
     DungeonRoomType room_type_count[DungeonRoomType_Count] = {0};

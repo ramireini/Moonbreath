@@ -59,7 +59,7 @@ update_examine_mode(Examine *examine,
             assert(is_enemy_entity_valid(examine->entity));
             
             // Begin entity spell examine
-                char pressed = get_pressed_alphabet_char(input);
+            char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet);
                 if(pressed)
             {
                 Owner *owner = get_owner_from_letter(ui->temp_owners, pressed);
@@ -999,16 +999,10 @@ internal char
 get_char(char c, b32 is_upper)
 {
     assert(is_alpha(c));
+    if(is_upper) c = make_uppercase(c);
+    assert(is_alpha(c));
     
-    char result = c;
-    
-    if(is_upper)
-    {
-        result = make_uppercase(c);
-    }
-    
-    assert(result);
-    return(result);
+    return(c);
 }
 
 internal String8
@@ -1229,46 +1223,31 @@ get_printable_key(Input *input, Key key)
 }
 
 internal char
-get_pressed_keyboard_char(Input *input)
+get_pressed_keyboard_char(Input *input, KeyboardCharType type)
 {
     assert(input);
+    assert(type);
     
-    char result = 0;
-    
-    // Only check if any of the printable characters are being pressed
-    for(Key key = Key_A; key < Key_Shift; ++key)
+    Key key_end = Key_None;
+    switch(type)
     {
-        if(was_pressed(&input->keyboard[key]))
-        {
-            result = get_printable_key(input, key).s[0];
-            break;
-        }
+        case KeyboardCharType_Any: key_end = Key_Shift; break;
+        case KeyboardCharType_Alphabet: key_end = Key_Z; break;
+        
+        invalid_default_case;
     }
     
-    return(result);
-}
-
-internal char
-get_pressed_alphabet_char(Input *input)
-{
-    char result = 0;
-    
-    for(Key key = Key_A; key <= Key_Z; ++key)
+    for(Key key = Key_A; key < key_end; ++key)
     {
-        if(was_pressed(&input->keyboard[key]))
-        {
-            result = get_printable_key(input, key).s[0];
-            break;
-        }
+        if(was_pressed(&input->keyboard[key])) return(get_printable_key(input, key).s[0]);
     }
     
-    return(result);
+    return(0);
 }
 
 internal void
 update_and_render_game(Game *game,
                        Input *input,
-                       Entity *player,
                        EntityState *entities,
                        Dungeons *dungeons,
                        ItemState *items,
@@ -1278,7 +1257,6 @@ update_and_render_game(Game *game,
 {
     assert(game);
     assert(input);
-    assert(player);
     assert(entities);
     assert(dungeons);
     assert(items);
@@ -1286,6 +1264,7 @@ update_and_render_game(Game *game,
     assert(assets);
     assert(ui);
     
+    Entity *player = get_player_entity();
     Random *random = &game->random;
     
     if(game->mode == GameMode_MainMenu)
@@ -1989,7 +1968,6 @@ int main(int argc, char *argv[])
                                     
                                     update_and_render_game(game,
                                                            new_input,
-                                                               player,
                                                            entities,
                                                                dungeons,
                                                            items,

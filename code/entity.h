@@ -97,7 +97,8 @@ typedef enum
     EntityFlag_GhostFlipped = (1 << 10),
     EntityFlag_Invisible = (1 << 11),
     EntityFlag_NormalWaterMovement = (1 << 12),
-    EntityFlag_Undead = (1 << 13)
+    EntityFlag_InvulnerableToTraps = (1 << 13),
+    EntityFlag_Undead = (1 << 14)
 } EntityFlag;
 
 typedef enum
@@ -193,9 +194,17 @@ typedef struct
 
 typedef struct
 {
+    // Default player stats
+    u32 base_str;
+    u32 base_intel;
+    u32 base_dex;
+    u32 base_def;
+    u32 base_ev;
+    u32 base_view_range;
+    
     f32 action_time;
     u32 weight;
-    u32 weight_to_evasion_ratio;
+    u32 weight_evasion_ratio;
     
     b32 render_pathfind_trail;
     PathfindTrail pathfind_trail[MAX_PATHFIND_TRAIL_COUNT];
@@ -271,12 +280,13 @@ struct Entity
     u32 dex;
     u32 def;
     u32 ev;
+    u32 view_range;
+    
     u32 hit_chance;
     f32 action_time;
-    u32 view_range;
     EntityRegen regen;
     
-    s32 resistances[DamageType_Count];
+    s32 resists[DamageType_Count];
     Status statuses[MAX_ENTITY_STATUS_COUNT];
     
     EntityType type;
@@ -297,6 +307,7 @@ typedef struct
     Entity array[MAX_ENTITY_COUNT];
 } EntityState;
 
+internal void change_stat(u32 *value, s32 change, b32 is_add, b32 zero_clamp);
 internal void update_entity_statuses(Game *game, PathfindMap *enemy_pathfind_map, Entity *entity, Dungeon *dungeon, Inventory *inventory, UI *ui);
 internal void cast_entity_spell(Random *random, Entity *caster, Entity *target, Dungeon *dungeon, UI *ui);
 internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui);

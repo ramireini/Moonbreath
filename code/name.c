@@ -7,37 +7,27 @@ typedef enum
 internal b32
 is_vowel(char c)
 {
-    b32 result = false;
-    
     char vowels[10] = "aeiouAEIOU";
+    
     for(u32 index = 0; index < array_count(vowels); ++index)
     {
-        if(c == vowels[index])
-        {
-            result = true;
-            break;
-        }
+        if(c == vowels[index]) return(true);
     }
     
-    return(result);
+    return(false);
 }
 
 internal b32
 is_consonant(char c)
 {
-    b32 result = false;
-    
     char consonants[42] = "bcdfghjklmnpqrstvxzwyBCDFGHJKLMNPQRSTVXZWY";
+    
     for(u32 index = 0; index < array_count(consonants); ++index)
     {
-        if(c == consonants[index])
-        {
-            result = true;
-            break;
-        }
+        if(c == consonants[index]) return(true);
     }
     
-    return(result);
+    return(false);
 }
 
 internal char
@@ -57,7 +47,7 @@ get_random_consonant(Random *random)
 internal char
 get_random_lower_char(Random *random)
 {
-    char result = ('a' + get_random(random, 0, 25));
+    char result = 'a' + get_random(random, 0, 25);
     return(result);
 }
 
@@ -69,20 +59,26 @@ get_random_upper_char(Random *random)
 }
 
 internal char *
-get_random_name(Random *random, char *name, NameType type)
+set_random_name(Random *random, char *name, NameType type)
 {
     u32 space_index = 0;
     u32 name_length = 0;
     u32 name_index = 0;
     
-    if(type == NameType_Item)
+    switch(type)
     {
-        name_length = get_random(random, 3, 8);
-    }
-    else if(type == NameType_NPC)
-    {
-        name_length = get_random(random, 8, 12);
-        space_index = get_random(random, 3, name_length - 3);
+        case NameType_Item:
+        {
+            name_length = get_random(random, 3, 8);
+        } break;
+        
+        case NameType_NPC:
+        {
+            name_length = get_random(random, 8, 12);
+            space_index = get_random(random, 3, name_length - 3);
+        } break;
+        
+        invalid_default_case
     }
     
     while(name_index < name_length)

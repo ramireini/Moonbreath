@@ -207,6 +207,12 @@ typedef enum
 
 typedef enum
 {
+    KeyboardCharType_Any,
+    KeyboardCharType_Alphabet
+} KeyboardCharType;
+
+typedef enum
+{
     Key_None,
     
     // Printable characters

@@ -100,19 +100,14 @@ get_text_width(char *text, Font *font, b32 strip_color_codes)
 internal u32
 get_glyph_advance(Font *font, char c)
 {
+    assert(font);
+    
     u32 result = 0;
     
     switch(font->type)
     {
-        case FontType_BMP:
-        {
-            result = font->bmp_advance;
-        } break;
-        
-        case FontType_TTF:
-        {
-            result = font->metrics[get_font_metric_index_from_char(c)].advance;
-        } break;
+        case FontType_BMP: result = font->bmp_advance; break;
+        case FontType_TTF: result = font->metrics[get_font_metric_index_from_char(c)].advance; break;
         
         invalid_default_case;
     }
@@ -235,9 +230,9 @@ end_color()
 }
 
 internal void
-create_font_ttf(Game *game, Font *result, char *font_path, u32 font_size)
+create_font_ttf(Game *game, Font *result, char *path, u32 size)
 {
-            TTF_Font *ttf_font = TTF_OpenFont(font_path, font_size);
+            TTF_Font *ttf_font = TTF_OpenFont(path, size);
             if(ttf_font)
             {
                 SDL_Texture *atlas = SDL_CreateTexture(game->renderer,
@@ -248,7 +243,7 @@ create_font_ttf(Game *game, Font *result, char *font_path, u32 font_size)
                 if(atlas)
                 {
                     result->type = FontType_TTF;
-                    result->size = font_size;
+                    result->size = size;
                     result->atlas = atlas;
                     SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
                     SDL_SetRenderTarget(game->renderer, result->atlas);
@@ -301,7 +296,7 @@ create_font_ttf(Game *game, Font *result, char *font_path, u32 font_size)
         }
 
 internal void
-create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyph_per_row, u32 space_size, u32 advance)
+create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyphs_per_row, u32 advance)
 {
     Texture atlas = load_texture(game->renderer, path, 0);
             if(atlas.tex)
@@ -312,16 +307,16 @@ create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyph_per_ro
         result->atlas = atlas.tex;
         SDL_SetTextureBlendMode(result->atlas, SDL_BLENDMODE_BLEND);
                 
-        v4u glyph = {1, 1, result->size, result->size};
                 u32 glyph_count = 0;
+        v4u glyph = {1, 1, result->size, result->size};
                 
         for(u32 index = 1; index < array_count(result->metrics); ++index)
                 {
-                    if(glyph_count >= glyph_per_row)
+                    if(glyph_count >= glyphs_per_row)
                     {
-                        glyph.x = 1;
+                glyph.x = 1;
+                
                         glyph.y += glyph.h + 1;
-                        
                         glyph_count = 0;
                     }
                     
@@ -358,8 +353,8 @@ initialize_assets(Game *game, Assets *assets)
     }
     
     // Set Fonts
-    create_font_bmp(game, &assets->fonts[FontName_Classic], "data/fonts/classic16x16.png", 16, 14, 8, 13);
-    create_font_bmp(game, &assets->fonts[FontName_ClassicOutlined], "data/fonts/classic_outlined16x16.png", 16, 14, 8, 13);
+    create_font_bmp(game, &assets->fonts[FontName_Classic], "data/fonts/classic16x16.png", 16, 14, 13);
+    create_font_bmp(game, &assets->fonts[FontName_ClassicOutlined], "data/fonts/classic_outlined16x16.png", 16, 14, 13);
     create_font_ttf(game, &assets->fonts[FontName_Alkhemikal], "data/fonts/alkhemikal.ttf", 16);
     create_font_ttf(game, &assets->fonts[FontName_Monaco], "data/fonts/monaco.ttf", 16);
     create_font_ttf(game, &assets->fonts[FontName_DosVga], "data/fonts/dos_vga.ttf", 16);
