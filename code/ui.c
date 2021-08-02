@@ -1539,10 +1539,13 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         defer_string("%s%s", &name_pos, 0, 1, ui, get_letter_string(entity->select_letter).s, entity->name.s);
         defer_tile(pos, entity->tile_src, ui, true);
         
+        #if MOONBREATH_SLOW
         defer_string("Health: %u/%u", pos, 1, 1, ui, entity->hp, entity->max_hp);
+#else
+        defer_string("Max Health: %u", pos, 1, 1, ui, entity->max_hp);
+        #endif
         
-        if(entity->e.damage.min &&
-           entity->e.damage.max)
+        if(entity->e.damage.min && entity->e.damage.max)
         {
             defer_string("Damage: %u-%u", pos, 0, 1, ui, entity->e.damage.min, entity->e.damage.max);
         }
@@ -1578,7 +1581,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
     
         defer_string("Evasion: %s (%u)", pos, 0, 1, ui, evasion_text, entity->ev);
         defer_string("View Range: %u", pos, 0, 1, ui, entity->view_range);
-        defer_string("Speed: %.01f", pos, 0, 1, ui, entity->action_time);
+        defer_string("Action Time: %.01f", pos, 0, 1, ui, entity->action_time);
         
         // Find out the longest damage type length and damage type resistance so that
         // we can align text correctly.
@@ -1739,9 +1742,9 @@ render_spell_examine_window(Game *game,
                             v2u defender_pos)
 {
     assert(game);
-    assert(is_entity_spell_valid(spell));
     assert(assets);
     assert(ui);
+    assert(is_entity_spell_valid(spell));
     assert(!is_v2u_zero(attacker_pos));
     assert(!is_v2u_zero(defender_pos));
     
@@ -1760,10 +1763,10 @@ render_spell_examine_window(Game *game,
     
     if(!spell->summon_type)
     {
-        char in_spell_range_text[32] = {0};
-        if(is_in_spell_range(attacker_pos, defender_pos, spell->range))
+        char *in_spell_range_text = " (You are not in range)";
+        if(is_pos_in_spell_range(attacker_pos, defender_pos, spell->range))
         {
-            strcpy(in_spell_range_text, " (You are in range)");
+            in_spell_range_text = " (You are in range)";
         }
         
         defer_string("%s%s", pos, 0, 1, ui, spell_range_text, in_spell_range_text);
@@ -2429,7 +2432,7 @@ render_multiple_examine_window(Game *game,
     
     disable_clip_rect_and_render_scrollbar(game, view, examine_rect, ui);
     
-#if 1
+#if MOONBREATH_SLOW && 1
     ui_print_view("Multiple Examine View", *view);
 #endif
     
@@ -2591,7 +2594,7 @@ render_ui(Game *game,
                 if(regen->next_turn)
                 {
                     // Regen indicator
-                    u32 hp_after_regen = player->hp + regen->hp_increase;
+                    u32 hp_after_regen = player->hp + regen->amount;
                     if(hp_after_regen > player->max_hp)
                     {
                         hp_after_regen = player->max_hp;

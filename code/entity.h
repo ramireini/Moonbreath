@@ -148,6 +148,11 @@ typedef enum
 
 typedef struct
 {
+    b32 target_not_in_spell_range;
+} SelectCastResult;
+
+typedef struct
+{
     ResistAmount amount;
     u32 damage_after;
 } ResistInfo;
@@ -186,10 +191,10 @@ typedef struct
 {
     b32 next_turn;
     
-    u32 hp_increase;
-    u32 max;
-    u32 current;
-    u32 advance;
+    u32 amount;
+    u32 counter_max;
+    u32 counter_current;
+    u32 counter_advance;
     } EntityRegen;
 
 typedef struct
@@ -256,6 +261,7 @@ typedef struct
 
 struct Entity
 {
+    u32 index;
     u32 flags;
     char select_letter;
     
@@ -307,6 +313,7 @@ typedef struct
     Entity array[MAX_ENTITY_COUNT];
 } EntityState;
 
+internal void log_add_entity_action_string(Random *random, Entity *attacker, Entity *defender, UI *ui, u32 value, ResistAmount resist_amount);
 internal void change_stat(u32 *value, s32 change, b32 is_add, b32 zero_clamp);
 internal void update_entity_statuses(Game *game, PathfindMap *enemy_pathfind_map, Entity *entity, Dungeon *dungeon, Inventory *inventory, UI *ui);
 internal void cast_entity_spell(Random *random, Entity *caster, Entity *target, Dungeon *dungeon, UI *ui);
@@ -321,7 +328,7 @@ internal u32 get_player_view_enemy_count(EntityState *entities, Dungeon *dungeon
 internal u32 get_dungeon_pos_entity_count(EntityState *entities, u32 dungeon_level, v2u pos, b32 enemy_only);
 internal u32 get_entity_level(EntityID id);
 internal EntityID get_random_enemy_entity_id(Random *random);
-internal b32 entity_in_view_and_spell_range(v4u attacker_view, v2u attacker_pos, v2u defender_pos, u32 spell_range);
+internal b32 is_entity_in_view_and_spell_range(Entity *attacker, v2u defender_pos, u32 spell_range);
 internal b32 move_entity(Random *random, PathfindMap *enemy_pathfind_map, Entity *entity, Dungeon *dungeon, UI *ui, v2u pos);
 internal b32 is_pos_seen_and_flag_not_set(DungeonTiles tiles, v2u pos, u32 flags, u32 flag);
 internal b32 is_enemy_entity_valid(Entity *entity);

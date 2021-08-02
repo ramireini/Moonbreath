@@ -333,6 +333,9 @@ typedef struct
      String64 description;
     } ItemStat;
 
+// TODO(rami): When we use a scroll that requires a target, we could check for the target and automatically
+// discard the scroll if we don't have one. This would mean the player doesn't have to press Escape into
+// choosing the Yes option for discard.
 struct Item
 {
     u32 flags;

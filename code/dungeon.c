@@ -506,7 +506,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Spike Trap");
                     
                     sprintf(trap->description.s,
-                                "A pit of spikes dealing %u - %u %s damage when triggered.",
+                                "A pit of spikes dealing %u-%u %s damage when stepped on.",
                                 spec->spike_trap_damage.min, spec->spike_trap_damage.max,
                                 get_damage_type_string(spec->spike_trap_damage.type));
                     
@@ -518,7 +518,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Sword Trap");
                     
                     sprintf(trap->description.s,
-                                "A pit of swords dealing %u - %u %s damage when triggered.",
+                                "A pit of swords dealing %u-%u %s damage when stepped on.",
                                 spec->sword_trap_damage.min, spec->sword_trap_damage.max,
                                 get_damage_type_string(spec->sword_trap_damage.type));
                     
@@ -530,7 +530,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Arrow Trap");
                     
                     sprintf(trap->description.s,
-                                "A pit of arrows dealing %u - %u %s damage when triggered.",
+                                "A pit of arrows dealing %u-%u %s damage when stepped on.",
                                 spec->arrow_trap_damage.min, spec->arrow_trap_damage.max,
                                 get_damage_type_string(spec->arrow_trap_damage.type));
                     
@@ -542,7 +542,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Magic Trap");
                     
                     sprintf(trap->description.s,
-                                "A glyph that that explodes dealing %u - %u random type damage when triggered.",
+                                "A glyph that explodes dealing %u-%u random type damage when stepped on.",
                                 spec->magic_trap_damage.min, spec->magic_trap_damage.max);
                     
                     trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_MagicTrap);
@@ -553,7 +553,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Bind Trap");
                     
                     sprintf(trap->description.s,
-                                "A glyph that stops you from moving for %u - %u turns when triggered.",
+                                "A glyph that stops you from moving for %u-%u turns when stepped on.",
                             spec->bind_trap_value.min, spec->bind_trap_value.max);
                     
                     trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_BindTrap);
@@ -564,7 +564,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Summon Trap");
                     
                     strcpy(trap->description.s,
-                                "A glyph that summons a random enemy to the vicinity when triggered.");
+                                "A glyph that summons a random enemy to the vicinity when stepped on.");
                     
                     trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_SummonTrap);
                 } break;
@@ -574,7 +574,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Teleport Trap");
                     
                     strcpy(trap->description.s,
-                                "A glyph that teleports you to a random location in the dungeon when triggered.");
+                                "A glyph that teleports you to a random location in the dungeon when stepped on.");
                     
                     trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_TeleportTrap);
                 } break;
@@ -584,7 +584,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                     strcpy(trap->name.s, "Shaft");
                     
                     sprintf(trap->description.s,
-                                "Stepping itno shafts will cause you to fall %u - %u dungeon levels.",
+                                "Stepping itno shafts will cause you to fall %u-%u dungeon levels.",
                             spec->shaft_trap_value.min, spec->shaft_trap_value.max);
                     
                     trap->tile_src = get_dungeon_tileset_rect(DungeonTileID_ShaftTrap);
@@ -1245,23 +1245,34 @@ get_dungeon_pos_remains(DungeonTiles tiles, v2u pos)
     return(remains);
 }
 
-internal b32
-can_place_dungeon_remains_on_pos(Dungeon *dungeon, v2u pos)
-{
-    b32 result = (!is_dungeon_pos_occupied(dungeon->tiles, pos) &&
-                  !get_dungeon_pos_remains(dungeon->tiles, pos) &&
-                      !is_dungeon_pos_passage(dungeon->tiles, pos) &&
-                      !is_dungeon_pos_water(dungeon->tiles, pos) &&
-                      !is_dungeon_pos_trap(&dungeon->traps, pos) &&
-                      !is_dungeon_pos_door(dungeon->tiles, pos)); // Remains don't look right visually on open door tiles so we don't place them.
-    
-    return(result);
-}
-
 internal void
 set_dungeon_pos_remains(DungeonTiles tiles, v2u pos, DungeonTileID tile)
 {
+    assert(tile);
     tiles.array[(pos.y * tiles.width) + pos.x].remains = tile;
+}
+
+internal b32
+can_place_entity_remains_on_dungeon_pos(Dungeon *dungeon, v2u pos, EntityRemainsType type)
+{
+    assert(dungeon);
+    assert(type);
+    
+    b32 result = (!is_dungeon_pos_passage(dungeon->tiles, pos) &&
+                      !is_dungeon_pos_water(dungeon->tiles, pos) &&
+                      !is_dungeon_pos_trap(&dungeon->traps, pos) &&
+                      
+                      // Remains on door tiles don't look visually correct.
+                      !is_dungeon_pos_door(dungeon->tiles, pos));
+    
+    
+    if(type == EntityRemainsType_Wound)
+    {
+        result = (!is_dungeon_pos_occupied(dungeon->tiles, pos) &&
+                  !get_dungeon_pos_remains(dungeon->tiles, pos));
+    }
+    
+    return(result);
 }
 
 internal void
@@ -1963,10 +1974,10 @@ create_dungeon(Game *game,
     spec->down_passage_count = get_random(random, 1, 3);
     
     // Entity
-    spec->enemy_count = (spec->size.w + spec->size.h) * 0.15f;
+    spec->enemy_count = (spec->size.w + spec->size.h) * 0.14f;
     
     // Item
-    spec->item_count = (spec->size.w + spec->size.h) * 0.15f;
+    spec->item_count = (spec->size.w + spec->size.h) * 0.12f;
     spec->item_curse_chance = 5;
     
     spec->item_type_chances[get_index(ItemType_Weapon)] = 30;
@@ -2046,7 +2057,7 @@ create_dungeon(Game *game,
             }
         }
         
-#if 0
+#if 1
     // Test room
     dungeon->can_pathfind = true;
     
@@ -2054,8 +2065,7 @@ create_dungeon(Game *game,
     {
         for(u32 x = 1; x < dungeon->size.w - 1; ++x)
         {
-            v2u pos = {x, y};
-                set_dungeon_pos_floor(random, dungeon->tiles, pos);
+            set_dungeon_pos_floor(random, dungeon->tiles, make_v2u(x, y));
         }
     }
     
@@ -2064,9 +2074,52 @@ create_dungeon(Game *game,
     
     //add_enemy_entity(entities, dungeon, EntityID_Zarimahar, 16, 8);
     //add_enemy_entity(entities, dungeon, EntityID_AbyssalHexmaster, 16, 8);
-    //add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 16, 8);
     //add_enemy_entity(entities, dungeon, EntityID_DwarfTinkerer, 14, 14);
-    move_entity(random, &entities->enemy_pathfind_map, player, dungeon, ui, make_v2u(14, 8));
+    //add_enemy_entity(entities, dungeon, EntityID_Bat, 12, 8);
+    //add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 21, 8);
+    
+#if 1
+    u32 water_x = 12;
+    u32 water_y = 10;
+    
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x, water_y));
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 1, water_y));
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 2, water_y));
+    
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x, water_y + 1));
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 1, water_y + 1));
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 2, water_y + 1));
+    
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x, water_y + 2));
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 1, water_y + 2));
+    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 2, water_y + 2));
+    
+    //move_entity(random, &entities->enemy_pathfind_map, player, dungeon, ui, make_v2u(16, 8));
+    #endif
+    
+    move_entity(random, &entities->enemy_pathfind_map, player, dungeon, ui, make_v2u(10, 15));
+    //player->hp = player->max_hp - 1;
+    //player->hp = 1;
+    
+    #if 0
+    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(21, 11));
+    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(22, 11));
+    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(23, 11));
+    
+    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(21, 12));
+    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(23, 12));
+    
+    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(21, 13));
+    //add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(22, 13));
+    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(23, 13));
+    #endif
+    
+    add_enemy_entity(entities, dungeon, EntityID_KoboldShaman, 22, 15);
+    
+    #if 0
+    add_consumable_item(random, items, dungeon_level, ItemID_MightPotion, 10, 10, 1);
+    add_consumable_item(random, items, dungeon_level, ItemID_MightPotion, 10, 11, 1);
+    #endif
     
 #if 0
     // Test blood
@@ -2717,11 +2770,6 @@ create_dungeon(Game *game,
                     {
                         case ItemType_Weapon:
                 {
-                    // TODO(rami):
-                    // You want the chances to increase, but you also want to say we only use the chance if we're at a certain
-                    // dungeon level, this way we'd have chances and we wouldn't have unwanted rarities too early.
-                    // Print out total item rarities so we can tweak the values.
-                    
                     // Set item rarity
                     ItemRarity item_rarity = ItemRarity_None;
                     
@@ -2786,7 +2834,7 @@ create_dungeon(Game *game,
     }
     #endif
     
-#if 0
+#if 1
     // Place enemies
     for(u32 count = 0; count < spec->enemy_count; ++count)
     {
@@ -2830,7 +2878,7 @@ create_dungeon(Game *game,
     
     for(ItemRarity item_rarity = ItemRarity_Common + 1; item_rarity < ItemRarity_Count; ++item_rarity)
     {
-        printf("%s Rarity: Valid %s, Chance: %u\n", get_item_rarity_string(item_rarity), item_rarity_info[item_rarity].valid ? "True" : "False", item_rarity_info[item_rarity].chance);
+        printf("%s Rarity: Valid: %s, Chance: %u\n", get_item_rarity_string(item_rarity), item_rarity_info[item_rarity].valid ? "True" : "False", item_rarity_info[item_rarity].chance);
     }
     printf("\n");
     

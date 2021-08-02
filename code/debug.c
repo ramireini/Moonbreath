@@ -578,6 +578,7 @@ update_and_render_debug_state(Game *game,
                         
                         add_debug_delete(game, new_tree, entity, DebugVarActionType_DeleteEntity);
                         
+                        add_debug_variable(new_tree, "Index", entity->index, DebugVarType_U32);
                     start_debug_group(debug, new_tree, "Flags", false);
                         {
                             add_debug_flag(new_tree, "ShowViewRange", entity->flags, EntityFlag_ShowViewRange);

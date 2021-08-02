@@ -56,6 +56,17 @@ set_pathfind_value(PathfindMap *pathfind_map, v2u pos, u32 value)
     pathfind_map->array[(pos.y * pathfind_map->width) + pos.x] = value;
 }
 
+internal b32
+is_pos_pathfindable(Dungeon *dungeon, v2u pos)
+{
+    assert(dungeon);
+    
+    b32 result = (is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos) &&
+                  !is_dungeon_pos_trap(&dungeon->traps, pos));
+    
+    return(result);
+}
+
 internal PathfindPosInfo
 get_pathfind_result(PathfindMap *map, Dungeon *dungeon, v2u start_pos, v2u target_pos)
 {
@@ -76,9 +87,8 @@ get_pathfind_result(PathfindMap *map, Dungeon *dungeon, v2u start_pos, v2u targe
     {
         PathfindPosInfo info = get_pathfind_pos_info(map, start_pos, direction);
         
-        if((is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, info.pos) ||
-                   is_v2u_equal(info.pos, target_pos)) &&
-               !is_dungeon_pos_trap(&dungeon->traps, info.pos))
+        if(is_pos_pathfindable(dungeon, info.pos) ||
+           is_v2u_equal(info.pos, target_pos))
         {
             PathfindPosInfo *array_pos = &info_array[direction];
             
@@ -87,18 +97,20 @@ get_pathfind_result(PathfindMap *map, Dungeon *dungeon, v2u start_pos, v2u targe
             }
     }
     
-    #if 0
+#if 0
+    printf("\n");
+    
     // Print array positions
     for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
     {
         PathfindPosInfo *info = &info_array[direction];
-        if(info->is_valid)
+        //if(info->is_valid)
         {
             print_pathfind_pos_info(*info);
         }
     }
     
-    //assert(0);
+    assert(0);
     #endif
     
     // Find the closest position
@@ -110,10 +122,7 @@ get_pathfind_result(PathfindMap *map, Dungeon *dungeon, v2u start_pos, v2u targe
         if(result.is_valid)
             {
                 // Set better result
-                if(array_pos->target_dist < result.target_dist)
-                {
-                    result = *array_pos;
-                }
+                if(array_pos->target_dist < result.target_dist) result = *array_pos;
         }
         else
             {
@@ -129,6 +138,7 @@ get_pathfind_result(PathfindMap *map, Dungeon *dungeon, v2u start_pos, v2u targe
     //assert(0);
     #endif
     
+    assert(result.is_valid);
     return(result);
 }
 
@@ -155,17 +165,6 @@ print_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map)
     }
 }
 #endif
-
-internal b32
-is_pos_pathfindable(Dungeon *dungeon, v2u pos)
-{
-    assert(dungeon);
-    
-    b32 result = (is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos) &&
-                      !is_dungeon_pos_trap(&dungeon->traps, pos));
-    
-    return(result);
-}
 
 internal b32
 pathfind_map_has_default_values(Dungeon *dungeon, PathfindMap *map)

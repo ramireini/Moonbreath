@@ -592,15 +592,8 @@ add_item_to_inventory(Game *game,
     {
         zero_struct(item->pos);
         
-        if(add_to_log)
-        {
-            log_add_item_action_string(item, ui, ItemActionType_Pickup);
-        }
-        
-        if(added_to_stack)
-        {
-            remove_item_from_game(item, inventory->item_owners);
-        }
+        if(add_to_log) log_add_item_action_string(item, ui, ItemActionType_Pickup);
+        if(added_to_stack) remove_item_from_game(item, inventory->item_owners);
         
         game->passed_time += player->p.action_time;
     }
@@ -834,9 +827,10 @@ unequip_item(Game *game, Entity *player, Item *item, UI *ui, b32 came_from_drop_
         else
         {
             unset(item->flags, ItemFlag_IsEquipped);
+            apply_item_stats_to_player(player, item, false);
             if(item->type == ItemType_Weapon) player->p.weapon = 0;
+            log_add_item_action_string(item, ui, ItemActionType_Unequip);
             
-                apply_item_stats_to_player(player, item, false);
             game->passed_time = player->p.action_time;
             return(true);
         }
@@ -2091,7 +2085,8 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
             item->rarity = ItemRarity_Common;
             item->c.stack_count = stack_count;
             
-            u32 potion_duration = get_random(random, 10, 20);
+            v2u potion_duration_range = {10, 20};
+            u32 potion_duration = get_random_from_v2u(random, potion_duration_range);
             
             switch(id)
             {
@@ -2109,7 +2104,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     sprintf(status->player_start.s, "You drink the %s, you feel more mighty.", item->name.s);
                     sprintf(status->player_end.s, "%sYou don't feel as mighty anymore.", start_color(Color_LightGray));
                     
-                    sprintf(item->description.s, "Grants +%u Strength for %u turns.", status->value.max, status->duration);
+                    sprintf(item->description.s, "Grants +%u Strength for %u-%u turns.", status->value.max, potion_duration_range.min, potion_duration_range.max);
                     copy_consumable_info_to_item(item, &items->potion_info[Potion_Might]);
                     } break;
                 
@@ -2181,7 +2176,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     status->player_active_target = item->name;
                     status->item_info = info;
                     
-                    sprintf(item->description.s, "Restores %u - %u%% of your hitpoints.", info->value_range.min, info->value_range.max);
+                    sprintf(item->description.s, "Restores %u-%u%% of your hitpoints.", info->value_range.min, info->value_range.max);
                     copy_consumable_info_to_item(item, info);
                 } break;
                 
@@ -2264,7 +2259,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                 
                 case ItemID_Ration:
                 {
-                    // TODO(rami): Random ration eating adjectives, this could be in the depiction array.
+                    // TODO(rami): Future: Random ration eating adjectives, maybe store in the depiction array.
                     
                     strcpy(item->name.s, "Ration");
                     item->c.info = &items->ration_info;
@@ -2278,7 +2273,7 @@ add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID 
                     status->player_active_target = item->name;
                     status->item_info = item->c.info;
                     
-                    sprintf(item->description.s, "Restores %u - %u%% of your hitpoints.", item->c.info->value_range.min, item->c.info->value_range.max);
+                    sprintf(item->description.s, "Restores %u-%u%% of your hitpoints.", item->c.info->value_range.min, item->c.info->value_range.max);
                     copy_consumable_info_to_item(item, item->c.info);
                     set(item->flags, ItemFlag_IsIdentified);
                 } break;

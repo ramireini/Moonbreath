@@ -203,13 +203,26 @@ update_examine_mode(Examine *examine,
                         return;
                     }
                     
-                    Entity *entity = get_dungeon_pos_entity(entities, dungeon->level, examine->pos, true);
-                    if(entity)
+                    for(u32 enemy_index = 0; enemy_index < MAX_ENTITY_COUNT; ++enemy_index)
                     {
-                        examine->type = ExamineType_Entity;
-                        examine->entity = entity;
-                        return;
-                    }
+                        Entity *enemy = &entities->array[enemy_index];
+                        
+                        if(is_enemy_entity_valid(enemy) &&
+                           enemy->dungeon_level == dungeon->level)
+                        {
+                            if(is_v2u_equal(enemy->pos, examine->pos) ||
+                               (is_set(enemy->flags, EntityFlag_GhostEnabled) &&
+                                    is_v2u_equal(enemy->e.ghost_pos, examine->pos)))
+                            {
+                                // Making sure the enemy is valid if we're examining it through a ghost.
+                                assert(is_entity_valid(enemy));
+                                
+                                examine->type = ExamineType_Entity;
+                                examine->entity = enemy;
+                                return;
+                            }
+                        }
+                }
                     
                     DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, examine->pos);
                     if(trap)
@@ -227,6 +240,39 @@ update_examine_mode(Examine *examine,
             }
         }
     }
+
+internal String128
+get_os_path(char *path)
+{
+    assert(path);
+    
+    u32 index = 0;
+    String128 result = {0};
+    
+    for(char *c = path; *c; ++c)
+    {
+        assert(index < array_count(result.s));
+        
+#if MOONBREATH_WINDOWS
+        if(c[0] == '/')
+        {
+            result.s[index++] = '\\';
+            result.s[index++] = '\\';
+        }
+#else
+        if(c[0] == '\\')
+        {
+            result.s[index++] = '/';
+        }
+#endif
+        else
+        {
+            result.s[index++] = c[0];
+        }
+    }
+    
+    return(result);
+}
 
 internal void
 init_view_scrolling_data(View *view, u32 entry_size, f32 shared_step_multiplier)
@@ -1473,6 +1519,7 @@ update_and_render_game(Game *game,
             }
 #endif
             
+            // TODO(rami): An actual player name
             log_add("%sWelcome, %s!", ui, start_color(Color_LightYellow), player->name.s);
             log_add("%sFind and destroy the underworld portal,", ui, start_color(Color_LightYellow));
             log_add("%swhich is located somewhere in the depths.", ui, start_color(Color_LightYellow));
@@ -1596,11 +1643,11 @@ update_and_render_game(Game *game,
         render_ui(game, input->mouse, entities, items, inventory, dungeon, assets, ui);
         
         // Render mouse tile
-        if(other_windows_are_closed(examine, inventory, ui))
+        if(windows_are_closed(examine, inventory->flags, ui))
         {
             if(input->mouse.x > 0 &&
                    input->mouse.y > 0 &&
-                   input->mouse.x < game->window_size.w - 1 && // The - 1 is because the mouse can't be exactly window width
+                   input->mouse.x < game->window_size.w - 1 && // -1 is so the rectangle doesn't stay on the right edge of the screen if the mouse goes past it
                    input->mouse.y < game->window_size.h - assets->stat_and_log_window_h)
             {
                 v2u tile_pos =
@@ -1714,7 +1761,7 @@ int main(int argc, char *argv[])
 #endif
         
         // TODO(rami): Need to check success on everything
-        Config config = get_config(&game->memory_arena, "data/config.txt");
+        Config config = get_config(&game->memory_arena, get_os_path("data/config.txt").s);
         
         ConfigValue show_item_ground_outline = get_config_bool(&config, "show_item_ground_outline");
         if(show_item_ground_outline.boolean)
@@ -1732,7 +1779,8 @@ int main(int argc, char *argv[])
             else if(window_size.uint == 2)
             {
                 game->window_size = make_v2u(1280, 720);
-            }
+        }
+        //game->window_size = make_v2u(1920, 1080);
         
 #if 0
         for(u32 index = 0; index < GameKey_Count; ++index)
@@ -1835,7 +1883,7 @@ int main(int argc, char *argv[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 1626810441;
+                                u64 seed = 1627698016;
                                 printf("Seed: %lu\n\n", seed);
                                 
                                 game->random = set_random_seed(seed);

@@ -245,6 +245,7 @@ typedef struct
     u32 array[MAX_DUNGEON_SIZE_SQUARED];
 } PathfindMap;
 
+// TODO(rami): Polish: When examining a tile, render tile remains on it as well.
 typedef struct
 {
     b32 is_seen;
@@ -395,15 +396,12 @@ typedef struct
     DungeonPassages passages;
     } Dungeon;
 
+// TODO(rami): Test having more than 10 dungeon levels, make allocating more memory at start work.
 typedef struct
 {
     u32 current_level;
     Dungeon levels[MAX_DUNGEON_LEVEL];
 } Dungeons;
-
-// TODO(rami): Doors look stupid when they're in water, especially because when we open the door the
-// opened door tile does not have water on it, do we choose to not place doors in water like we do with
-// dungeon traps?
 
 internal void dungeon_automaton_room_step(Random *random, DungeonTiles src_tiles, DungeonTiles dest_tiles, v4u rect);
 internal void set_dungeon_pos_wall(Random *random, DungeonTiles tiles, v2u pos);

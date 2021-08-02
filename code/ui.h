@@ -94,8 +94,10 @@ typedef struct
     v4u clip_rect;
 } View;
 
-// TODO(rami): Instead of {} for the mark indicator, test [] or even have the mark text be a darker gray,
-// making it look like a cool side comment.
+// TODO(rami): Future: Maybe have options in the config for mark styles:
+// {This is a mark!}
+// [This is a mark!]
+// This is a mark! (Gray color, ike a code comment)
 typedef struct
 {
     b32 render_cursor;
@@ -126,6 +128,9 @@ typedef struct
 {
     Font *font;
     
+    // TODO(rami): Should we render a line to indicate what actions have taken place in the last player
+    // turn in the full log. Instead of doing it between player action turns, maybe just the stuff that
+    // happened in the last one turn.
     b32 full_log_open;
     b32 start_full_log_from_end;
     View short_log_view;

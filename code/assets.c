@@ -339,7 +339,7 @@ initialize_assets(Game *game, Assets *assets)
     b32 textures_success = true;
     
     // Set Window Icon
-    SDL_Surface *icon = IMG_Load("data/images/icon.png");
+    SDL_Surface *icon = IMG_Load(get_os_path("data/images/icon.png").s);
     if(icon)
     {
         SDL_SetWindowIcon(game->window, icon);
@@ -353,11 +353,11 @@ initialize_assets(Game *game, Assets *assets)
     }
     
     // Set Fonts
-    create_font_bmp(game, &assets->fonts[FontName_Classic], "data/fonts/classic16x16.png", 16, 14, 13);
-    create_font_bmp(game, &assets->fonts[FontName_ClassicOutlined], "data/fonts/classic_outlined16x16.png", 16, 14, 13);
-    create_font_ttf(game, &assets->fonts[FontName_Alkhemikal], "data/fonts/alkhemikal.ttf", 16);
-    create_font_ttf(game, &assets->fonts[FontName_Monaco], "data/fonts/monaco.ttf", 16);
-    create_font_ttf(game, &assets->fonts[FontName_DosVga], "data/fonts/dos_vga.ttf", 16);
+    create_font_bmp(game, &assets->fonts[FontName_Classic], get_os_path("data/fonts/classic16x16.png").s, 16, 14, 13);
+    create_font_bmp(game, &assets->fonts[FontName_ClassicOutlined], get_os_path("data/fonts/classic_outlined16x16.png").s, 16, 14, 13);
+    create_font_ttf(game, &assets->fonts[FontName_Alkhemikal], get_os_path("data/fonts/alkhemikal.ttf").s, 16);
+    create_font_ttf(game, &assets->fonts[FontName_Monaco], get_os_path("data/fonts/monaco.ttf").s, 16);
+    create_font_ttf(game, &assets->fonts[FontName_DosVga], get_os_path("data/fonts/dos_vga.ttf").s, 16);
     
     for(u32 index = 0; index < FontName_Count; ++index)
     {
@@ -373,13 +373,8 @@ initialize_assets(Game *game, Assets *assets)
     // Set Textures
     assets->tilemap.w = tile_mul(MAX_DUNGEON_SIZE);
     assets->tilemap.h = tile_mul(MAX_DUNGEON_SIZE);
-    assets->tilemap.tex = SDL_CreateTexture(game->renderer,
-                                            SDL_PIXELFORMAT_RGBA8888,
-                                            SDL_TEXTUREACCESS_TARGET,
-                                            assets->tilemap.w,
-                                            assets->tilemap.h);
-    
-    assets->tileset = load_texture(game->renderer, "data/images/tileset.png", 0);
+    assets->tilemap.tex = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, assets->tilemap.w, assets->tilemap.h);
+    assets->tileset = load_texture(game->renderer, get_os_path("data/images/tileset.png").s, 0);
     
     assets->health_bar_sources[0] = get_pos_tile_mul_rect(make_v2u(1, 16));
     assets->health_bar_sources[1] = get_pos_tile_mul_rect(make_v2u(2, 16));
