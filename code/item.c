@@ -1549,7 +1549,7 @@ render_items(Game *game,
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &items->array[index];
-        if(is_item_valid_and_not_in_inventory(item))
+        if(is_item_valid_and_not_in_inventory(item) && item->dungeon_level == dungeon->level)
         {
             v4u dest = get_game_dest(game->camera, item->pos);
             
@@ -1557,20 +1557,12 @@ render_items(Game *game,
             {
                 set_flag_if_player_is_not_pathfinding(player->flags, &item->flags, ItemFlag_HasBeenSeen);
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&item->tile_src, (SDL_Rect *)&dest);
-                
-                if(game->show_item_ground_outline)
-                {
-                    render_outline_rect(game->renderer, dest, Color_Green);
-                }
+                if(game->show_item_ground_outline) render_outline_rect(game->renderer, dest, Color_Green);
             }
             else if(tile_has_been_seen(dungeon->tiles, item->pos))
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, item->tile_src, dest, false);
-                
-                if(game->show_item_ground_outline)
-                {
-                    render_outline_rect(game->renderer, dest, Color_DarkGreen);
-                }
+                if(game->show_item_ground_outline) render_outline_rect(game->renderer, dest, Color_DarkGreen);
             }
         }
     }
@@ -1609,9 +1601,9 @@ get_dungeon_pos_item(ItemState *items, u32 dungeon_level, v2u pos, ItemID search
         Item *item = &items->array[index];
         
         if(is_item_valid_and_not_in_inventory(item) &&
+           item->dungeon_level == dungeon_level &&
            is_v2u_equal(item->pos, pos))
         {
-            // If ID is set, we are searching for a specific item
             if(search_id && item->id != search_id) continue;
             
             result = item;

@@ -1,19 +1,3 @@
-typedef enum
-{
-    PathfindResultType_None,
-    
-    PathfindResultType_Move,
-    PathfindResultType_BlockedByDungeonTrap
-} PathfindResultType;
-
-typedef struct
-{
-    b32 is_valid;
-    v2u pos;
-    u32 target_dist;
-    Direction direction;
-} PathfindPosInfo;
-
 #if MOONBREATH_SLOW
 internal void
 print_pathfind_pos_info(PathfindPosInfo info)
@@ -52,15 +36,12 @@ get_pathfind_pos_info(PathfindMap *map, v2u pos, Direction direction)
 internal void
 set_pathfind_value(PathfindMap *pathfind_map, v2u pos, u32 value)
 {
-    assert(pathfind_map);
     pathfind_map->array[(pos.y * pathfind_map->width) + pos.x] = value;
 }
 
 internal b32
 is_pos_pathfindable(Dungeon *dungeon, v2u pos)
 {
-    assert(dungeon);
-    
     b32 result = (is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos) &&
                   !is_dungeon_pos_trap(&dungeon->traps, pos));
     
@@ -87,7 +68,7 @@ get_pathfind_result(PathfindMap *map, Dungeon *dungeon, v2u start_pos, v2u targe
     {
         PathfindPosInfo info = get_pathfind_pos_info(map, start_pos, direction);
         
-        if(is_pos_pathfindable(dungeon, info.pos) ||
+        if(is_dungeon_pos_pathfindable_and_unoccupied(dungeon, info.pos) ||
            is_v2u_equal(info.pos, target_pos))
         {
             PathfindPosInfo *array_pos = &info_array[direction];

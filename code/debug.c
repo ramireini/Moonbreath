@@ -232,25 +232,38 @@ add_debug_text_(DebugState *debug, DebugTree *tree, char *string, Color color, .
 }
 
 internal void
-add_debug_delete(Game *game, DebugTree *tree, void *data, DebugVarActionType type)
+add_debug_var_action(Game *game, DebugTree *tree, void *data, DebugVarActionType type)
 {
     assert(game);
     assert(tree);
     assert(data);
     assert(type);
     
-    DebugVar *var = add_debug_string(tree, tree->delete_string, Color_White);
-    var->action = type;
-    
+    DebugVar *var = 0;
     switch(type)
     {
-        case DebugVarActionType_DeleteItem: var->item = (Item *)data; break;
-        case DebugVarActionType_DeleteEntity: var->entity = (Entity *)data; break;
+        case DebugVarActionType_DeleteItem:
+        {
+            var = add_debug_string(tree, tree->delete_string, Color_White);
+            var->item = (Item *)data;
+        } break;
+        
+        case DebugVarActionType_KillEntity:
+        {
+            var = add_debug_string(tree, "Kill", Color_White);
+            var->entity = (Entity *)data;
+        } break;
+        
+        case DebugVarActionType_DeleteEntity:
+        {
+            var = add_debug_string(tree, tree->delete_string, Color_White);
+            var->entity = (Entity *)data;
+        } break;
         
         invalid_default_case;
     }
     
-    add_debug_newline(&game->debug, tree);
+    var->action = type;
 }
 
 internal void
@@ -294,7 +307,8 @@ update_and_render_debug_state(Game *game,
                     Input *input,
                     EntityState *entities,
                     ItemState *items,
-                              Dungeon *dungeon)
+                              Dungeon *dungeon,
+                              UI *ui)
 {
     DebugState *debug = &game->debug;
     if(debug->is_shown)
@@ -539,8 +553,20 @@ update_and_render_debug_state(Game *game,
                         switch(hot_var->action)
                             {
                             case DebugVarActionType_DeleteItem: zero_struct(*hot_var->item); break;
-                            case DebugVarActionType_DeleteEntity: remove_entity_from_game(hot_var->entity, dungeon->tiles); break;
-                            case DebugVarActionType_ShowEntityView: toggle(hot_var->entity->flags, EntityFlag_ShowViewRange); break;
+                            case DebugVarActionType_KillEntity:
+                            {
+                                if(is_entity_valid(hot_var->entity))
+                                {
+                                    kill_entity(&game->random, hot_var->entity, dungeon, ui);
+                                }
+                            } break;
+                            case DebugVarActionType_DeleteEntity:
+                            {
+                                if(is_entity_valid(hot_var->entity))
+                                {
+                                    remove_entity_from_game(hot_var->entity, dungeon->tiles);
+                                }
+                            } break;
                         }
                     } break;
                 
@@ -563,7 +589,7 @@ update_and_render_debug_state(Game *game,
         }
         else
         {
-            DebugTree *new_tree = add_debug_tree(debug, game->window_size.x / 2, 50);
+            DebugTree *new_tree = add_debug_tree(debug, game->window_size.x / 2, 25);
                 
                 Entity *entity = get_dungeon_pos_entity(entities, dungeon->level, input->mouse_tile, false);
                 if(entity && is_tile_seen_or_has_been_seen(dungeon->tiles, entity->pos))
@@ -572,33 +598,11 @@ update_and_render_debug_state(Game *game,
                     
                     start_debug_group(debug, new_tree, entity->name.s, true);
                     {
-                        DebugVar *view_var = add_debug_string(new_tree, "View Toggle", Color_White);
-                        view_var->action = DebugVarActionType_ShowEntityView;
-                        view_var->entity = entity;
-                        
-                        add_debug_delete(game, new_tree, entity, DebugVarActionType_DeleteEntity);
+                        add_debug_var_action(game, new_tree, entity, DebugVarActionType_KillEntity);
+                        add_debug_var_action(game, new_tree, entity, DebugVarActionType_DeleteEntity);
+                        add_debug_newline(&game->debug, new_tree);
                         
                         add_debug_variable(new_tree, "Index", entity->index, DebugVarType_U32);
-                    start_debug_group(debug, new_tree, "Flags", false);
-                        {
-                            add_debug_flag(new_tree, "ShowViewRange", entity->flags, EntityFlag_ShowViewRange);
-                            add_debug_flag(new_tree, "NotifyAboutMultipleItems", entity->flags, EntityFlag_NotifyAboutMultipleItems);
-                            add_debug_flag(new_tree, "UsesPhysicalAttacks", entity->flags, EntityFlag_UsesPhysicalAttacks);
-                            add_debug_flag(new_tree, "UsesRangedAttacks", entity->flags, EntityFlag_UsesRangedAttacks);
-                            add_debug_flag(new_tree, "HasBeenSeen", entity->flags, EntityFlag_HasBeenSeen);
-                        add_debug_flag(new_tree, "Flipped", entity->flags, EntityFlag_Flipped);
-                        add_debug_flag(new_tree, "InCombat", entity->flags, EntityFlag_InCombat);
-                        add_debug_flag(new_tree, "Pathfinding", entity->flags, EntityFlag_Pathfinding);
-                        add_debug_flag(new_tree, "GhostEnabled", entity->flags, EntityFlag_GhostEnabled);
-                        add_debug_flag(new_tree, "GhostFlipped", entity->flags, EntityFlag_GhostFlipped);
-                            add_debug_flag(new_tree, "Invisible", entity->flags, EntityFlag_Invisible);
-                            add_debug_flag(new_tree, "NormalWaterMovement", entity->flags, EntityFlag_NormalWaterMovement);
-                            add_debug_flag(new_tree, "InvulnerableToTraps", entity->flags, EntityFlag_InvulnerableToTraps);
-                            add_debug_flag(new_tree, "Undead", entity->flags, EntityFlag_Undead);
-                    }
-                    end_debug_group(new_tree);
-                    add_debug_newline(debug, new_tree);
-                    
                     add_debug_variable(new_tree, "ID", entity->id, DebugVarType_U32);
                         add_debug_enum(new_tree, "Type", entity->type, get_entity_type_string);
                         add_debug_variable(new_tree, "Name", entity->name.s, DebugVarType_String);
@@ -615,10 +619,29 @@ update_and_render_debug_state(Game *game,
                     add_debug_variable(new_tree, "Width", entity->width, DebugVarType_U32);
                     add_debug_variable(new_tree, "Height", entity->height, DebugVarType_U32);
                     add_debug_variable(new_tree, "Tile Source", entity->tile_src, DebugVarType_V4U);
-                        add_debug_enum(new_tree, "Remains", entity->remains, get_entity_remains_string);
+                        add_debug_enum(new_tree, "Remains Type", entity->remains_type, get_entity_remains_string);
                     add_debug_variable(new_tree, "pathfind Target", entity->pathfind_target_pos, DebugVarType_V2U);
                     add_debug_newline(debug, new_tree);
-                    
+                        
+                        start_debug_group(debug, new_tree, "Flags", false);
+                        {
+                            add_debug_flag(new_tree, "ShowViewRange", entity->flags, EntityFlag_ShowViewRange);
+                            add_debug_flag(new_tree, "NotifyAboutMultipleItems", entity->flags, EntityFlag_NotifyAboutMultipleItems);
+                            add_debug_flag(new_tree, "UsesPhysicalAttacks", entity->flags, EntityFlag_UsesPhysicalAttacks);
+                            add_debug_flag(new_tree, "UsesRangedAttacks", entity->flags, EntityFlag_UsesRangedAttacks);
+                            add_debug_flag(new_tree, "HasBeenSeen", entity->flags, EntityFlag_HasBeenSeen);
+                            add_debug_flag(new_tree, "Flipped", entity->flags, EntityFlag_Flipped);
+                            add_debug_flag(new_tree, "InCombat", entity->flags, EntityFlag_InCombat);
+                            add_debug_flag(new_tree, "Pathfinding", entity->flags, EntityFlag_Pathfinding);
+                            add_debug_flag(new_tree, "GhostEnabled", entity->flags, EntityFlag_GhostEnabled);
+                            add_debug_flag(new_tree, "GhostFlipped", entity->flags, EntityFlag_GhostFlipped);
+                            add_debug_flag(new_tree, "Invisible", entity->flags, EntityFlag_Invisible);
+                            add_debug_flag(new_tree, "NormalWaterMovement", entity->flags, EntityFlag_NormalWaterMovement);
+                            add_debug_flag(new_tree, "InvulnerableToTraps", entity->flags, EntityFlag_InvulnerableToTraps);
+                            add_debug_flag(new_tree, "Undead", entity->flags, EntityFlag_Undead);
+                        }
+                        end_debug_group(new_tree);
+                        
                     start_debug_group(debug, new_tree, "Stats", false);
                         {
                             add_debug_variable(new_tree, "Hit Chance", entity->hit_chance, DebugVarType_U32);
@@ -660,7 +683,8 @@ update_and_render_debug_state(Game *game,
                 {
                     start_debug_group(debug, new_tree, get_item_type_string(item->type), true);
                     {
-                        add_debug_delete(game, new_tree, item, DebugVarActionType_DeleteItem);
+                        add_debug_var_action(game, new_tree, entity, DebugVarActionType_DeleteItem);
+                        add_debug_newline(&game->debug, new_tree);
                         
                     start_debug_group(debug, new_tree, "Flags", false);
                     {

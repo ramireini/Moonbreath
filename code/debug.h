@@ -39,8 +39,8 @@ typedef enum
     DebugVarActionType_None,
     
     DebugVarActionType_DeleteItem,
+    DebugVarActionType_KillEntity,
     DebugVarActionType_DeleteEntity,
-    DebugVarActionType_ShowEntityView
 } DebugVarActionType;
 
 typedef struct DebugVar DebugVar;

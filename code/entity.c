@@ -592,7 +592,7 @@ log_add_entity_resistance_action(Entity *entity, UI *ui, ResistAmount resist_amo
 }
 
 internal void
-place_entity_remains(Random *random, Entity *entity, Dungeon *dungeon, EntityRemainsType type)
+place_entity_remains(Random *random, Entity *entity, Dungeon *dungeon, EntityRemainsPlaceType type)
 {
     assert(random);
     assert(is_entity_valid(entity));
@@ -602,145 +602,105 @@ place_entity_remains(Random *random, Entity *entity, Dungeon *dungeon, EntityRem
     v2u remains_pos = {0};
     DungeonTileID remains = 0;
     
-    if(entity->remains)
+    if(entity->remains_type)
     {
-        if(type == EntityRemainsType_Wound)
+        if(type == EntityRemainsPlaceType_Wound)
         {
             Direction direction = get_random_direction(random);
             remains_pos = get_direction_pos(entity->pos, direction);
             
             if(can_place_entity_remains_on_dungeon_pos(dungeon, remains_pos, type))
             {
-                //if(entity->type == EntityType_Enemy) printf("Wound, %s\n", get_direction_string(direction));
-                
                 if(is_dungeon_pos_wall(dungeon->tiles, remains_pos))
-                { 
-                    switch(entity->remains)
+                {
+                    if(entity->remains_type == EntityRemainsType_RedBlood)
                     {
-                        case EntityRemains_RedBlood:
+                        switch(direction)
                         {
-                            if(direction == Direction_Up)
-                            {
-                                remains= get_random(random,
-                                                    DungeonTileID_RedBloodWallUp1,
-                                                    DungeonTileID_RedBloodWallUp3);
-                            }
-                            else if(direction == Direction_Down)
-                            {
-                                remains = get_random(random,
-                                                     DungeonTileID_RedBloodWallDown1,
-                                                     DungeonTileID_RedBloodWallDown3);
-                            }
-                            else if(direction == Direction_Left)
-                            {
-                                remains = get_random(random,
-                                                     DungeonTileID_RedBloodWallLeft1,
-                                                     DungeonTileID_RedBloodWallLeft3);
-                            }
-                            else if(direction == Direction_Right)
-                            {
-                                remains = get_random(random,
-                                                     DungeonTileID_RedBloodWallRight1,
-                                                     DungeonTileID_RedBloodWallRight3);
-                            }
-                        } break;
+                            case Direction_Up: remains = get_random(random, DungeonTileID_RedBloodWallUp1, DungeonTileID_RedBloodWallUp3); break;
+                            case Direction_Down: remains = get_random(random, DungeonTileID_RedBloodWallDown1, DungeonTileID_RedBloodWallDown3); break;
+                            case Direction_Left: remains = get_random(random, DungeonTileID_RedBloodWallLeft1, DungeonTileID_RedBloodWallLeft3); break;
+                            case Direction_Right: remains = get_random(random, DungeonTileID_RedBloodWallRight1, DungeonTileID_RedBloodWallRight3); break;
+                            case Direction_UpLeft: remains = get_random(random, DungeonTileID_RedBloodWallUpLeft1, DungeonTileID_RedBloodWallUpLeft3); break;
+                            case Direction_UpRight: remains = get_random(random, DungeonTileID_RedBloodWallUpRight1, DungeonTileID_RedBloodWallUpRight3); break;
+                            case Direction_DownLeft: remains = get_random(random, DungeonTileID_RedBloodWallDownLeft1, DungeonTileID_RedBloodWallDownLeft3); break;
+                            case Direction_DownRight: remains = get_random(random, DungeonTileID_RedBloodWallDownRight1, DungeonTileID_RedBloodWallDownRight3); break;
+                            
+                            invalid_default_case;
+                        }
+                        }
+                    else
+                    {
+                        assert(entity->remains_type == EntityRemainsType_GreenBlood);
                         
-                        case EntityRemains_GreenBlood:
+                        switch(direction)
                         {
-                            if(direction == Direction_Up)
-                            {
-                                remains = get_random(random,
-                                                     DungeonTileID_GreenBloodWallUp1,
-                                                     DungeonTileID_GreenBloodWallUp3);
-                            }
-                            else if(direction == Direction_Down)
-                            {
-                                remains = get_random(random,
-                                                     DungeonTileID_GreenBloodWallDown1,
-                                                     DungeonTileID_GreenBloodWallDown3);
-                            }
-                            else if(direction == Direction_Left)
-                            {
-                                remains = get_random(random,
-                                                     DungeonTileID_GreenBloodWallLeft1,
-                                                     DungeonTileID_GreenBloodWallLeft3);
-                            }
-                            else if(direction == Direction_Right)
-                            {
-                                remains = get_random(random,
-                                                     DungeonTileID_GreenBloodWallRight1,
-                                                     DungeonTileID_GreenBloodWallRight3);
-                            }
-                        } break;
-                        
-                        invalid_default_case;
+                            case Direction_Up: remains = get_random(random, DungeonTileID_GreenBloodWallUp1, DungeonTileID_GreenBloodWallUp3); break;
+                            case Direction_Down: remains = get_random(random, DungeonTileID_GreenBloodWallDown1, DungeonTileID_GreenBloodWallDown3); break;
+                            case Direction_Left: remains = get_random(random, DungeonTileID_GreenBloodWallLeft1, DungeonTileID_GreenBloodWallLeft3); break;
+                            case Direction_Right: remains = get_random(random, DungeonTileID_GreenBloodWallRight1, DungeonTileID_GreenBloodWallRight3); break;
+                            case Direction_UpLeft: remains = get_random(random, DungeonTileID_GreenBloodWallUpLeft1, DungeonTileID_GreenBloodWallUpLeft3); break;
+                            case Direction_UpRight: remains = get_random(random, DungeonTileID_GreenBloodWallUpRight1, DungeonTileID_GreenBloodWallUpRight3); break;
+                            case Direction_DownLeft: remains = get_random(random, DungeonTileID_GreenBloodWallDownLeft1, DungeonTileID_GreenBloodWallDownLeft3); break;
+                            case Direction_DownRight: remains = get_random(random, DungeonTileID_GreenBloodWallDownRight1, DungeonTileID_GreenBloodWallDownRight3); break;
+                            
+                            invalid_default_case;
+                        }
                     }
                 }
                 else
                 {
-                    switch(entity->remains)
+                    if(entity->remains_type == EntityRemainsType_RedBlood)
                     {
-                        case EntityRemains_RedBlood:
-                        {
-                            remains = get_random(random,
-                                                 DungeonTileID_RedBloodGroundSmall1,
-                                                 DungeonTileID_RedBloodGroundSmall3);
-                        } break;
-                        
-                        case EntityRemains_GreenBlood:
-                        {
-                            remains = get_random(random,
-                                                 DungeonTileID_GreenBloodGroundSmall1,
-                                                 DungeonTileID_GreenBloodGroundSmall3);
-                        } break;
-                        
-                        invalid_default_case;
+                        remains = get_random(random, DungeonTileID_RedBloodGroundSmall1, DungeonTileID_RedBloodGroundSmall3);
+                    }
+                    else
+                    {
+                        assert(entity->remains_type == EntityRemainsType_GreenBlood);
+                        remains = get_random(random, DungeonTileID_GreenBloodGroundSmall1, DungeonTileID_GreenBloodGroundSmall3);
                     }
                 }
-                 
+                
                 assert(remains);
-                assert(is_dungeon_pos_traversable(dungeon->tiles, remains_pos));
             }
         }
         else
         {
-            assert(type == EntityRemainsType_Kill);
+            assert(type == EntityRemainsPlaceType_Kill);
             assert(is_dungeon_pos_traversable(dungeon->tiles, entity->pos));
             
-            #if 0
-            printf("Before: %u\n", get_dungeon_pos_remains(dungeon->tiles, entity->pos));
-            printf("entity remain type: %u\n", entity->remains);
-            printf("can_place_dungeon_remains_on_pos: %u\n", can_place_entity_remains_on_dungeon_pos(dungeon, entity->pos, EntityRemainsType_Kill));
-            #endif
-            
-            if(can_place_entity_remains_on_dungeon_pos(dungeon, entity->pos, EntityRemainsType_Kill))
+            if(can_place_entity_remains_on_dungeon_pos(dungeon, entity->pos, EntityRemainsPlaceType_Kill))
             {
                 remains_pos = entity->pos;
                 
-                switch(entity->remains)
+                if(entity->remains_type == EntityRemainsType_RedBlood)
                 {
-                    case EntityRemains_RedBlood:
-                    {
-                        remains = get_random(random,
-                                             DungeonTileID_RedBloodGroundMedium1,
-                                             DungeonTileID_RedBloodGroundLarge2);
-                    } break;
-                    
-                    case EntityRemains_GreenBlood:
-                    {
-                        remains = get_random(random,
-                                             DungeonTileID_GreenBloodGroundMedium1,
-                                             DungeonTileID_GreenBloodGroundLarge2);
-                    } break;
-                    
-                    invalid_default_case;
+                    remains = get_random(random, DungeonTileID_RedBloodGroundMedium1, DungeonTileID_RedBloodGroundLarge2);
                 }
-            }
-            
+                else
+                {
+                    assert(entity->remains_type == EntityRemainsType_GreenBlood);
+                    remains = get_random(random, DungeonTileID_GreenBloodGroundMedium1, DungeonTileID_GreenBloodGroundLarge2);
+                }
+                
             assert(remains);
-        }
+            }
+            }
         
-        if(remains) set_dungeon_pos_remains(dungeon->tiles, remains_pos, remains);
+        if(remains)
+        {
+            
+#if 0
+            printf("\nName: %s\n", entity->name.s);
+            printf("Remains Type: %u\n\n", entity->remains_type);
+            printf("Remains Place Type: %u\n", type);
+            printf("Remains ID: %u\n", remains);
+            printf("Remains Pos: %u, %u\n", remains_pos.x, remains_pos.y);
+            printf("Is Remains Pos Wall: %u\n", is_dungeon_pos_wall(dungeon->tiles, remains_pos));
+#endif
+            
+            set_dungeon_pos_remains(dungeon->tiles, remains_pos, remains);
+        }
     }
     }
 
@@ -1518,14 +1478,14 @@ get_entity_type_string(EntityType type)
 }
 
 internal char *
-get_entity_remains_string(EntityRemains type)
+get_entity_remains_string(EntityRemainsType type)
 {
     char *result = 0;
     
     switch(type)
     {
-        case EntityRemains_RedBlood: result = "Red Blood"; break;
-        case EntityRemains_GreenBlood: result = "Green Blood"; break;
+        case EntityRemainsType_RedBlood: result = "Red Blood"; break;
+        case EntityRemainsType_GreenBlood: result = "Green Blood"; break;
         
         invalid_default_case;
     }
@@ -1534,7 +1494,11 @@ get_entity_remains_string(EntityRemains type)
     }
 
 internal void
-force_move_entity(PathfindMap *enemy_pathfind_map, Entity *entity, Dungeon *dungeon, v2u pos, u32 dungeon_level)
+force_move_entity(PathfindMap *enemy_pathfind_map,
+                  Entity *entity,
+                  Dungeon *dungeon,
+                  v2u pos,
+                  u32 dungeon_level)
 {
     set_dungeon_pos_occupied(dungeon->tiles, entity->pos, false);
     
@@ -1806,6 +1770,24 @@ is_entity_valid(Entity *entity)
         entity->id &&
         entity->type &&
         is_dungeon_level_valid(entity->dungeon_level));
+    
+#if 0
+    if(!result)
+    {
+        if(entity)
+        {
+            printf("is_entity_valid: ID: %u\n", entity->id);
+            printf("is_entity_valid: Type: %u\n", entity->type);
+            printf("is_entity_valid: is_dungeon_level_valid: %u\n", is_dungeon_level_valid(entity->dungeon_level));
+        }
+        else
+        {
+            printf("is_entity_valid: Invalid pointer.\n");
+        }
+        
+        printf("\n");
+    }
+    #endif
     
     return(result);
 }
@@ -2805,14 +2787,18 @@ entity_use_passage(Game *game,
     }
 
 internal b32
-move_entity(Random *random, PathfindMap *enemy_pathfind_map, Entity *entity, Dungeon *dungeon, UI *ui, v2u pos)
+move_entity(Random *random, PathfindMap *enemy_pathfind_map, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_pos)
 {
     assert(is_entity_valid(entity));
-    assert(!is_v2u_zero(pos));
+    assert(!is_v2u_zero(new_pos));
+    assert(!is_v2u_equal(entity->pos, new_pos));
     
-    b32 result = entity_can_move(entity, ui);
-    if(result)
+    b32 result = false;
+    
+    if(entity_can_move(entity, ui))
     {
+            result = true;
+            
         // If the entity is confused, attempt to move them in a direction that is different from the
         // original move direction.
         Status *confusion_status = get_active_status(entity->statuses, StatusType_Confusion);
@@ -2834,7 +2820,7 @@ move_entity(Random *random, PathfindMap *enemy_pathfind_map, Entity *entity, Dun
                 printf("confused_move_pos: %u, %u\n", confused_move_pos.x, confused_move_pos.y);
 #endif
                 
-                pos = confused_move_pos;
+                    new_pos = confused_move_pos;
                     
                     switch(entity->type)
                     {
@@ -2847,8 +2833,17 @@ move_entity(Random *random, PathfindMap *enemy_pathfind_map, Entity *entity, Dun
         }
     }
         
-        force_move_entity(enemy_pathfind_map, entity, dungeon, pos, dungeon->level);
-        //printf("force_move_entity(): %u, %u\n", pos.x, pos.y);
+#if 0
+        printf("Name: %s\n", entity->name.s);
+        printf("New Pos: %u, %u\n", new_pos.x, new_pos.y);
+        printf("Traversable: %u\n", is_dungeon_pos_traversable(dungeon->tiles, new_pos));
+        printf("Occupied: %u\n", is_dungeon_pos_occupied(dungeon->tiles, new_pos));
+        printf("Pathfindable: %u\n\n", is_pos_pathfindable(dungeon, new_pos));
+        #endif
+        
+        //assert(is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, new_pos));
+        //assert(is_pos_pathfindable(dungeon, new_pos));
+        force_move_entity(enemy_pathfind_map, entity, dungeon, new_pos, dungeon->level);
         
         // We only set the flipped flag for enemies.
         if(entity->type == EntityType_Enemy)
@@ -2918,7 +2913,7 @@ kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui)
         case EntityType_Enemy:
         {
             log_add("%sThe %s dies!", ui, start_color(Color_LightRed), entity->name.s);
-            place_entity_remains(random, entity, dungeon, EntityRemainsType_Kill);
+            place_entity_remains(random, entity, dungeon, EntityRemainsPlaceType_Kill);
             remove_entity_from_game(entity, dungeon->tiles);
         } break;
         
@@ -3011,15 +3006,16 @@ attack_entity(Random *random,
                     defender->hp -= damage;
                     if(!is_zero(defender->hp))
                     {
-                        // TODO(rami): When something dies on a water tile, have the water tile change
-                        // depending on the remains of the entity that died.
+                        // TODO(rami): When placing entity remains on a water tile, switch the water tile
+                        // itself to whatever based on the remains.
                         
                         defender->regen.counter_current = 0; // Reset defender health regeneration
-                        if(hit_random_chance(random, 30)) place_entity_remains(random, defender, dungeon, EntityRemainsType_Wound);
+                        if(hit_random_chance(random, 30)) place_entity_remains(random, defender, dungeon, EntityRemainsPlaceType_Wound);
                         
                         // Start attack status
                         if(attacker && attacker->type == EntityType_Enemy)
                         {
+                            assert(attacker->dungeon_level == defender->dungeon_level);
                             Status *status = &attacker->e.attack_status;
                             
                             if(status->type &&
@@ -3174,18 +3170,12 @@ update_enemy_entities(Game *game,
                     enemy_turn_count = get_enemy_turn_count(&enemy_available_time, enemy->action_time);
                 }
                 
-                #if 0
-                printf("passed_time: %.02f\n", passed_time);
-                printf("enemy->e.action_timer: %.02f\n", enemy->e.action_timer);
-                printf("enemy_turn_count: %u\n\n", enemy_turn_count);
-                #endif
-                
                 while(enemy_turn_count)
                 {
                     
 #if 0
-                    printf("game->action_time: %.01f\n", game->action_time);
-                    printf("enemy->e.action_timer: %.01f\n", enemy->e.action_timer);
+                    printf("game->action_time: %.02f\n", game->action_time);
+                    printf("enemy->e.action_timer: %.02f\n", enemy->e.action_timer);
                     printf("enemy_turn_count: %u\n", enemy_turn_count);
                     printf("\n");
 #endif
@@ -3193,10 +3183,9 @@ update_enemy_entities(Game *game,
                     --enemy_turn_count;
                     enemy->e.action_timer = 0;
                     
-                    if(can_enemy_see_pos(dungeon->tiles, enemy->e.view_rect, enemy->pos, player->pos))
+                    if(enemy->dungeon_level == player->dungeon_level &&
+                       can_enemy_see_pos(dungeon->tiles, enemy->e.view_rect, enemy->pos, player->pos))
                     {
-                        assert(enemy->dungeon_level == player->dungeon_level);
-                        
                         set(enemy->flags, EntityFlag_InCombat);
                         unset(enemy->flags, EntityFlag_Pathfinding);
                         
@@ -3240,11 +3229,10 @@ update_enemy_entities(Game *game,
                     }
                     else
                     {
-                        assert(enemy->dungeon_level == player->dungeon_level);
-                        
                         // Update enemy combat pathfind
                         if(is_set(enemy->flags, EntityFlag_InCombat) &&
-                           !is_enemy_alerted(enemy->e.turns_in_player_view))
+                               !is_enemy_alerted(enemy->e.turns_in_player_view) &&
+                               enemy->dungeon_level == player->dungeon_level)
                         {
                             if(!is_set(enemy->flags, EntityFlag_Pathfinding))
                             {
@@ -3275,7 +3263,11 @@ update_enemy_entities(Game *game,
                                 enemy->direction = get_random_direction(random);
                                 enemy->new_pos = get_direction_pos(enemy->pos, enemy->direction);
                                 
-                                if(is_pos_pathfindable(dungeon, enemy->new_pos)) break;
+                                if(!is_dungeon_pos_occupied(dungeon->tiles, enemy->new_pos) &&
+                                       is_pos_pathfindable(dungeon, enemy->new_pos))
+                                {
+                                    break;
+                                }
                             }
                             
                             // If enemy is going to move to a tile that's seen by the player,
@@ -3301,8 +3293,11 @@ update_enemy_entities(Game *game,
                         enemy->e.saved_pos_for_ghost = enemy->pos;
                     }
                     
-                    assert(is_pos_pathfindable(dungeon, enemy->new_pos));
+                    if(!is_v2u_equal(enemy->pos, enemy->new_pos))
+                    {
                         move_entity(random, &entities->enemy_pathfind_map, enemy, dungeon, ui, enemy->new_pos);
+                    }
+                    
                     update_entity_statuses(game, &entities->enemy_pathfind_map, enemy, dungeon, inventory, ui);
                 }
             }
@@ -3400,7 +3395,6 @@ update_player_input(Game *game,
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 Item *item = &items->array[index];
-                
                 if(is_item_valid_and_not_in_inventory(item))
                 {
                     add_item_to_inventory(game, player, item, items, inventory, ui, dungeon->level, true);
@@ -3419,7 +3413,6 @@ update_player_input(Game *game,
                 for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
                 {
                     Item *item = inventory->slots[index];
-                    
                     if(item)
                     {
                         drop_item_from_inventory(game, player, item, items, inventory, dungeon, ui);
@@ -3436,9 +3429,7 @@ update_player_input(Game *game,
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 Item *item = &items->array[index];
-                
-                if(is_item_valid(item) &&
-                   item->type != ItemType_Ration)
+                if(is_item_valid(item) && item->type != ItemType_Ration)
                 {
                     toggle(item->flags, ItemFlag_IsIdentified);
                 }
@@ -3462,29 +3453,44 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[7]))
         {
-            player->hp = player->max_hp / 2;
+            printf("F7: Killed all enemy entities.\n");
             
-            return(result);;
+            for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
+            {
+                Entity *enemy = &entities->array[index];
+                if(is_enemy_entity_valid(enemy) && enemy->dungeon_level == dungeon->level)
+                {
+                    kill_entity(random, enemy, dungeon, ui);
+                }
+            }
+            
+            return(result);
         }
         else if(was_pressed(&input->fkeys[8]))
         {
-            return(result);;
+            if(player->hp != player->max_hp)
+            {
+            printf("F8: Player max health.\n");
+            player->hp = player->max_hp;
+                }
+            
+            return(result);
         }
         else if(was_pressed(&input->fkeys[9]))
         {
-            return(result);;
+            return(result);
         }
         else if(was_pressed(&input->fkeys[10]))
         {
-            return(result);;
+            return(result);
         }
         else if(was_pressed(&input->fkeys[11]))
         {
-            return(result);;
+            return(result);
         }
         else if(was_pressed(&input->fkeys[12]))
         {
-            return(result);;
+            return(result);
         }
 #endif
         
@@ -3648,7 +3654,6 @@ update_player_input(Game *game,
                     {
                         // Pickup item
                         Item *item = get_dungeon_pos_item(items, dungeon->level, player->pos, 0);
-                        
                         if(item)
                         {
                             add_item_to_inventory(game, player, item, items, inventory, ui, dungeon->level, true);
@@ -3749,8 +3754,6 @@ update_player_input(Game *game,
                 {
                         log_add("%sYou take a rest.", ui, start_color(Color_LightGray));
                     unset(player->flags, EntityFlag_NotifyAboutMultipleItems);
-                    
-                    // TODO(rami): Revise naming
                     
                     for(;;)
                     {
@@ -4117,9 +4120,10 @@ UI *ui)
                 for(u32 target_index = 0; target_index < MAX_ENTITY_COUNT; ++target_index)
                 {
                     Entity *target = &entities->array[target_index];
-                    
-                    if(target->type == EntityType_Enemy &&
-                       is_v2u_equal(player->new_pos, target->pos))
+                        
+                        if(is_enemy_entity_valid(target) &&
+                               target->dungeon_level == player->dungeon_level &&
+                               is_v2u_equal(player->new_pos, target->pos))
                     {
                         // These are the unarmed defaults
                         DamageInfo damage = {0};
@@ -4184,8 +4188,9 @@ UI *ui)
                         
                         // Player steps on a dungeon trap
                     if(is_dungeon_pos_trap(&dungeon->traps, player->new_pos))
-                    {
-                        DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, player->new_pos);
+                            {
+                                #if 1
+                                DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, player->new_pos);
                         switch(trap->type)
                         {
                             case DungeonTrapType_Spike:
@@ -4251,7 +4256,9 @@ UI *ui)
                             } break;
                             
                             invalid_default_case;
-                            }
+                                }
+                                #endif
+                                
                     }
                     }
                 }
@@ -4492,7 +4499,7 @@ add_player_entity(Entity *player)
     player->dungeon_level = 1;
     player->width = player->height = 32;
     player->tile_src = get_dungeon_tile_rect(get_entity_tile_pos(player->id));
-    player->remains = EntityRemains_RedBlood;
+    player->remains_type = EntityRemainsType_RedBlood;
     player->type = EntityType_Player;
     
     player->p.base_str = 10;
@@ -4623,7 +4630,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 14;
                     enemy->action_time = 0.3f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_Rat:
@@ -4636,7 +4643,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 11;
                     enemy->action_time = 0.5f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_KoboldWarrior:
@@ -4649,7 +4656,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 8;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_KoboldShaman:
@@ -4659,7 +4666,7 @@ add_enemy_entity(EntityState *entities,
                     
                     enemy->ev = 7;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     add_entity_heal_spell(enemy, "Healing Touch", 3, 6, 40, enemy->view_range);
                     add_entity_attack_spell(enemy, "Lightning Whip", 4, DamageType_Lightning, 60, 4);
@@ -4675,7 +4682,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 3;
                     enemy->action_time = 2.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_Slime:
@@ -4688,7 +4695,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 4;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_GreenBlood;
+                    enemy->remains_type = EntityRemainsType_GreenBlood;
                     
                     enemy->resists[DamageType_Physical] = 1;
                 } break;
@@ -4703,7 +4710,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 9;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_OrcWarrior:
@@ -4716,7 +4723,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 8;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_OrcArcher:
@@ -4729,7 +4736,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 7;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_OrcShaman:
@@ -4739,7 +4746,7 @@ add_enemy_entity(EntityState *entities,
                     
                     enemy->ev = 7;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Poison] = 5;
                     
@@ -4757,7 +4764,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 11;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Poison] = 2;
                     
@@ -4789,7 +4796,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->def = 3;
                     enemy->ev = 2;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_ElfArbalest:
@@ -4802,7 +4809,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 4;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_ElfMage:
@@ -4812,7 +4819,7 @@ add_enemy_entity(EntityState *entities,
                     
                     enemy->ev = 9;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     add_entity_stat_spell(enemy, "Weaken", StatType_Str, -3, 8, 20, enemy->view_range);
                     add_entity_attack_spell(enemy, "Fire Lance", 6, DamageType_Fire, 60, enemy->view_range);
@@ -4829,7 +4836,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 3;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_GreenBlood;
+                    enemy->remains_type = EntityRemainsType_GreenBlood;
                     
                     enemy->resists[DamageType_Physical] = 2;
                 } break;
@@ -4858,7 +4865,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 8;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_OrcSorcerer:
@@ -4868,7 +4875,7 @@ add_enemy_entity(EntityState *entities,
                     
                     enemy->ev = 5;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     add_entity_attack_spell(enemy, "Ignite", 12, DamageType_Fire, 80, enemy->view_range);
                     add_entity_status_spell(enemy, "Bind", StatusType_Bind, 0, 4, 30, enemy->view_range);
@@ -4884,7 +4891,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 4;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_Treant:
@@ -4912,7 +4919,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 11;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Poison] = 2;
                     
@@ -4929,7 +4936,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 6;
                     enemy->action_time = 2.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_CentaurSpearman:
@@ -4942,7 +4949,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 4;
                     enemy->action_time = 2.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_CentaurArcher:
@@ -4955,7 +4962,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 4;
                     enemy->action_time = 2.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_CursedSkull:
@@ -4984,7 +4991,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 10;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     add_entity_attack_status(&enemy->e.attack_status, StatusType_Bleed, 3, 8, 33);
                 } break;
@@ -4999,7 +5006,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 3;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_OgreArcher:
@@ -5012,7 +5019,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 3;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_OgreMage:
@@ -5022,7 +5029,7 @@ add_enemy_entity(EntityState *entities,
                     
                     enemy->ev = 3;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     add_entity_stat_spell(enemy, "Sap", StatType_EV, -2, 8, 15, enemy->view_range);
                     add_entity_stat_spell(enemy, "Warsong", StatType_Str, 1, 8, 15, enemy->view_range);
@@ -5039,7 +5046,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 3;
                     enemy->action_time = 0.5f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_ShadowWalker:
@@ -5069,7 +5076,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->def = 8;
                     enemy->ev = 2;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_DwarfSoldier:
@@ -5085,7 +5092,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->ev = 4;
                     enemy->def = 6;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                 } break;
                 
                 case EntityID_DwarfTinkerer:
@@ -5101,7 +5108,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->ev = 6;
                     enemy->def = 2;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     add_entity_attack_status(&enemy->e.attack_status, StatusType_BrokenArmor, 0, 8, 33);
                 } break;
@@ -5116,7 +5123,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 11;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Poison] = 2;
                     
@@ -5151,7 +5158,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 17;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Fire] = 2;
                     enemy->resists[DamageType_Holy] = -1;
@@ -5170,7 +5177,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 4;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Physical] = 2;
                     enemy->resists[DamageType_Holy] = -3;
@@ -5202,7 +5209,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 8;
                     enemy->action_time = 2.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Holy] = 3;
                     enemy->resists[DamageType_Dark] = -3;
@@ -5218,7 +5225,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 7;
                     enemy->action_time = 3.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Holy] = -2;
                     enemy->resists[DamageType_Fire] = 2;
@@ -5247,7 +5254,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 6;
                     enemy->action_time = 2.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Fire] = 2;
                     enemy->resists[DamageType_Dark] = 2;
@@ -5267,7 +5274,7 @@ add_enemy_entity(EntityState *entities,
                     enemy->e.damage.type = DamageType_Physical;
                     enemy->ev = 11;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Fire] = 2;
                     enemy->resists[DamageType_Ice] = -2;
@@ -5280,7 +5287,7 @@ add_enemy_entity(EntityState *entities,
                     
                     enemy->ev = 11;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Poison] = 4;
                     enemy->resists[DamageType_Holy] = -2;
@@ -5298,7 +5305,7 @@ add_enemy_entity(EntityState *entities,
                     
                     enemy->ev = 9;
                     enemy->action_time = 1.0f;
-                    enemy->remains = EntityRemains_RedBlood;
+                    enemy->remains_type = EntityRemainsType_RedBlood;
                     
                     enemy->resists[DamageType_Fire] = 1;
                     enemy->resists[DamageType_Ice] = 1;

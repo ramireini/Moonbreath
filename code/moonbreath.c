@@ -543,85 +543,21 @@ render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
             v4u tile_src = get_dungeon_tile_rect(tileset_pos);
             v4u tile_dest = get_dungeon_tile_rect(tile_pos);
             
-            DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, tile_pos);
-            
-            b32 has_remains = false;
                 v4u remains_src = {0};
-                
-                v2u remains_tile_pos = {0};
             DungeonTileID remains = get_dungeon_pos_remains(dungeon->tiles, tile_pos);
-                
                 if(remains)
                 {
-                    has_remains = true;
-                    
-                    switch(remains)
-                    {
-                        case DungeonTileID_RedBloodGroundSmall1: remains_tile_pos = make_v2u(33, 0); break;
-                        case DungeonTileID_RedBloodGroundSmall2: remains_tile_pos = make_v2u(34, 0); break;
-                        case DungeonTileID_RedBloodGroundSmall3: remains_tile_pos = make_v2u(35, 0); break;
-                        
-                        case DungeonTileID_RedBloodGroundMedium1: remains_tile_pos = make_v2u(36, 0); break;
-                        case DungeonTileID_RedBloodGroundMedium2: remains_tile_pos = make_v2u(37, 0); break;
-                        
-                        case DungeonTileID_RedBloodGroundLarge1: remains_tile_pos = make_v2u(38, 0); break;
-                        case DungeonTileID_RedBloodGroundLarge2: remains_tile_pos = make_v2u(39, 0); break;
-                        
-                        case DungeonTileID_RedBloodWallUp1: remains_tile_pos = make_v2u(40, 0); break;
-                        case DungeonTileID_RedBloodWallUp2: remains_tile_pos = make_v2u(41, 0); break;
-                        case DungeonTileID_RedBloodWallUp3: remains_tile_pos = make_v2u(42, 0); break;
-                        
-                        case DungeonTileID_RedBloodWallDown1: remains_tile_pos = make_v2u(43, 0); break;
-                        case DungeonTileID_RedBloodWallDown2: remains_tile_pos = make_v2u(44, 0); break;
-                        case DungeonTileID_RedBloodWallDown3: remains_tile_pos = make_v2u(45, 0); break;
-                        
-                        case DungeonTileID_RedBloodWallLeft1: remains_tile_pos = make_v2u(46, 0); break;
-                        case DungeonTileID_RedBloodWallLeft2: remains_tile_pos = make_v2u(47, 0); break;
-                        case DungeonTileID_RedBloodWallLeft3: remains_tile_pos = make_v2u(48, 0); break;
-                        
-                        case DungeonTileID_RedBloodWallRight1: remains_tile_pos = make_v2u(49, 0); break;
-                        case DungeonTileID_RedBloodWallRight2: remains_tile_pos = make_v2u(50, 0); break;
-                        case DungeonTileID_RedBloodWallRight3: remains_tile_pos = make_v2u(51, 0); break;
-                        
-                        //
-                        
-                        case DungeonTileID_GreenBloodGroundSmall1: remains_tile_pos = make_v2u(33, 1); break;
-                        case DungeonTileID_GreenBloodGroundSmall2: remains_tile_pos = make_v2u(34, 1); break;
-                        case DungeonTileID_GreenBloodGroundSmall3: remains_tile_pos = make_v2u(35, 1); break;
-                        
-                        case DungeonTileID_GreenBloodGroundMedium1: remains_tile_pos = make_v2u(36, 1); break;
-                        case DungeonTileID_GreenBloodGroundMedium2: remains_tile_pos = make_v2u(37, 1); break;
-                        
-                        case DungeonTileID_GreenBloodGroundLarge1: remains_tile_pos = make_v2u(38, 1); break;
-                        case DungeonTileID_GreenBloodGroundLarge2: remains_tile_pos = make_v2u(39, 1); break;
-                        
-                        case DungeonTileID_GreenBloodWallUp1: remains_tile_pos = make_v2u(40, 1); break;
-                        case DungeonTileID_GreenBloodWallUp2: remains_tile_pos = make_v2u(41, 1); break;
-                        case DungeonTileID_GreenBloodWallUp3: remains_tile_pos = make_v2u(42, 1); break;
-                        
-                        case DungeonTileID_GreenBloodWallDown1: remains_tile_pos = make_v2u(43, 1); break;
-                        case DungeonTileID_GreenBloodWallDown2: remains_tile_pos = make_v2u(44, 1); break;
-                        case DungeonTileID_GreenBloodWallDown3: remains_tile_pos = make_v2u(45, 1); break;
-                        
-                        case DungeonTileID_GreenBloodWallLeft1: remains_tile_pos = make_v2u(46, 1); break;
-                        case DungeonTileID_GreenBloodWallLeft2: remains_tile_pos = make_v2u(47, 1); break;
-                        case DungeonTileID_GreenBloodWallLeft3: remains_tile_pos = make_v2u(48, 1); break;
-                        
-                        case DungeonTileID_GreenBloodWallRight1: remains_tile_pos = make_v2u(49, 1); break;
-                        case DungeonTileID_GreenBloodWallRight2: remains_tile_pos = make_v2u(59, 1); break;
-                        case DungeonTileID_GreenBloodWallRight3: remains_tile_pos = make_v2u(51, 1); break;
-                        
-                        invalid_default_case;
-                    }
-                    
-                remains_src = get_dungeon_tile_rect(remains_tile_pos);
+                remains_src = get_dungeon_tile_rect(get_dungeon_tile_tileset_pos(remains));
                 }
+            
+            DungeonTrap *trap = get_dungeon_pos_trap(dungeon->tiles, &dungeon->traps, tile_pos);
             
             if(is_tile_seen(dungeon->tiles, tile_pos))
             {
                 SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&tile_src, (SDL_Rect *)&tile_dest);
-                if(has_remains)
+                if(remains)
                 {
+                    assert(!is_v4u_zero(remains_src));
                     SDL_RenderCopy(game->renderer, assets->tileset.tex, (SDL_Rect *)&remains_src, (SDL_Rect *)&tile_dest);
                 }
                 else if(trap)
@@ -633,8 +569,9 @@ render_dungeon(Game *game, u32 player_flags, Dungeon *dungeon, Assets *assets)
             else if(tile_has_been_seen(dungeon->tiles, tile_pos))
             {
                 render_texture_half_color(game->renderer, assets->tileset.tex, tile_src, tile_dest, false);
-                if(has_remains)
+                if(remains)
                 {
+                    assert(!is_v4u_zero(remains_src));
                     render_texture_half_color(game->renderer, assets->tileset.tex, remains_src, tile_dest, false);
                 }
                 else if(trap)
@@ -1519,7 +1456,7 @@ update_and_render_game(Game *game,
             }
 #endif
             
-            // TODO(rami): An actual player name
+            // TODO(rami): Let the player set their name or generate a random one.
             log_add("%sWelcome, %s!", ui, start_color(Color_LightYellow), player->name.s);
             log_add("%sFind and destroy the underworld portal,", ui, start_color(Color_LightYellow));
             log_add("%swhich is located somewhere in the depths.", ui, start_color(Color_LightYellow));
@@ -1883,9 +1820,8 @@ int main(int argc, char *argv[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 1627698016;
+                                u64 seed = 17698016;
                                 printf("Seed: %lu\n\n", seed);
-                                
                                 game->random = set_random_seed(seed);
                                 
                                 game->mode = GameMode_Playing;
@@ -2014,14 +1950,7 @@ int main(int argc, char *argv[])
                                     new_input->frame_dt = ((end_dt - last_dt) / (f32)performance_frequency);
                                     last_dt = end_dt;
                                     
-                                    update_and_render_game(game,
-                                                           new_input,
-                                                           entities,
-                                                               dungeons,
-                                                           items,
-                                                           inventory,
-                                                           assets,
-                                                           ui);
+                                    update_and_render_game(game, new_input, entities, dungeons, items, inventory, assets, ui);
                                     
 #if MOONBREATH_SLOW
                                     u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;
@@ -2051,7 +1980,7 @@ int main(int argc, char *argv[])
                                     fps = (f32)performance_frequency / (f32)elapsed_counter;
                                     full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
                                     
-                                    update_and_render_debug_state(game, new_input, entities, items, get_dungeon_from_level(dungeons, dungeons->current_level));
+                                    update_and_render_debug_state(game, new_input, entities, items, get_dungeon_from_level(dungeons, dungeons->current_level), ui);
                                     #endif
                                     
                                     Input *temp = new_input;

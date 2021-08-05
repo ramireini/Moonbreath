@@ -109,19 +109,19 @@ typedef enum
 
 typedef enum
 {
-    EntityRemainsType_None,
+    EntityRemainsPlaceType_None,
     
-    EntityRemainsType_Wound,
-    EntityRemainsType_Kill
-} EntityRemainsType;
+    EntityRemainsPlaceType_Wound,
+    EntityRemainsPlaceType_Kill
+} EntityRemainsPlaceType;
 
 typedef enum
 {
-    EntityRemains_None,
+    EntityRemainsType_None,
     
-    EntityRemains_RedBlood,
-    EntityRemains_GreenBlood
-} EntityRemains;
+    EntityRemainsType_RedBlood,
+    EntityRemainsType_GreenBlood
+} EntityRemainsType;
 
 typedef enum
 {
@@ -278,7 +278,7 @@ struct Entity
     u32 width;
     u32 height;
     v4u tile_src;
-    EntityRemains remains;
+    EntityRemainsType remains_type;
     v2u pathfind_target_pos;
     
     u32 str;

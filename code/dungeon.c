@@ -77,11 +77,7 @@ get_random_dungeon_traversable_unoccupied_pos(Random *random, Dungeon *dungeon)
     for(;;)
     {
         result = get_random_dungeon_pos(random, dungeon->size);
-        
-    if(is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, result))
-    {
-        break;
-    }
+        if(is_dungeon_pos_traversable_and_unoccupied(dungeon->tiles, result)) break;
     }
     
     return(result);
@@ -778,9 +774,93 @@ get_dungeon_tile_tileset_pos(DungeonTileID tile)
         case DungeonTileID_TeleportTrap: result = make_v2u(20, 4); break;
         case DungeonTileID_ShaftTrap: result = make_v2u(21, 4); break;
         
-        case DungeonTileID_Water1: result = make_v2u(52, 0); break;
-        case DungeonTileID_Water2: result = make_v2u(53, 0); break;
-        case DungeonTileID_Water3: result = make_v2u(54, 0); break;
+        case DungeonTileID_Water1: result = make_v2u(1, 1); break;
+        case DungeonTileID_Water2: result = make_v2u(2, 1); break;
+        case DungeonTileID_Water3: result = make_v2u(3, 1); break;
+        
+        case DungeonTileID_RedBloodGroundSmall1: result = make_v2u(33, 0); break;
+        case DungeonTileID_RedBloodGroundSmall2: result = make_v2u(34, 0); break;
+        case DungeonTileID_RedBloodGroundSmall3: result = make_v2u(35, 0); break;
+        
+        case DungeonTileID_RedBloodGroundMedium1: result = make_v2u(36, 0); break;
+        case DungeonTileID_RedBloodGroundMedium2: result = make_v2u(37, 0); break;
+        
+        case DungeonTileID_RedBloodGroundLarge1: result = make_v2u(38, 0); break;
+        case DungeonTileID_RedBloodGroundLarge2: result = make_v2u(39, 0); break;
+        
+        case DungeonTileID_RedBloodWallUp1: result = make_v2u(40, 0); break;
+        case DungeonTileID_RedBloodWallUp2: result = make_v2u(41, 0); break;
+        case DungeonTileID_RedBloodWallUp3: result = make_v2u(42, 0); break;
+        
+        case DungeonTileID_RedBloodWallDown1: result = make_v2u(43, 0); break;
+        case DungeonTileID_RedBloodWallDown2: result = make_v2u(44, 0); break;
+        case DungeonTileID_RedBloodWallDown3: result = make_v2u(45, 0); break;
+        
+        case DungeonTileID_RedBloodWallLeft1: result = make_v2u(46, 0); break;
+        case DungeonTileID_RedBloodWallLeft2: result = make_v2u(47, 0); break;
+        case DungeonTileID_RedBloodWallLeft3: result = make_v2u(48, 0); break;
+        
+        case DungeonTileID_RedBloodWallRight1: result = make_v2u(49, 0); break;
+        case DungeonTileID_RedBloodWallRight2: result = make_v2u(50, 0); break;
+        case DungeonTileID_RedBloodWallRight3: result = make_v2u(51, 0); break;
+        
+        case DungeonTileID_RedBloodWallUpLeft1: result = make_v2u(52, 0); break;
+        case DungeonTileID_RedBloodWallUpLeft2: result = make_v2u(53, 0); break;
+        case DungeonTileID_RedBloodWallUpLeft3: result = make_v2u(54, 0); break;
+        
+        case DungeonTileID_RedBloodWallUpRight1: result = make_v2u(55, 0); break;
+        case DungeonTileID_RedBloodWallUpRight2: result = make_v2u(56, 0); break;
+        case DungeonTileID_RedBloodWallUpRight3: result = make_v2u(57, 0); break;
+        
+        case DungeonTileID_RedBloodWallDownLeft1: result = make_v2u(58, 0); break;
+        case DungeonTileID_RedBloodWallDownLeft2: result = make_v2u(59, 0); break;
+        case DungeonTileID_RedBloodWallDownLeft3: result = make_v2u(60, 0); break;
+        
+        case DungeonTileID_RedBloodWallDownRight1: result = make_v2u(61, 0); break;
+        case DungeonTileID_RedBloodWallDownRight2: result = make_v2u(62, 0); break;
+        case DungeonTileID_RedBloodWallDownRight3: result = make_v2u(63, 0); break;
+        
+        case DungeonTileID_GreenBloodGroundSmall1: result = make_v2u(33, 1); break;
+        case DungeonTileID_GreenBloodGroundSmall2: result = make_v2u(34, 1); break;
+        case DungeonTileID_GreenBloodGroundSmall3: result = make_v2u(35, 1); break;
+        
+        case DungeonTileID_GreenBloodGroundMedium1: result = make_v2u(36, 1); break;
+        case DungeonTileID_GreenBloodGroundMedium2: result = make_v2u(37, 1); break;
+        
+        case DungeonTileID_GreenBloodGroundLarge1: result = make_v2u(38, 1); break;
+        case DungeonTileID_GreenBloodGroundLarge2: result = make_v2u(39, 1); break;
+        
+        case DungeonTileID_GreenBloodWallUp1: result = make_v2u(40, 1); break;
+        case DungeonTileID_GreenBloodWallUp2: result = make_v2u(41, 1); break;
+        case DungeonTileID_GreenBloodWallUp3: result = make_v2u(42, 1); break;
+        
+        case DungeonTileID_GreenBloodWallDown1: result = make_v2u(43, 1); break;
+        case DungeonTileID_GreenBloodWallDown2: result = make_v2u(44, 1); break;
+        case DungeonTileID_GreenBloodWallDown3: result = make_v2u(45, 1); break;
+        
+        case DungeonTileID_GreenBloodWallLeft1: result = make_v2u(46, 1); break;
+        case DungeonTileID_GreenBloodWallLeft2: result = make_v2u(47, 1); break;
+        case DungeonTileID_GreenBloodWallLeft3: result = make_v2u(48, 1); break;
+        
+        case DungeonTileID_GreenBloodWallRight1: result = make_v2u(49, 1); break;
+        case DungeonTileID_GreenBloodWallRight2: result = make_v2u(59, 1); break;
+        case DungeonTileID_GreenBloodWallRight3: result = make_v2u(51, 1); break;
+        
+        case DungeonTileID_GreenBloodWallUpLeft1: result = make_v2u(52, 1); break;
+        case DungeonTileID_GreenBloodWallUpLeft2: result = make_v2u(53, 1); break;
+        case DungeonTileID_GreenBloodWallUpLeft3: result = make_v2u(54, 1); break;
+        
+        case DungeonTileID_GreenBloodWallUpRight1: result = make_v2u(55, 1); break;
+        case DungeonTileID_GreenBloodWallUpRight2: result = make_v2u(56, 1); break;
+        case DungeonTileID_GreenBloodWallUpRight3: result = make_v2u(57, 1); break;
+        
+        case DungeonTileID_GreenBloodWallDownLeft1: result = make_v2u(58, 1); break;
+        case DungeonTileID_GreenBloodWallDownLeft2: result = make_v2u(59, 1); break;
+        case DungeonTileID_GreenBloodWallDownLeft3: result = make_v2u(60, 1); break;
+        
+        case DungeonTileID_GreenBloodWallDownRight1: result = make_v2u(61, 1); break;
+        case DungeonTileID_GreenBloodWallDownRight2: result = make_v2u(62, 1); break;
+        case DungeonTileID_GreenBloodWallDownRight3: result = make_v2u(63, 1); break;
         
         invalid_default_case;
     }
@@ -999,6 +1079,13 @@ internal b32
 is_dungeon_pos_traversable_and_occupied(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_dungeon_pos_traversable(tiles, pos) && is_dungeon_pos_occupied(tiles, pos));
+    return(result);
+}
+
+internal b32
+is_dungeon_pos_pathfindable_and_unoccupied(Dungeon *dungeon, v2u pos)
+{
+    b32 result = (is_pos_pathfindable(dungeon, pos) && !is_dungeon_pos_occupied(dungeon->tiles, pos));
     return(result);
 }
 
@@ -1253,23 +1340,31 @@ set_dungeon_pos_remains(DungeonTiles tiles, v2u pos, DungeonTileID tile)
 }
 
 internal b32
-can_place_entity_remains_on_dungeon_pos(Dungeon *dungeon, v2u pos, EntityRemainsType type)
+can_place_entity_remains_on_dungeon_pos(Dungeon *dungeon, v2u pos, EntityRemainsPlaceType type)
 {
     assert(dungeon);
-    assert(type);
+    assert(type == EntityRemainsPlaceType_Wound ||
+           type == EntityRemainsPlaceType_Kill);
     
-    b32 result = (!is_dungeon_pos_passage(dungeon->tiles, pos) &&
-                      !is_dungeon_pos_water(dungeon->tiles, pos) &&
-                      !is_dungeon_pos_trap(&dungeon->traps, pos) &&
-                      
-                      // Remains on door tiles don't look visually correct.
-                      !is_dungeon_pos_door(dungeon->tiles, pos));
+    b32 result = false;
     
-    
-    if(type == EntityRemainsType_Wound)
+    if(type == EntityRemainsPlaceType_Wound &&
+           !is_dungeon_pos_passage(dungeon->tiles, pos) &&
+           !is_dungeon_pos_water(dungeon->tiles, pos) &&
+           !is_dungeon_pos_trap(&dungeon->traps, pos) &&
+           !is_dungeon_pos_door(dungeon->tiles, pos) &&
+           !is_dungeon_pos_occupied(dungeon->tiles, pos) &&
+           !get_dungeon_pos_remains(dungeon->tiles, pos))
     {
-        result = (!is_dungeon_pos_occupied(dungeon->tiles, pos) &&
-                  !get_dungeon_pos_remains(dungeon->tiles, pos));
+        result = true;
+    }
+    else if(type == EntityRemainsPlaceType_Kill &&
+                !is_dungeon_pos_passage(dungeon->tiles, pos) &&
+                !is_dungeon_pos_water(dungeon->tiles, pos) &&
+                !is_dungeon_pos_trap(&dungeon->traps, pos) &&
+                !is_dungeon_pos_door(dungeon->tiles, pos))
+    {
+        result = true;
     }
     
     return(result);
@@ -2051,13 +2146,13 @@ create_dungeon(Game *game,
         {
             v2u pos = {x, y};
             
-            set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
+            set_dungeon_pos_wall(random, dungeon->tiles, pos);
             set_dungeon_pos_occupied(dungeon->tiles, pos, false);
-                set_dungeon_pos_wall(random, dungeon->tiles, pos);
+            set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
             }
         }
         
-#if 1
+#if 0
     // Test room
     dungeon->can_pathfind = true;
     
@@ -2081,23 +2176,22 @@ create_dungeon(Game *game,
 #if 1
     u32 water_x = 12;
     u32 water_y = 10;
+    u32 water_size = 8;
     
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x, water_y));
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 1, water_y));
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 2, water_y));
-    
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x, water_y + 1));
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 1, water_y + 1));
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 2, water_y + 1));
-    
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x, water_y + 2));
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 1, water_y + 2));
-    set_dungeon_pos_water(random, dungeon->tiles, make_v2u(water_x + 2, water_y + 2));
-    
-    //move_entity(random, &entities->enemy_pathfind_map, player, dungeon, ui, make_v2u(16, 8));
+    for(u32 y = water_y; y < water_y + water_size; ++y)
+    {
+        for(u32 x = water_x; x < water_x + water_size; ++x)
+        {
+        v2u pos = {x, y};
+        set_dungeon_pos_water(random, dungeon->tiles, pos);
+    }
+            }
     #endif
     
-    move_entity(random, &entities->enemy_pathfind_map, player, dungeon, ui, make_v2u(10, 15));
+    add_enemy_entity(entities, dungeon, EntityID_Snail, 17, 13);
+    add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 18, 13);
+    
+    move_entity(random, &entities->enemy_pathfind_map, player, dungeon, ui, make_v2u(14, 13));
     //player->hp = player->max_hp - 1;
     //player->hp = 1;
     
@@ -2113,8 +2207,6 @@ create_dungeon(Game *game,
     //add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(22, 13));
     add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(23, 13));
     #endif
-    
-    add_enemy_entity(entities, dungeon, EntityID_KoboldShaman, 22, 15);
     
     #if 0
     add_consumable_item(random, items, dungeon_level, ItemID_MightPotion, 10, 10, 1);
@@ -2712,9 +2804,7 @@ create_dungeon(Game *game,
         }
 #endif
     
-#if 1
-    //dungeon_level = 1;
-    
+#if 0
     // Place items
     u32 percent_progress = ((f32)dungeon_level / (f32)MAX_DUNGEON_LEVEL) * 100;
     u32 chance_per_level = 100 / MAX_DUNGEON_LEVEL;
@@ -2860,7 +2950,7 @@ create_dungeon(Game *game,
     }
 #endif
     
-#if 1
+#if 0
     printf("spec->torch_count: %u\n", spec->torch_count);
     printf("spec->torches_generated_count: %u\n", spec->torches_generated_count);
     printf("spec->torch_retry_count: %u\n", spec->torch_retry_count);

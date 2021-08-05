@@ -9,129 +9,161 @@
 
 typedef enum
 {
-    DungeonTileID_None,
+    DungeonTileID_None = 0,
     
-    DungeonTileID_StoneWall1,
-    DungeonTileID_StoneWall2,
-    DungeonTileID_StoneWall3,
-    DungeonTileID_StoneWall4,
-    DungeonTileID_StoneWall5,
+    DungeonTileID_StoneWall1 = 1,
+    DungeonTileID_StoneWall2 = 2,
+    DungeonTileID_StoneWall3 = 3,
+    DungeonTileID_StoneWall4 = 4,
+    DungeonTileID_StoneWall5 = 5,
     
-    DungeonTileID_StoneWallTorch1,
-    DungeonTileID_StoneWallTorch2,
-    DungeonTileID_StoneWallTorch3,
-    DungeonTileID_StoneWallTorch4,
-    DungeonTileID_StoneWallTorch5,
+    DungeonTileID_StoneWallTorch1 = 6,
+    DungeonTileID_StoneWallTorch2 = 7,
+    DungeonTileID_StoneWallTorch3 = 8,
+    DungeonTileID_StoneWallTorch4 = 9,
+    DungeonTileID_StoneWallTorch5 = 10,
     
-    DungeonTileID_StoneWallGrate1,
-    DungeonTileID_StoneWallGrate2,
+    DungeonTileID_StoneWallGrate1 = 11,
+    DungeonTileID_StoneWallGrate2 = 12,
     
-    DungeonTileID_StoneWallVines1,
-    DungeonTileID_StoneWallVines2,
-    DungeonTileID_StoneWallVines3,
-    DungeonTileID_StoneWallVines4,
-    DungeonTileID_StoneWallVines5,
+    DungeonTileID_StoneWallVines1 = 13,
+    DungeonTileID_StoneWallVines2 = 14,
+    DungeonTileID_StoneWallVines3 = 15,
+    DungeonTileID_StoneWallVines4 = 16,
+    DungeonTileID_StoneWallVines5 = 17,
     
-    DungeonTileID_StoneFloor1,
-    DungeonTileID_StoneFloor2,
-    DungeonTileID_StoneFloor3,
-    DungeonTileID_StoneFloor4,
+    DungeonTileID_StoneFloor1 = 18,
+    DungeonTileID_StoneFloor2 = 19,
+    DungeonTileID_StoneFloor3 = 20,
+    DungeonTileID_StoneFloor4 = 21,
     
-    DungeonTileID_StoneFloorGrate1,
-    DungeonTileID_StoneFloorGrate2,
-    DungeonTileID_StoneFloorGrate3,
-    DungeonTileID_StoneFloorGrate4,
-    DungeonTileID_StoneFloorGrate5,
-    DungeonTileID_StoneFloorGrate6,
+    DungeonTileID_StoneFloorGrate1 = 22,
+    DungeonTileID_StoneFloorGrate2 = 23,
+    DungeonTileID_StoneFloorGrate3 = 24,
+    DungeonTileID_StoneFloorGrate4 = 25,
+    DungeonTileID_StoneFloorGrate5 = 26,
+    DungeonTileID_StoneFloorGrate6 = 27,
     
-    DungeonTileID_StoneDoorClosed,
-    DungeonTileID_StoneDoorOpen,
+    DungeonTileID_StoneDoorClosed = 28,
+    DungeonTileID_StoneDoorOpen = 29,
     
-    DungeonTileID_StoneStaircaseUp,
-    DungeonTileID_StoneStaircaseDown,
-    DungeonTileID_ExitDungeon,
+    DungeonTileID_StoneStaircaseUp = 30,
+    DungeonTileID_StoneStaircaseDown = 31,
+    DungeonTileID_ExitDungeon = 32,
     
-    DungeonTileID_EntityStatus,
-    DungeonTileID_EntityAlerted,
-    DungeonTileID_EntityInvisible,
+    DungeonTileID_EntityStatus = 33,
+    DungeonTileID_EntityAlerted = 34,
+    DungeonTileID_EntityInvisible = 35,
     
-    DungeonTileID_FootstepsUp,
-    DungeonTileID_FootstepsDown,
-    DungeonTileID_FootstepsLeft,
-    DungeonTileID_FootstepsRight,
+    DungeonTileID_FootstepsUp = 36,
+    DungeonTileID_FootstepsDown = 37,
+    DungeonTileID_FootstepsLeft = 38,
+    DungeonTileID_FootstepsRight = 39,
     
-    DungeonTileID_FootstepsUpLeft,
-    DungeonTileID_FootstepsUpRight,
-    DungeonTileID_FootstepsDownLeft,
-    DungeonTileID_FootstepsDownRight,
+    DungeonTileID_FootstepsUpLeft = 40,
+    DungeonTileID_FootstepsUpRight = 41,
+    DungeonTileID_FootstepsDownLeft = 42,
+    DungeonTileID_FootstepsDownRight = 43,
     
-    DungeonTileID_SpikeTrap,
-    DungeonTileID_SwordTrap,
-    DungeonTileID_ArrowTrap,
-    DungeonTileID_MagicTrap,
-    DungeonTileID_BindTrap,
-    DungeonTileID_ShaftTrap,
-    DungeonTileID_SummonTrap,
-    DungeonTileID_TeleportTrap,
+    DungeonTileID_SpikeTrap = 44,
+    DungeonTileID_SwordTrap = 45,
+    DungeonTileID_ArrowTrap = 46,
+    DungeonTileID_MagicTrap = 47,
+    DungeonTileID_BindTrap = 48,
+    DungeonTileID_ShaftTrap = 49,
+    DungeonTileID_SummonTrap = 50,
+    DungeonTileID_TeleportTrap = 51,
     
-    DungeonTileID_Water1,
-    DungeonTileID_Water2,
-    DungeonTileID_Water3,
+    DungeonTileID_Water1 = 52,
+    DungeonTileID_Water2 = 53,
+    DungeonTileID_Water3 = 54,
     
     // Red Blood
-    DungeonTileID_RedBloodGroundSmall1,
-    DungeonTileID_RedBloodGroundSmall2,
-    DungeonTileID_RedBloodGroundSmall3,
+    DungeonTileID_RedBloodGroundSmall1 = 55,
+    DungeonTileID_RedBloodGroundSmall2 = 56,
+    DungeonTileID_RedBloodGroundSmall3 = 57,
     
-    DungeonTileID_RedBloodGroundMedium1,
-    DungeonTileID_RedBloodGroundMedium2,
+    DungeonTileID_RedBloodGroundMedium1 = 58,
+    DungeonTileID_RedBloodGroundMedium2 = 59,
     
-    DungeonTileID_RedBloodGroundLarge1,
-    DungeonTileID_RedBloodGroundLarge2,
+    DungeonTileID_RedBloodGroundLarge1 = 60,
+    DungeonTileID_RedBloodGroundLarge2 = 61,
     
-    DungeonTileID_RedBloodWallUp1,
-    DungeonTileID_RedBloodWallUp2,
-    DungeonTileID_RedBloodWallUp3,
+    DungeonTileID_RedBloodWallUp1 = 62,
+    DungeonTileID_RedBloodWallUp2 = 63,
+    DungeonTileID_RedBloodWallUp3 = 64,
     
-    DungeonTileID_RedBloodWallDown1,
-    DungeonTileID_RedBloodWallDown2,
-    DungeonTileID_RedBloodWallDown3,
+    DungeonTileID_RedBloodWallDown1 = 65,
+    DungeonTileID_RedBloodWallDown2 = 66,
+    DungeonTileID_RedBloodWallDown3 = 67,
     
-    DungeonTileID_RedBloodWallLeft1,
-    DungeonTileID_RedBloodWallLeft2,
-    DungeonTileID_RedBloodWallLeft3,
+    DungeonTileID_RedBloodWallLeft1 = 68,
+    DungeonTileID_RedBloodWallLeft2 = 69,
+    DungeonTileID_RedBloodWallLeft3 = 70,
     
-    DungeonTileID_RedBloodWallRight1,
-    DungeonTileID_RedBloodWallRight2,
-    DungeonTileID_RedBloodWallRight3,
+    DungeonTileID_RedBloodWallRight1 = 71,
+    DungeonTileID_RedBloodWallRight2 = 72,
+    DungeonTileID_RedBloodWallRight3 = 73,
+    
+    DungeonTileID_RedBloodWallUpLeft1 = 74,
+    DungeonTileID_RedBloodWallUpLeft2 = 75,
+    DungeonTileID_RedBloodWallUpLeft3 = 76,
+    
+    DungeonTileID_RedBloodWallUpRight1 = 77,
+    DungeonTileID_RedBloodWallUpRight2 = 78,
+    DungeonTileID_RedBloodWallUpRight3 = 79,
+    
+    DungeonTileID_RedBloodWallDownLeft1 = 80,
+    DungeonTileID_RedBloodWallDownLeft2 = 81,
+    DungeonTileID_RedBloodWallDownLeft3 = 82,
+    
+    DungeonTileID_RedBloodWallDownRight1 = 83,
+    DungeonTileID_RedBloodWallDownRight2 = 84,
+    DungeonTileID_RedBloodWallDownRight3 = 85,
     
     // Green Blood
-    DungeonTileID_GreenBloodGroundSmall1,
-    DungeonTileID_GreenBloodGroundSmall2,
-    DungeonTileID_GreenBloodGroundSmall3,
+    DungeonTileID_GreenBloodGroundSmall1 = 86,
+    DungeonTileID_GreenBloodGroundSmall2 = 87,
+    DungeonTileID_GreenBloodGroundSmall3 = 88,
     
-    DungeonTileID_GreenBloodGroundMedium1,
-    DungeonTileID_GreenBloodGroundMedium2,
+    DungeonTileID_GreenBloodGroundMedium1 = 89,
+    DungeonTileID_GreenBloodGroundMedium2 = 90,
     
-    DungeonTileID_GreenBloodGroundLarge1,
-    DungeonTileID_GreenBloodGroundLarge2,
+    DungeonTileID_GreenBloodGroundLarge1 = 91,
+    DungeonTileID_GreenBloodGroundLarge2 = 92,
     
-    DungeonTileID_GreenBloodWallUp1,
-    DungeonTileID_GreenBloodWallUp2,
-    DungeonTileID_GreenBloodWallUp3,
+    DungeonTileID_GreenBloodWallUp1 = 93,
+    DungeonTileID_GreenBloodWallUp2 = 94,
+    DungeonTileID_GreenBloodWallUp3 = 95,
     
-    DungeonTileID_GreenBloodWallDown1,
-    DungeonTileID_GreenBloodWallDown2,
-    DungeonTileID_GreenBloodWallDown3,
+    DungeonTileID_GreenBloodWallDown1 = 96,
+    DungeonTileID_GreenBloodWallDown2 = 97,
+    DungeonTileID_GreenBloodWallDown3 = 98,
     
-    DungeonTileID_GreenBloodWallLeft1,
-    DungeonTileID_GreenBloodWallLeft2,
-    DungeonTileID_GreenBloodWallLeft3,
+    DungeonTileID_GreenBloodWallLeft1 = 99,
+    DungeonTileID_GreenBloodWallLeft2 = 100,
+    DungeonTileID_GreenBloodWallLeft3 = 101,
     
-    DungeonTileID_GreenBloodWallRight1,
-    DungeonTileID_GreenBloodWallRight2,
-    DungeonTileID_GreenBloodWallRight3
-} DungeonTileID;
+    DungeonTileID_GreenBloodWallRight1 = 102,
+    DungeonTileID_GreenBloodWallRight2 = 103,
+    DungeonTileID_GreenBloodWallRight3 = 104,
+    
+    DungeonTileID_GreenBloodWallUpLeft1 = 105,
+    DungeonTileID_GreenBloodWallUpLeft2 = 106,
+    DungeonTileID_GreenBloodWallUpLeft3 = 107,
+    
+    DungeonTileID_GreenBloodWallUpRight1 = 108,
+    DungeonTileID_GreenBloodWallUpRight2 = 109,
+    DungeonTileID_GreenBloodWallUpRight3 = 110,
+    
+    DungeonTileID_GreenBloodWallDownLeft1 = 111,
+    DungeonTileID_GreenBloodWallDownLeft2 = 112,
+    DungeonTileID_GreenBloodWallDownLeft3 = 113,
+    
+    DungeonTileID_GreenBloodWallDownRight1 = 114,
+    DungeonTileID_GreenBloodWallDownRight2 = 115,
+    DungeonTileID_GreenBloodWallDownRight3 = 116
+    } DungeonTileID;
 
 typedef enum
 {
@@ -245,7 +277,6 @@ typedef struct
     u32 array[MAX_DUNGEON_SIZE_SQUARED];
 } PathfindMap;
 
-// TODO(rami): Polish: When examining a tile, render tile remains on it as well.
 typedef struct
 {
     b32 is_seen;
@@ -259,7 +290,7 @@ typedef struct
 typedef struct
 {
     u32 width;
-    DungeonTile *array; // This is allocated separately because it's used by more than one thing.
+    DungeonTile *array; // Allocated separately because it's used by multiple things.
 } DungeonTiles;
 
 struct DungeonTrap
@@ -379,7 +410,7 @@ typedef struct
     u32 scroll_chances[Scroll_Count];
     } DungeonSpec;
 
-typedef struct
+struct Dungeon
 {
     b32 can_pathfind;
     
@@ -394,7 +425,7 @@ typedef struct
     DungeonRooms rooms;
     DungeonTraps traps;
     DungeonPassages passages;
-    } Dungeon;
+    };
 
 // TODO(rami): Test having more than 10 dungeon levels, make allocating more memory at start work.
 typedef struct

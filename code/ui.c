@@ -614,7 +614,7 @@ extend_view_move(ViewMove *move, ViewMoveParams params)
     assert(move && move->is_moving);
     assert(are_view_params_valid);
     
-    f32 total_view_move_size = (move->size * params.move_count);
+    f32 total_view_move_size = move->size * params.move_count;
     
     if(params.direction == Direction_Up)
     {
@@ -2432,7 +2432,7 @@ render_multiple_examine_window(Game *game,
     
     disable_clip_rect_and_render_scrollbar(game, view, examine_rect, ui);
     
-#if MOONBREATH_SLOW && 1
+#if 0
     ui_print_view("Multiple Examine View", *view);
 #endif
     

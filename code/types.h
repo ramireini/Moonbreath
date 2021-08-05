@@ -458,16 +458,18 @@ typedef struct
 
 typedef struct Game Game;
 typedef struct Item Item;
-typedef struct ItemInfo ItemInfo;
-typedef struct Entity Entity;
-typedef struct DungeonTrap DungeonTrap;
 typedef struct Spell Spell;
+typedef struct Entity Entity;
+typedef struct Dungeon Dungeon;
+typedef struct ItemInfo ItemInfo;
+typedef struct DungeonTrap DungeonTrap;
 
 #include "util.c"
 #include "random.c"
 #include "assets.h"
 #include "ui.h"
 #include "item.h"
+#include "pathfind.h"
 #include "dungeon.h"
 #include "debug.h"
 #include "entity.h"
@@ -490,6 +492,5 @@ internal ItemID get_random_scroll(Random *random);
 #if MOONBREATH_SLOW
 global b32 fov_toggle_array_set;
 global DungeonTile fov_toggle_array[MAX_DUNGEON_SIZE_SQUARED];
-
 global b32 fkey_active[13];
 #endif
