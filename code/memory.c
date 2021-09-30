@@ -13,23 +13,22 @@ zero_size(void *pointer, memory_size size)
 internal TemporaryMemory
 start_temporary_memory(MemoryArena *arena)
 {
+ ++arena->temporary_memory_count;
+ 
     TemporaryMemory result = {0};
-    
     result.arena = arena;
-    result.used = arena->used;
-    
-    ++arena->temporary_memory_count;
-    
+ result.used = arena->used;
+ 
     return(result);
 }
 
 internal void
-end_temporary_memory(TemporaryMemory temp_mem)
+end_temporary_memory(TemporaryMemory memory)
 {
-    MemoryArena *arena = temp_mem.arena;
+ MemoryArena *arena = memory.arena;
     
-    assert(arena->used >= temp_mem.used);
-    arena->used = temp_mem.used;
+ assert(arena->used >= memory.used);
+ arena->used = memory.used;
     
     assert(arena->temporary_memory_count);
     --arena->temporary_memory_count;
@@ -48,16 +47,16 @@ push_memory(MemoryArena *arena, memory_size size)
     return(result);
 }
 
-#define pop_memory_struct(arena, type) pop_memory_(arena, sizeof(type))
+#define pop_memory_struct(arena, type) pop_memory(arena, sizeof(type))
 internal void
-pop_memory_(MemoryArena *arena, memory_size size)
+pop_memory(MemoryArena *arena, memory_size size)
 {
     assert(arena->used >= size);
     arena->used -= size;
 }
 
 internal void
-init_arena(MemoryArena *arena, u8 *base, memory_size size)
+init_memory_arena(MemoryArena *arena, u8 *base, memory_size size)
 {
     arena->base = base;
     arena->size = size;

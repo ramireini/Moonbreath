@@ -4,7 +4,7 @@ clear
 
 if [ "$1" == "linux" ]; then
   rm -rf ../build/linux/*; mkdir -p ../build/linux
-  time gcc moonbreath.c -I ../ -O0 -std=c99 -DMOONBREATH_SLOW=1 -o ../build/linux/Moonbreath -lSDL2 -lSDL2_image -lSDL2_ttf -lm
+  time gcc moonbreath.c -I ../ -O0 -std=c99 -DMOONBREATH_SLOW=1 -o ../build/linux/Moonbreath -lSDL2 -lSDL2_image -lSDL2_ttf -lm -g
   cp -RT ../data ../build/linux/data
 
   echo "[Linux Success]"
@@ -19,4 +19,4 @@ else
   echo "Usage: ./build.sh linux OR ./build.sh windows"
 fi
 
-# TODO(rami): Do clean up with -Wall and -Wextra, -Wunused-function
+# TODO(rami): Do clean up with -Wall and -Wextra, -Wunused-functionq

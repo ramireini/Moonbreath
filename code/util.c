@@ -16,11 +16,25 @@ set(flags, new_flag); \
 #define unset(flags, new_flags) (flags &= ~(new_flags))
 #define is_set(flags, new_flags) ((flags & (new_flags)) == (new_flags))
 
-#define print_v2u(name) printf("%s: %u, %u\n", #name, name.x, name.y);
-#define print_v2s(name) printf("%s: %d, %d\n", #name, name.x, name.y);
+#define print_v2u(name) \
+printf("%s.x: %u\n", #name, name.x); \
+printf("%s.y: %u\n\n", #name, name.y); \
 
-#define print_v4u(name) printf("%s: %u, %u, %u, %u\n", #name, name.x, name.y, name.w, name.h);
-#define print_v4s(name) printf("%s: %d, %d, %d, %d\n", #name, name.x, name.y, name.w, name.h);
+#define print_v2s(name) \
+printf("%s.x: %d\n", #name, name.x); \
+printf("%s.y: %d\n\n", #name, name.y); \
+
+#define print_v4u(name) \
+printf("%s.x: %u\n", #name, name.x); \
+printf("%s.y: %u\n", #name, name.y); \
+       printf("%s.w: %u\n", #name, name.w); \
+printf("%s.h: %u\n\n", #name, name.h); \
+
+#define print_v4s(name) \
+printf("%s.x: %d\n", #name, name.x); \
+printf("%s.y: %d\n", #name, name.y); \
+printf("%s.w: %d\n", #name, name.w); \
+printf("%s.h: %d\n\n", #name, name.h); \
 
 internal v2u
 make_v2u(u32 a, u32 b)
@@ -87,11 +101,7 @@ internal u32
 get_string_length(char *string)
 {
     u32 length = 0;
-    
-    while(*string++)
-    {
-        ++length;
-    }
+    while(*string++) ++length;
     
     return(length);
 }
@@ -265,20 +275,12 @@ strings_match(char *a, char *b)
     assert(a);
     assert(b);
     
-    b32 result = false;
-    
-    while(*a && *b &&
-          *a++ == *b++)
+    while(*a && *b && *a++ == *b++)
     {
-        if(*a == '\0' &&
-           *b == '\0')
-        {
-            result = true;
-            break;
-        }
+        if(*a == '\0' && *b == '\0') return(true);
     }
     
-    return(result);
+    return(false);
 }
 
 internal f32
@@ -289,8 +291,8 @@ lerp(f32 start, f32 end, f32 step)
 }
 
 internal u32
-f32_to_u32_rounded_up(f32 value)
+get_u32_from_up_rounded_f32(f32 value)
 {
-    u32 result = (u32)(value + 0.5f);
+    u32 result = value + 0.5f;
     return(result);
 }

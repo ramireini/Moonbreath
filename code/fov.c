@@ -20,7 +20,7 @@ is_tile_seen(DungeonTiles tiles, v2u pos)
 }
 
 internal b32
-tile_has_been_seen(DungeonTiles tiles, v2u pos)
+has_tile_been_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = (tiles.array[(pos.y * tiles.width) + pos.x].has_been_seen);
     return(result);
@@ -36,7 +36,7 @@ set_tile_is_seen_and_has_been_seen(DungeonTiles tiles, v2u pos, b32 value)
 internal b32
 is_tile_seen_or_has_been_seen(DungeonTiles tiles, v2u pos)
 {
-    b32 result = (is_tile_seen(tiles, pos) || tile_has_been_seen(tiles, pos));
+    b32 result = (is_tile_seen(tiles, pos) || has_tile_been_seen(tiles, pos));
         return(result);
 }
 
@@ -130,7 +130,7 @@ update_player_view(Entity *player, Dungeon *dungeon)
     assert(dungeon);
     
 #if MOONBREATH_SLOW
-    if(fkey_active[1]) return;
+ if(debug_toggles[1]) return;
     #endif
     
     // Reset visibility
@@ -173,6 +173,6 @@ update_player_view(Entity *player, Dungeon *dungeon)
             multipliers[sector][3]
         };
         
-        cast_light(dungeon, player->pos, player->view_range, 1, slope, multiplier);
+        cast_light(dungeon, player->pos, player->stats.fov, 1, slope, multiplier);
     }
 }

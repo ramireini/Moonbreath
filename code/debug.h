@@ -1,4 +1,4 @@
-#define MAX_DEBUG_TREE_COUNT 32
+#define MAX_DEBUG_TREE_COUNT 8
 
 typedef enum
 {
@@ -89,7 +89,7 @@ struct DebugVar
         Entity *entity;
     };
     
-    Status *status;
+    EntityStatus *status;
     };
 
 typedef struct
@@ -135,13 +135,13 @@ typedef struct
 
 typedef struct
 {
-    b32 is_shown;
-    b32 should_update;
-    
+ b32 is_open;
+ b32 update_state;
+ 
     Font *font;
     v2u text_offset;
     
-    DebugHot hot;
+ DebugHot hot;
     DebugEvent event;
     
     memory_size memory_size;
@@ -152,5 +152,5 @@ typedef struct
 
 internal void end_debug_group(DebugTree *tree);
 internal void reset_debug_event(DebugEvent *event);
-internal void add_debug_status_effect(DebugState *debug, DebugTree *tree, Status *status);
+internal void add_debug_status_effect(DebugState *debug, DebugTree *tree, EntityStatus *status);
 internal DebugVar *start_debug_group(DebugState *debug, DebugTree *tree, char *name, b32 is_expanded);

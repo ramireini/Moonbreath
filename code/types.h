@@ -3,12 +3,20 @@
 { \
 if(!(expression)) \
 { \
-fprintf(stderr, ("Assertion in %s, %u\n"), __FILE__, __LINE__); \
+fprintf(stderr, ("Assert: %s, %u\n"), __FILE__, __LINE__); \
 *(u32 *)0 = 0; \
 } \
 }
 #else
 #define assert(expression)
+#endif
+
+#if MOONBREATH_SLOW
+#define assert_loop_count() \
+persist u32 loop_count = 0; \
+if(loop_count++ >= 100000) assert(0);
+#else
+#define assert_loop_count()
 #endif
 
 #define internal static
@@ -194,6 +202,7 @@ typedef enum
     GameKey_AutoExplore,
     GameKey_IteratePassages,
     GameKey_Examine,
+    GameKey_Status,
     GameKey_Log,
     
     GameKey_Back,
@@ -209,15 +218,15 @@ typedef enum
 {
     KeyboardCharType_None,
     
-    KeyboardCharType_Any,
-    KeyboardCharType_Alphabet
+    KeyboardCharType_Alphabet,
+    KeyboardCharType_Printable,
 } KeyboardCharType;
 
+// Add new codes to get_key_from_keycode()
 typedef enum
 {
     Key_None,
     
-    // Printable characters
     Key_A,
     Key_B,
     Key_C,
@@ -244,7 +253,7 @@ typedef enum
     Key_X,
     Key_Y,
     Key_Z,
-    
+ 
     Key_0,
     Key_1,
     Key_2,
@@ -263,9 +272,10 @@ typedef enum
     Key_Comma,
     Key_Period,
     Key_LessThan,
-    Key_GreaterThan,
-    
-    // Non-printable characters
+ Key_GreaterThan,
+ Key_PrintableEnd,
+ 
+ // Non-printable characters
     Key_Shift,
     Key_Control,
     Key_Alt,
@@ -283,13 +293,18 @@ typedef enum
     Key_ArrowLeft,
     Key_ArrowRight,
     
-    Key_Count
+    Key_Count,
 } Key;
 
 typedef struct
 {
     char s[8];
 } String8;
+
+typedef struct
+{
+    char s[16];
+} String16;
 
 typedef struct
 {
@@ -323,8 +338,8 @@ typedef struct
     f32 frame_dt;
     InputState fkeys[13];
     
-    v2u mouse;
-    v2u mouse_tile;
+    v2u mouse_pos;
+ v2u mouse_tile_pos;
     union
     {
         InputState mouse_buttons[Button_Count];
@@ -361,6 +376,7 @@ typedef struct
             InputState GameKey_AutoExplore;
             InputState GameKey_IteratePassages;
             InputState GameKey_Examine;
+            InputState GameKey_Status;
             InputState GameKey_Log;
             
             InputState GameKey_Back;
@@ -454,7 +470,7 @@ typedef struct
     u32 temporary_memory_count;
 } MemoryArena;
 
-#define MAX_INVENTORY_SLOT_COUNT 52
+typedef enum EntityID EntityID;
 
 typedef struct Game Game;
 typedef struct Item Item;
@@ -462,26 +478,30 @@ typedef struct Spell Spell;
 typedef struct Entity Entity;
 typedef struct Dungeon Dungeon;
 typedef struct ItemInfo ItemInfo;
+typedef struct EntityState EntityState;
 typedef struct DungeonTrap DungeonTrap;
+typedef struct EntityStatus EntityStatus;
 
 #include "util.c"
 #include "random.c"
 #include "assets.h"
 #include "ui.h"
+#include "entity_status.h"
 #include "item.h"
 #include "pathfind.h"
 #include "dungeon.h"
 #include "debug.h"
 #include "entity.h"
+#include "editor.h"
 #include "moonbreath.h"
 
 internal void log_add_okay(UI *ui);
 internal void log_add_item_action_string(Item *item, UI *ui, ItemActionType action);
-internal void add_player_starting_item(Game *game, Entity *player, ItemState *items, Inventory *inventory, UI *ui, u32 dungeon_level, ItemID item_id, u32 x, u32 y);
+internal void add_player_starting_item(Game *game, Entity *player, ItemState *item_state, Inventory *inventory, UI *ui, ItemID item_id);
 internal void set_render_color(SDL_Renderer *renderer, Color color);
 internal u32 get_potion_chance_index(ItemID id);
 internal u32 get_scroll_chance_index(ItemID id);
-internal u32 get_dungeon_pos_item_count(ItemState *items, u32 dungeon_level, v2u pos);
+internal u32 get_dungeon_pos_item_count(ItemState *item_state, u32 dungeon_level, v2u pos);
 internal b32 is_item_equipment(ItemType type);
 internal ItemID get_random_leather_armor(Random *random);
 internal ItemID get_random_steel_armor(Random *random);
@@ -490,7 +510,14 @@ internal ItemID get_random_potion(Random *random);
 internal ItemID get_random_scroll(Random *random);
 
 #if MOONBREATH_SLOW
-global b32 fov_toggle_array_set;
-global DungeonTile fov_toggle_array[MAX_DUNGEON_SIZE_SQUARED];
-global b32 fkey_active[13];
+typedef enum
+{
+ DebugToggleType_TraverseAll,
+ DebugToggleType_SkipHasBeenUp,
+ DebugToggleType_EntityHitTest,
+ 
+ DebugToggleType_Count
+} DebugToggleType;
+
+global b32 debug_toggles[DebugToggleType_Count];
 #endif

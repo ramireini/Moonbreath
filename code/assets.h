@@ -1,29 +1,11 @@
 #define FONT_ATLAS_WIDTH 1920
 #define FONT_ATLAS_HEIGHT 1080
-#define FONT_START_GLYPH 32
-#define HEALTH_BAR_SECTION_COUNT 5
+#define MAX_FONT_METRICS_COUNT 95
+#define FIRST_FONT_GLYPH ' '
+#define MAX_HEALTHBAR_SRC_COUNT 5
 
 // Font test
 // !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqrstuvwxyz{|}~
-
-typedef enum
-{
-    FontName_Classic,
-    FontName_ClassicOutlined,
-    FontName_Alkhemikal,
-    FontName_Monaco,
-    FontName_DosVga,
-    
-    FontName_Count
-} FontName;
-
-typedef enum
-{
-    FontType_None,
-    
-    FontType_BMP,
-    FontType_TTF
-} FontType;
 
 typedef enum
 {
@@ -66,8 +48,28 @@ typedef enum
     Color_WindowBackground,
     Color_WindowShadow,
     
-        Color_MouseSelect
+    Color_MouseHighlightBackground,
+    Color_MouseHighlightBorder
 } Color;
+
+typedef enum
+{
+    FontName_Classic,
+    FontName_ClassicOutlined,
+    FontName_Alkhemikal,
+    FontName_Monaco,
+    FontName_DosVga,
+    
+    FontName_Count
+} FontName;
+
+typedef enum
+{
+    FontType_None,
+    
+    FontType_BMP,
+    FontType_TTF
+} FontType;
 
 typedef struct
 {
@@ -83,23 +85,24 @@ typedef struct
 
 typedef struct
 {
-    b32 is_valid;
+    b32 is_set;
     
     FontType type;
-    u32 size;
+    u32 bmp_advance;
+ u32 size;
+ u32 start_glyph;
     
     SDL_Texture *atlas;
-    GlyphMetrics metrics[95];
-    u32 bmp_advance;
+ GlyphMetrics metrics[MAX_FONT_METRICS_COUNT];
 } Font;
 
 typedef struct
 {
-    Font fonts[FontName_Count];
-    
+ u32 stat_and_log_window_h;
+ 
     Texture tilemap;
-    Texture tileset;
-    
-    v4u health_bar_sources[HEALTH_BAR_SECTION_COUNT];
-    u32 stat_and_log_window_h;
+ Texture tileset;
+ 
+ v4u healthbar_src[MAX_HEALTHBAR_SRC_COUNT];
+    Font fonts[FontName_Count];
 } Assets;

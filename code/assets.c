@@ -18,10 +18,10 @@ get_color_string(Color color)
         case Color_LightGreen: result = "Light Green"; break;
         case Color_DarkGreen: result = "Dark Green"; break;
         
-        case Color_LightBlue: result = "Light Blue"; break;
+  case Color_LightBlue: result = "Light Blue"; break;
         case Color_DarkBlue: result = "Dark Blue"; break;
         
-        case Color_LightBrown: result = "Light Brown"; break;
+        case Color_LightBrown: result = "Light Brown"; break; 
         case Color_DarkBrown: result = "Dark Brown"; break;
         
         case Color_Yellow: result = "Yellow"; break;
@@ -54,7 +54,7 @@ get_font_metric_index_from_char(char c)
 {
     assert(c);
     
-    u32 result = (c - FONT_START_GLYPH);
+ u32 result = (c - FIRST_FONT_GLYPH);
     return(result);
 }
 
@@ -67,14 +67,15 @@ get_glyph_width(char c, Font *font)
     
     if(c)
     {
-        result = font->metrics[get_font_metric_index_from_char(c)].advance;
+        u32 index = get_font_metric_index_from_char(c);
+        result = font->metrics[index].advance;
     }
     
     return(result);
 }
 
 internal u32
-get_text_width(char *text, Font *font, b32 strip_color_codes)
+get_text_width(char *text, Font *font, b32 skip_color)
 {
     assert(text);
     assert(font);
@@ -83,11 +84,11 @@ get_text_width(char *text, Font *font, b32 strip_color_codes)
     
     for(char *c = text; *c; ++c)
     {
-        if(strip_color_codes &&
+        if(skip_color &&
                c[0] == '#' &&
-               c[1] == '#')
+               c[1] == '#' &&
+               (is_numeric(c[2] || is_uppercase(c[2]))))
         {
-            assert(is_numeric(c[2]) || is_uppercase(c[2]));
             c += 3;
         }
         
@@ -123,7 +124,7 @@ get_color_value(Color color)
     switch(color)
     {
         case Color_Black: result = make_v4u(0, 0, 0, 255); break;
-        case Color_White: result = make_v4u(255, 255, 255, 255); break;
+        case Color_White: result = make_v4u(240, 240, 240, 255); break;
         
         case Color_LightGray: result = make_v4u(179, 179, 179, 255); break;
         case Color_DarkGray: result = make_v4u(84, 85, 82, 255); break;
@@ -169,11 +170,13 @@ get_color_value(Color color)
         case Color_WindowBorder: result = make_v4u(122, 138, 153, 255); break;
         case Color_WindowShadow: result = make_v4u(6, 13, 19, 255); break;
         
-        case Color_MouseSelect:
+        case Color_MouseHighlightBackground:
         {
             result = get_color_value(Color_WindowBorder);
             result.a = 64;
         } break;
+        
+        case Color_MouseHighlightBorder: result = make_v4u(125, 139, 153, 225); break;
         
         invalid_default_case;
     }
@@ -241,7 +244,8 @@ create_font_ttf(Game *game, Font *result, char *path, u32 size)
                                                        FONT_ATLAS_WIDTH,
                                                        FONT_ATLAS_HEIGHT);
                 if(atlas)
-                {
+  {
+   result->is_set = true;
                     result->type = FontType_TTF;
                     result->size = size;
                     result->atlas = atlas;
@@ -249,19 +253,17 @@ create_font_ttf(Game *game, Font *result, char *path, u32 size)
                     SDL_SetRenderTarget(game->renderer, result->atlas);
                     
                     v4u glyph_dest = {0};
-                    SDL_Color glyph_color = {255, 255, 255, 255};
-                    SDL_Surface *glyph_surface = 0;
-                    SDL_Texture *glyph_texture = 0;
                     
-                    for(u32 index = 0; index < array_count(result->metrics); ++index)
+   for(u32 index = 0; index < MAX_FONT_METRICS_COUNT; ++index)
                     {
-                        char glyph_char = (FONT_START_GLYPH + index);
-                        
-                        glyph_surface = TTF_RenderGlyph_Solid(ttf_font, glyph_char, glyph_color);
-                        if(glyph_surface)
+    char glyph = index + FIRST_FONT_GLYPH;
+    
+    SDL_Color color = {255, 255, 255, 255};
+    SDL_Surface *surface = TTF_RenderGlyph_Solid(ttf_font, glyph, color);
+                        if(surface)
                         {
-                            glyph_dest.w = glyph_surface->w;
-                            glyph_dest.h = glyph_surface->h;
+                            glyph_dest.w = surface->w;
+                            glyph_dest.h = surface->h;
                             
                             GlyphMetrics metrics =
                             {
@@ -272,25 +274,23 @@ create_font_ttf(Game *game, Font *result, char *path, u32 size)
                                 0
                             };
                             
-                            TTF_GlyphMetrics(ttf_font, glyph_char, 0, 0, 0, 0, &metrics.advance);
+                            TTF_GlyphMetrics(ttf_font, glyph, 0, 0, 0, 0, &metrics.advance);
                             result->metrics[index] = metrics;
                             
-                            glyph_texture = SDL_CreateTextureFromSurface(game->renderer, glyph_surface);
-                            if(glyph_texture)
-                            {
-                                SDL_RenderCopy(game->renderer, glyph_texture, 0, (SDL_Rect *)&glyph_dest);
+     SDL_Texture *texture = SDL_CreateTextureFromSurface(game->renderer, surface);
+                            if(texture)
+     {
+      render_texture(game->renderer, texture, 0, &glyph_dest, false, false);
                                 glyph_dest.x += glyph_dest.w;
                                 
-                                SDL_FreeSurface(glyph_surface);
-                                SDL_DestroyTexture(glyph_texture);
+                                SDL_FreeSurface(surface);
+                                SDL_DestroyTexture(texture);
                             }
                         }
                     }
                     
                     SDL_SetRenderTarget(game->renderer, 0);
                     TTF_CloseFont(ttf_font);
-                    
-            result->is_valid = true;
                 }
             }
         }
@@ -300,7 +300,8 @@ create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyphs_per_r
 {
     Texture atlas = load_texture(game->renderer, path, 0);
             if(atlas.tex)
-            {
+ {
+  result->is_set = true;
                 result->type = FontType_BMP;
         result->size = size;
         result->bmp_advance = advance;
@@ -310,14 +311,14 @@ create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyphs_per_r
                 u32 glyph_count = 0;
         v4u glyph = {1, 1, result->size, result->size};
                 
-        for(u32 index = 1; index < array_count(result->metrics); ++index)
+  for(u32 index = 1; index < MAX_FONT_METRICS_COUNT; ++index)
                 {
                     if(glyph_count >= glyphs_per_row)
                     {
+    glyph_count = 0;
+    
                 glyph.x = 1;
-                
-                        glyph.y += glyph.h + 1;
-                        glyph_count = 0;
+                glyph.y += glyph.h + 1;
                     }
                     
                     GlyphMetrics metrics = {glyph.x, glyph.y, glyph.w, glyph.h, 0};
@@ -326,8 +327,6 @@ create_font_bmp(Game *game, Font *result, char *path, u32 size, u32 glyphs_per_r
                     glyph.x += glyph.w + 1;
                     ++glyph_count;
                 }
-                
-        result->is_valid = true;
             }
         }
 
@@ -362,7 +361,7 @@ initialize_assets(Game *game, Assets *assets)
     for(u32 index = 0; index < FontName_Count; ++index)
     {
         Font *font = &assets->fonts[index];
-        if(!font->is_valid)
+  if(!font->is_set)
         {
             // TODO(rami): Logging
             fonts_success = false;
@@ -376,11 +375,11 @@ initialize_assets(Game *game, Assets *assets)
     assets->tilemap.tex = SDL_CreateTexture(game->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, assets->tilemap.w, assets->tilemap.h);
     assets->tileset = load_texture(game->renderer, get_os_path("data/images/tileset.png").s, 0);
     
-    assets->health_bar_sources[0] = get_pos_tile_mul_rect(make_v2u(1, 16));
-    assets->health_bar_sources[1] = get_pos_tile_mul_rect(make_v2u(2, 16));
-    assets->health_bar_sources[2] = get_pos_tile_mul_rect(make_v2u(3, 16));
-    assets->health_bar_sources[3] = get_pos_tile_mul_rect(make_v2u(4, 16));
-    assets->health_bar_sources[4] = get_pos_tile_mul_rect(make_v2u(5, 16));
+ assets->healthbar_src[0] = get_pos_tile_mul_rect(make_v2u(1, 16));
+ assets->healthbar_src[1] = get_pos_tile_mul_rect(make_v2u(2, 16));
+ assets->healthbar_src[2] = get_pos_tile_mul_rect(make_v2u(3, 16));
+ assets->healthbar_src[3] = get_pos_tile_mul_rect(make_v2u(4, 16));
+ assets->healthbar_src[4] = get_pos_tile_mul_rect(make_v2u(5, 16));
     
     assets->stat_and_log_window_h = 176;
     
@@ -400,7 +399,7 @@ free_assets(Assets *assets)
     for(u32 index = 0; index < FontName_Count; ++index)
     {
         Font *font = &assets->fonts[index];
-        if(font->is_valid)
+  if(font->is_set)
         {
             SDL_DestroyTexture(font->atlas);
         }
@@ -416,15 +415,15 @@ set_texture_color(SDL_Texture *texture, Color color)
     assert(texture);
     assert(color);
     
-    v4u color_value = get_color_value(color);
-    SDL_SetTextureColorMod(texture, color_value.r, color_value.g, color_value.b);
-    SDL_SetTextureAlphaMod(texture, color_value.a);
+    v4u value = get_color_value(color);
+    SDL_SetTextureColorMod(texture, value.r, value.g, value.b);
+    SDL_SetTextureAlphaMod(texture, value.a);
 }
 
-#define render_string_and_move(game, text, pos, lines_before, lines_after, font, ...) render_string_full(game->renderer, text, pos, lines_before, lines_after, font, 0, ##__VA_ARGS__)
-#define render_string(game, string, pos, font, ...) render_string_full(game->renderer, string, pos, 0, 0, font, 0, ##__VA_ARGS__)
+#define render_string_and_move(renderer, text, pos, lines_before, lines_after, font, ...) render_string_(renderer, text, pos, lines_before, lines_after, font, 0, ##__VA_ARGS__)
+#define render_string(renderer, string, pos, font, ...) render_string_(renderer, string, pos, 0, 0, font, 0, ##__VA_ARGS__)
 internal void
-render_string_full(SDL_Renderer *renderer,
+render_string_(SDL_Renderer *renderer,
                  char *string,
                  v2u *start_pos,
                  u32 lines_before,
@@ -435,7 +434,7 @@ render_string_full(SDL_Renderer *renderer,
     assert(renderer);
     assert(string);
     assert(font);
-    assert(font->is_valid);
+ assert(font->is_set);
     
     String256 text_format = {0};
     va_list arg_list;
@@ -443,19 +442,17 @@ render_string_full(SDL_Renderer *renderer,
     vsnprintf(text_format.s, sizeof(text_format), string, arg_list);
     va_end(arg_list);
     
-    if(lines_before)
-    {
-        pos_newline(start_pos, font->size, lines_before);
-    }
+    if(lines_before) pos_newline(start_pos, font->size, lines_before);
     
-    b32 using_color_code = false;
+    b32 has_color_code = false;
     b32 word_was_scanned = false;
     v2u text_pos = {start_pos->x, start_pos->y};
     set_texture_color(font->atlas, Color_White);
     
     for(char *at = text_format.s; *at;)
     {
-        GlyphMetrics *metrics = &font->metrics[get_font_metric_index_from_char(at[0])];
+        u32 metric_index = get_font_metric_index_from_char(at[0]);
+        GlyphMetrics *metrics = &font->metrics[metric_index];
         
         assert(metrics);
         assert(metrics->w);
@@ -464,9 +461,9 @@ render_string_full(SDL_Renderer *renderer,
         if(at[0] == '#' &&
            at[1] == '#')
         {
-            if(using_color_code)
+            if(has_color_code)
             {
-                using_color_code = false;
+                has_color_code = false;
                 
                 set_texture_color(font->atlas, Color_White);
                 at += 2;
@@ -510,7 +507,7 @@ render_string_full(SDL_Renderer *renderer,
                         invalid_default_case;
                     }
                     
-                    using_color_code = true;
+                    has_color_code = true;
                     
                     set_texture_color(font->atlas, color);
                     at += 3;
@@ -529,18 +526,13 @@ render_string_full(SDL_Renderer *renderer,
                 char *scan_at = at;
                 u32 scan_x = text_pos.x;
                 
-                while(scan_at[0] &&
-                      scan_at[0] != ' ')
+                while(scan_at[0] && scan_at[0] != ' ')
                 {
                     scan_x += get_glyph_advance(font, scan_at[0]);
                     ++scan_at;
                 }
                 
-                if(scan_x >= wrap_x)
-                {
-                    text_pos = get_next_line(text_pos, start_pos->x, font->size);
-                }
-                
+                if(scan_x >= wrap_x) text_pos = get_next_line(text_pos, start_pos->x, font->size);
                 word_was_scanned = true;
             }
             else if(at[0] == ' ')
@@ -549,16 +541,13 @@ render_string_full(SDL_Renderer *renderer,
             }
             
             v4u src = {metrics->x, metrics->y, metrics->w, metrics->h};
-            v4u dest = {text_pos.x, text_pos.y, metrics->w, metrics->h};
-            SDL_RenderCopy(renderer, font->atlas, (SDL_Rect *)&src, (SDL_Rect *)&dest);
+   v4u dest = {text_pos.x, text_pos.y, metrics->w, metrics->h};
+   render_texture(renderer, font->atlas, &src, &dest, false, false);
             
             text_pos.x += get_glyph_advance(font, at[0]);
             ++at;
         }
     }
     
-    if(lines_after)
-    {
-        pos_newline(start_pos, font->size, lines_after);
-    }
+    if(lines_after) pos_newline(start_pos, font->size, lines_after);
     }

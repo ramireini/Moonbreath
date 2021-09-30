@@ -1,6 +1,6 @@
 #define MAX_DUNGEON_LEVEL 10
-#define MAX_DUNGEON_SIZE 256
-#define MAX_DUNGEON_SIZE_SQUARED (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE)
+#define MAX_DUNGEON_SIZE 128
+#define MAX_DUNGEON_AREA (MAX_DUNGEON_SIZE * MAX_DUNGEON_SIZE)
 
 #define MAX_DUNGEON_ROOM_COUNT 256
 #define MAX_DUNGEON_TRAP_COUNT 128
@@ -9,170 +9,183 @@
 
 typedef enum
 {
-    DungeonTileID_None = 0,
+    DungeonTileID_None,
     
-    DungeonTileID_StoneWall1 = 1,
-    DungeonTileID_StoneWall2 = 2,
-    DungeonTileID_StoneWall3 = 3,
-    DungeonTileID_StoneWall4 = 4,
-    DungeonTileID_StoneWall5 = 5,
+    DungeonTileID_StoneWall1,
+    DungeonTileID_StoneWall2,
+    DungeonTileID_StoneWall3,
+    DungeonTileID_StoneWall4,
+    DungeonTileID_StoneWall5,
+    DungeonTileID_StoneWall6,
+    DungeonTileID_StoneWall7,
+    DungeonTileID_StoneWall8,
+    DungeonTileID_StoneWall9,
+    DungeonTileID_StoneWall10,
     
-    DungeonTileID_StoneWallTorch1 = 6,
-    DungeonTileID_StoneWallTorch2 = 7,
-    DungeonTileID_StoneWallTorch3 = 8,
-    DungeonTileID_StoneWallTorch4 = 9,
-    DungeonTileID_StoneWallTorch5 = 10,
+    DungeonTileID_StoneWallTorch1,
+    DungeonTileID_StoneWallTorch2,
+    DungeonTileID_StoneWallTorch3,
+    DungeonTileID_StoneWallTorch4,
     
-    DungeonTileID_StoneWallGrate1 = 11,
-    DungeonTileID_StoneWallGrate2 = 12,
+    DungeonTileID_StoneFloor1,
+    DungeonTileID_StoneFloor2,
+    DungeonTileID_StoneFloor3,
+    DungeonTileID_StoneFloor4,
     
-    DungeonTileID_StoneWallVines1 = 13,
-    DungeonTileID_StoneWallVines2 = 14,
-    DungeonTileID_StoneWallVines3 = 15,
-    DungeonTileID_StoneWallVines4 = 16,
-    DungeonTileID_StoneWallVines5 = 17,
+    DungeonTileID_StoneDoorClosed,
+    DungeonTileID_StoneDoorOpen,
     
-    DungeonTileID_StoneFloor1 = 18,
-    DungeonTileID_StoneFloor2 = 19,
-    DungeonTileID_StoneFloor3 = 20,
-    DungeonTileID_StoneFloor4 = 21,
+    DungeonTileID_StoneStaircaseUp,
+    DungeonTileID_StoneStaircaseDown,
     
-    DungeonTileID_StoneFloorGrate1 = 22,
-    DungeonTileID_StoneFloorGrate2 = 23,
-    DungeonTileID_StoneFloorGrate3 = 24,
-    DungeonTileID_StoneFloorGrate4 = 25,
-    DungeonTileID_StoneFloorGrate5 = 26,
-    DungeonTileID_StoneFloorGrate6 = 27,
+    DungeonTileID_ExitDungeon,
     
-    DungeonTileID_StoneDoorClosed = 28,
-    DungeonTileID_StoneDoorOpen = 29,
+    DungeonTileID_EntityStatus,
+    DungeonTileID_EntityAlerted,
+    DungeonTileID_EntityInvisible,
     
-    DungeonTileID_StoneStaircaseUp = 30,
-    DungeonTileID_StoneStaircaseDown = 31,
-    DungeonTileID_ExitDungeon = 32,
+    DungeonTileID_FootstepsUp,
+    DungeonTileID_FootstepsDown,
+    DungeonTileID_FootstepsLeft,
+    DungeonTileID_FootstepsRight,
     
-    DungeonTileID_EntityStatus = 33,
-    DungeonTileID_EntityAlerted = 34,
-    DungeonTileID_EntityInvisible = 35,
+    DungeonTileID_FootstepsUpLeft,
+    DungeonTileID_FootstepsUpRight,
+    DungeonTileID_FootstepsDownLeft,
+    DungeonTileID_FootstepsDownRight,
     
-    DungeonTileID_FootstepsUp = 36,
-    DungeonTileID_FootstepsDown = 37,
-    DungeonTileID_FootstepsLeft = 38,
-    DungeonTileID_FootstepsRight = 39,
+    DungeonTileID_SpikeTrap,
+    DungeonTileID_SwordTrap,
+    DungeonTileID_ArrowTrap,
+    DungeonTileID_MagicTrap,
+    DungeonTileID_BindTrap,
+    DungeonTileID_SummonTrap,
+    DungeonTileID_TeleportTrap,
+    DungeonTileID_ShaftTrap,
     
-    DungeonTileID_FootstepsUpLeft = 40,
-    DungeonTileID_FootstepsUpRight = 41,
-    DungeonTileID_FootstepsDownLeft = 42,
-    DungeonTileID_FootstepsDownRight = 43,
-    
-    DungeonTileID_SpikeTrap = 44,
-    DungeonTileID_SwordTrap = 45,
-    DungeonTileID_ArrowTrap = 46,
-    DungeonTileID_MagicTrap = 47,
-    DungeonTileID_BindTrap = 48,
-    DungeonTileID_ShaftTrap = 49,
-    DungeonTileID_SummonTrap = 50,
-    DungeonTileID_TeleportTrap = 51,
-    
-    DungeonTileID_Water1 = 52,
-    DungeonTileID_Water2 = 53,
-    DungeonTileID_Water3 = 54,
+    DungeonTileID_Water1,
+    DungeonTileID_Water2,
+    DungeonTileID_Water3,
+    DungeonTileID_RedBloodWater1,
+    DungeonTileID_RedBloodWater2,
+    DungeonTileID_GreenBloodWater1,
+    DungeonTileID_GreenBloodWater2,
     
     // Red Blood
-    DungeonTileID_RedBloodGroundSmall1 = 55,
-    DungeonTileID_RedBloodGroundSmall2 = 56,
-    DungeonTileID_RedBloodGroundSmall3 = 57,
+    DungeonTileID_RedBloodGroundSmall1,
+    DungeonTileID_RedBloodGroundSmall2,
     
-    DungeonTileID_RedBloodGroundMedium1 = 58,
-    DungeonTileID_RedBloodGroundMedium2 = 59,
+    DungeonTileID_RedBloodGroundMedium1,
+    DungeonTileID_RedBloodGroundMedium2,
     
-    DungeonTileID_RedBloodGroundLarge1 = 60,
-    DungeonTileID_RedBloodGroundLarge2 = 61,
+    DungeonTileID_RedBloodGroundLarge1,
+    DungeonTileID_RedBloodGroundLarge2,
     
-    DungeonTileID_RedBloodWallUp1 = 62,
-    DungeonTileID_RedBloodWallUp2 = 63,
-    DungeonTileID_RedBloodWallUp3 = 64,
+    DungeonTileID_RedBloodWallUp1,
+    DungeonTileID_RedBloodWallUp2,
+    DungeonTileID_RedBloodWallUp3,
     
-    DungeonTileID_RedBloodWallDown1 = 65,
-    DungeonTileID_RedBloodWallDown2 = 66,
-    DungeonTileID_RedBloodWallDown3 = 67,
+    DungeonTileID_RedBloodWallDown1,
+    DungeonTileID_RedBloodWallDown2,
+    DungeonTileID_RedBloodWallDown3,
     
-    DungeonTileID_RedBloodWallLeft1 = 68,
-    DungeonTileID_RedBloodWallLeft2 = 69,
-    DungeonTileID_RedBloodWallLeft3 = 70,
+    DungeonTileID_RedBloodWallLeft1,
+    DungeonTileID_RedBloodWallLeft2,
+    DungeonTileID_RedBloodWallLeft3,
     
-    DungeonTileID_RedBloodWallRight1 = 71,
-    DungeonTileID_RedBloodWallRight2 = 72,
-    DungeonTileID_RedBloodWallRight3 = 73,
+    DungeonTileID_RedBloodWallRight1,
+    DungeonTileID_RedBloodWallRight2,
+    DungeonTileID_RedBloodWallRight3,
     
-    DungeonTileID_RedBloodWallUpLeft1 = 74,
-    DungeonTileID_RedBloodWallUpLeft2 = 75,
-    DungeonTileID_RedBloodWallUpLeft3 = 76,
+    DungeonTileID_RedBloodWallUpLeft1,
+    DungeonTileID_RedBloodWallUpLeft2,
+    DungeonTileID_RedBloodWallUpLeft3,
     
-    DungeonTileID_RedBloodWallUpRight1 = 77,
-    DungeonTileID_RedBloodWallUpRight2 = 78,
-    DungeonTileID_RedBloodWallUpRight3 = 79,
+    DungeonTileID_RedBloodWallUpRight1,
+    DungeonTileID_RedBloodWallUpRight2,
+    DungeonTileID_RedBloodWallUpRight3,
     
-    DungeonTileID_RedBloodWallDownLeft1 = 80,
-    DungeonTileID_RedBloodWallDownLeft2 = 81,
-    DungeonTileID_RedBloodWallDownLeft3 = 82,
+    DungeonTileID_RedBloodWallDownLeft1,
+    DungeonTileID_RedBloodWallDownLeft2,
+    DungeonTileID_RedBloodWallDownLeft3,
     
-    DungeonTileID_RedBloodWallDownRight1 = 83,
-    DungeonTileID_RedBloodWallDownRight2 = 84,
-    DungeonTileID_RedBloodWallDownRight3 = 85,
+    DungeonTileID_RedBloodWallDownRight1,
+    DungeonTileID_RedBloodWallDownRight2,
+    DungeonTileID_RedBloodWallDownRight3,
     
     // Green Blood
-    DungeonTileID_GreenBloodGroundSmall1 = 86,
-    DungeonTileID_GreenBloodGroundSmall2 = 87,
-    DungeonTileID_GreenBloodGroundSmall3 = 88,
+    DungeonTileID_GreenBloodGroundSmall1,
+    DungeonTileID_GreenBloodGroundSmall2,
     
-    DungeonTileID_GreenBloodGroundMedium1 = 89,
-    DungeonTileID_GreenBloodGroundMedium2 = 90,
+    DungeonTileID_GreenBloodGroundMedium1,
+    DungeonTileID_GreenBloodGroundMedium2,
     
-    DungeonTileID_GreenBloodGroundLarge1 = 91,
-    DungeonTileID_GreenBloodGroundLarge2 = 92,
+    DungeonTileID_GreenBloodGroundLarge1,
+    DungeonTileID_GreenBloodGroundLarge2,
     
-    DungeonTileID_GreenBloodWallUp1 = 93,
-    DungeonTileID_GreenBloodWallUp2 = 94,
-    DungeonTileID_GreenBloodWallUp3 = 95,
+    DungeonTileID_GreenBloodWallUp1,
+    DungeonTileID_GreenBloodWallUp2,
+    DungeonTileID_GreenBloodWallUp3,
     
-    DungeonTileID_GreenBloodWallDown1 = 96,
-    DungeonTileID_GreenBloodWallDown2 = 97,
-    DungeonTileID_GreenBloodWallDown3 = 98,
+    DungeonTileID_GreenBloodWallDown1,
+    DungeonTileID_GreenBloodWallDown2,
+    DungeonTileID_GreenBloodWallDown3,
     
-    DungeonTileID_GreenBloodWallLeft1 = 99,
-    DungeonTileID_GreenBloodWallLeft2 = 100,
-    DungeonTileID_GreenBloodWallLeft3 = 101,
+    DungeonTileID_GreenBloodWallLeft1,
+    DungeonTileID_GreenBloodWallLeft2,
+    DungeonTileID_GreenBloodWallLeft3,
     
-    DungeonTileID_GreenBloodWallRight1 = 102,
-    DungeonTileID_GreenBloodWallRight2 = 103,
-    DungeonTileID_GreenBloodWallRight3 = 104,
+    DungeonTileID_GreenBloodWallRight1,
+    DungeonTileID_GreenBloodWallRight2,
+    DungeonTileID_GreenBloodWallRight3,
     
-    DungeonTileID_GreenBloodWallUpLeft1 = 105,
-    DungeonTileID_GreenBloodWallUpLeft2 = 106,
-    DungeonTileID_GreenBloodWallUpLeft3 = 107,
+    DungeonTileID_GreenBloodWallUpLeft1,
+    DungeonTileID_GreenBloodWallUpLeft2,
+    DungeonTileID_GreenBloodWallUpLeft3,
     
-    DungeonTileID_GreenBloodWallUpRight1 = 108,
-    DungeonTileID_GreenBloodWallUpRight2 = 109,
-    DungeonTileID_GreenBloodWallUpRight3 = 110,
+    DungeonTileID_GreenBloodWallUpRight1,
+    DungeonTileID_GreenBloodWallUpRight2,
+    DungeonTileID_GreenBloodWallUpRight3,
     
-    DungeonTileID_GreenBloodWallDownLeft1 = 111,
-    DungeonTileID_GreenBloodWallDownLeft2 = 112,
-    DungeonTileID_GreenBloodWallDownLeft3 = 113,
+    DungeonTileID_GreenBloodWallDownLeft1,
+    DungeonTileID_GreenBloodWallDownLeft2,
+    DungeonTileID_GreenBloodWallDownLeft3,
     
-    DungeonTileID_GreenBloodWallDownRight1 = 114,
-    DungeonTileID_GreenBloodWallDownRight2 = 115,
-    DungeonTileID_GreenBloodWallDownRight3 = 116
+    DungeonTileID_GreenBloodWallDownRight1,
+    DungeonTileID_GreenBloodWallDownRight2,
+ DungeonTileID_GreenBloodWallDownRight3,
+ 
+ DungeonTileID_Count
     } DungeonTileID;
+
+typedef enum
+{
+    DungeonWallTileType_None,
+    
+    DungeonWallTileType_StoneWall1,
+    DungeonWallTileType_StoneWall2,
+    DungeonWallTileType_StoneWall3,
+    DungeonWallTileType_StoneWall4,
+    DungeonWallTileType_StoneWall5,
+    DungeonWallTileType_StoneWall6,
+    DungeonWallTileType_StoneWall7,
+    DungeonWallTileType_StoneWall8,
+    DungeonWallTileType_StoneWall9,
+    DungeonWallTileType_StoneWall10,
+    
+    DungeonWallTileType_Count,
+} DungeonWallTileType;
 
 typedef enum
 {
     DungeonTileType_None,
     
-    DungeonTileType_Floor,
+        DungeonTileType_Passage,
+ DungeonTileType_Floor,
+ DungeonTileType_Wall,
     DungeonTileType_Water,
     DungeonTileType_Torch,
-    DungeonTileType_Door
+    DungeonTileType_Door,
 } DungeonTileType;
 
 typedef enum
@@ -188,7 +201,7 @@ typedef enum
 
 typedef enum
 {
-    RandomChanceType_Normal,
+    RandomChanceType_Default,
     RandomChanceType_ItemType,
     RandomChanceType_Potion,
         RandomChanceType_Scroll
@@ -271,26 +284,32 @@ typedef struct
     u32 item_count;
 } DungeonRoom;
 
+struct PathfindMap
+{
+ u32 width;
+ u32 array[MAX_DUNGEON_AREA];
+};
+
 typedef struct
 {
-    u32 width;
-    u32 array[MAX_DUNGEON_SIZE_SQUARED];
-} PathfindMap;
+ DungeonTileID tile_id;
+ v4u src;
+} DungeonRemainsInfo;
 
 typedef struct
 {
     b32 is_seen;
     b32 has_been_seen;
-    b32 is_occupied;
-    
-    DungeonTileID tile;
-    DungeonTileID remains;
+ Entity *occupier;
+ 
+    DungeonTileID tile_id;
+    DungeonTileID remains_tile_id;
     } DungeonTile;
 
 typedef struct
 {
     u32 width;
-    DungeonTile *array; // Allocated separately because it's used by multiple things.
+    DungeonTile *array; // Allocated separately because used by multiple things.
 } DungeonTiles;
 
 struct DungeonTrap
@@ -304,9 +323,12 @@ struct DungeonTrap
     
     v2u pos;
     v4u tile_src;
+ 
+ v2u value_range;
+    EntityDamage damage;
     
-    // Each shaft will drop you a certain amount of dungeon levels and to a particular
-    // position. The same data is used when you fall down the same shaft.
+ // Shafts cause you to fall a certain amount of dungeon levels.
+ // When you fall down the same shaft the same data is used making you fall the same amount.
     b32 is_shaft_set;
     u32 shaft_depth;
     v2u shaft_dest;
@@ -318,6 +340,7 @@ typedef struct
     
     v2u pos;
     v2u dest_pos;
+    u32 dungeon_level;
 } DungeonPassage;
 
 typedef struct
@@ -328,7 +351,6 @@ typedef struct
 
 typedef struct
 {
-    u32 count;
     DungeonTrap array[MAX_DUNGEON_TRAP_COUNT];
 } DungeonTraps;
 
@@ -374,6 +396,7 @@ typedef struct
     u32 room_max_items;
     u32 room_max_enemies;
     
+    u32 wall_tile_chances[DungeonWallTileType_Count];
     u32 room_type_chances[DungeonRoomType_Count];
     u32 corridor_type_chances[DungeonCorridorType_Count];
     
@@ -387,16 +410,17 @@ typedef struct
     u32 trap_count;
     u32 trap_minimum_distance;
     
-    DamageInfo spike_trap_damage;
-    DamageInfo sword_trap_damage;
-    DamageInfo arrow_trap_damage;
-    DamageInfo magic_trap_damage;
+    EntityDamage spike_trap_damage;
+    EntityDamage sword_trap_damage;
+    EntityDamage arrow_trap_damage;
+    EntityDamage magic_trap_damage;
     
-    v2u bind_trap_value;
-    v2u shaft_trap_value;
+    v2u bind_trap_value_range;
+ v2u shaft_trap_value_range;
     
     // Passage
     u32 down_passage_count;
+    u32 passage_min_spacing;
     
     // Entity
     u32 enemy_count;
@@ -412,7 +436,7 @@ typedef struct
 
 struct Dungeon
 {
-    b32 can_pathfind;
+    b32 can_pathfind; // TODO(rami): This is a debug meme.
     
     u32 level;
     v2u size;
@@ -420,38 +444,62 @@ struct Dungeon
     v4u rect;
     
     DungeonSpec spec;
-    
     DungeonTiles tiles;
     DungeonRooms rooms;
     DungeonTraps traps;
     DungeonPassages passages;
-    };
+};
 
-// TODO(rami): Test having more than 10 dungeon levels, make allocating more memory at start work.
+// TODO(rami): How to make dungeons feel alive
+// You have a dungeon which is populated with things, having these things interact whether they be
+// enemies, items or other is how the dungeon feels alive.
+
+// This dungeon exists inside of the Moonbreath mountain because one of the Lords of Chaos instructed his servants
+// to create it so they could create a Portal at the depths of it which would allow the Chaos Lord
+// and his minions to invade the surface. The minions, the things on the other side waiting for the
+// portal are creatures that defy imagination and would most likely raze everything on the surface.
+// Player has heard of suspicious activity relating to the Moonbreath mountain and has decided to
+// see what's going on over there.
+
+ // TODO(rami): Game guide
+// TODO(rami): Mist tiles, limit FOV
+// TODO(rami): Generic: Gold, treasure chests (mimic), swamps (traversable but slower than water?)
+// TODO(rami): Plant/other entities that are placed near water? Some could be generated as damaged already.
+// TODO(rami): Lava tiles, the ability to jump into the lava and die, if you really want to :)
+// TODO(rami): Art for weapon, armor and equip. get_item_equip_tile_pos()
 typedef struct
 {
     u32 current_level;
     Dungeon levels[MAX_DUNGEON_LEVEL];
-} Dungeons;
+} DungeonState;
 
-internal void dungeon_automaton_room_step(Random *random, DungeonTiles src_tiles, DungeonTiles dest_tiles, v4u rect);
-internal void set_dungeon_pos_wall(Random *random, DungeonTiles tiles, v2u pos);
+internal void remove_dungeon_trap(DungeonTrap *trap);
+internal void add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v2u pos);
+internal void dungeon_automaton_room_step(Random *random, DungeonSpec *spec, DungeonTiles src_tiles, DungeonTiles dest_tiles, v4u rect);
+internal void set_dungeon_pos_wall(Random *random, DungeonSpec *spec, DungeonTiles tiles, v2u pos);
 internal void set_dungeon_pos_floor(Random *random, DungeonTiles tiles, v2u pos);
 internal void set_dungeon_pos_water(Random *random, DungeonTiles tiles, v2u pos);
+internal u32 get_dungeon_area_tile_type_count(DungeonTiles tiles, v2u pos, u32 area, DungeonTileType type);
 internal b32 is_dungeon_level_valid(u32 dungeon_level);
-internal u32 get_dungeon_pos_trap_count(DungeonTiles tiles, DungeonTraps *traps, v2u pos);
-internal b32 is_dungeon_pos_trap(DungeonTraps *traps, v2u pos);
 internal b32 is_dungeon_pos_closed_door(DungeonTiles tiles, v2u pos);
-internal b32 is_dungeon_pos_occupied(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_floor(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_open_door(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_passage(DungeonTiles tiles, v2u pos);
-internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile);
+internal b32 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile_id);
 internal b32 is_pos_inside_dungeon(v2u dungeon_size, v2u pos);
 internal b32 is_dungeon_pos_water(DungeonTiles tiles, v2u pos);
 internal b32 is_dungeon_pos_traversable_and_unoccupied(DungeonTiles tiles, v2u pos);
+internal v2u get_dungeon_tileset_pos_from_tile_id(DungeonTileID id);
 internal v2u get_random_dungeon_pos(Random *random, v2u dungeon_size);
+internal v2u get_random_dungeon_feature_pos(Random *random, Dungeon *dungeon, ItemState *item_state, b32 accept_water);
 internal v2u get_random_dungeon_rect_pos(Random *random, v4u rect);
-internal v4u get_dungeon_tileset_rect(DungeonTileID tile);
-internal Dungeon *get_dungeon_from_level(Dungeons *dungeons, u32 level);
+internal v4u get_dungeon_tileset_rect(DungeonTileID tile_id);
+internal v4u get_dungeon_trap_tile_src(DungeonTrapType type);
+internal v4u get_dungeon_tile_rect_from_entity_id(EntityID id);
+internal v4u get_dungeon_tile_rect(v2u tile);
+internal DungeonTrap *get_dungeon_pos_trap(DungeonTraps *traps, v2u pos);
+internal DungeonTileID get_dungeon_pos_remains_tile_id(DungeonTiles tiles, v2u pos);
+internal DungeonRemainsInfo get_dungeon_pos_remains_info();
+internal Dungeon *get_dungeon_from_level(DungeonState *dungeon_state, u32 level);
+internal Entity *get_dungeon_pos_occupier(DungeonTiles tiles, v2u pos);

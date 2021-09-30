@@ -1,7 +1,13 @@
-#define MAX_OWNER_COUNT MAX_INVENTORY_SLOT_COUNT
-#define MAX_LOG_MESSAGE_COUNT 1024
-#define MAX_DEFER_COUNT 128
+#define MAX_OWNER_COUNT 52 // The amount of characters in the alphabet, lower and uppercase.
+#define MAX_LOG_MESSAGE_COUNT 512
+#define MAX_DEFER_COUNT MAX_LOG_MESSAGE_COUNT
 #define MAX_MARK_SIZE 64
+
+typedef enum
+{
+    UIFlag_FullLogOpen = (1 << 1),
+    UIFlag_PlayerStatusOpen = (1 << 2),
+} UIFlag;
 
 typedef enum
 {
@@ -20,7 +26,8 @@ typedef enum
     DeferType_Text,
     DeferType_Tile,
     DeferType_FillRect,
-    DeferType_OutlineRect
+    DeferType_OutlineRect,
+    DeferType_Separator,
 } DeferType;
 
 typedef struct
@@ -36,8 +43,8 @@ typedef struct
 
 typedef struct
 {
+    char c;
     OwnerType type;
-    
     union
     {
         Item *item;
@@ -45,13 +52,11 @@ typedef struct
     Entity *entity;
         DungeonTrap *trap;
     };
-    
-    char c;
 } Owner;
 
 typedef struct
 {
-    b32 can_be_extended;
+    b32 can_extend;
     
     u32 move_count;
     Direction direction;
@@ -67,7 +72,6 @@ typedef struct
     
     b32 is_moving;
     b32 can_extend;
-    b32 can_be_interrupted;
     Direction direction;
     
     s32 offset;
@@ -76,7 +80,7 @@ typedef struct
     
     f32 step;
     u32 size;
-    u32 size_count;
+    u32 count;
     } ViewMove;
 
 typedef struct
@@ -89,15 +93,15 @@ typedef struct
     
     f32 shared_step_multiplier;
     ViewMove move;
-    ViewMove scrollbar_move;
     
     v4u clip_rect;
+    v4s content_rect;
 } View;
 
-// TODO(rami): Future: Maybe have options in the config for mark styles:
+// TODO(rami): Config: Different item mark styles:
 // {This is a mark!}
 // [This is a mark!]
-// This is a mark! (Gray color, ike a code comment)
+// This is a mark! (Gray color, like a code comment)
 typedef struct
 {
     b32 render_cursor;
@@ -126,13 +130,9 @@ typedef struct
 
 typedef struct
 {
+    u32 flags;
     Font *font;
     
-    // TODO(rami): Should we render a line to indicate what actions have taken place in the last player
-    // turn in the full log. Instead of doing it between player action turns, maybe just the stuff that
-    // happened in the last one turn.
-    b32 full_log_open;
-    b32 start_full_log_from_end;
     View short_log_view;
     DeferWindow full_log;
      LogMessage log_messages[MAX_LOG_MESSAGE_COUNT];
@@ -151,24 +151,26 @@ typedef struct
     Owner temp_owners[MAX_OWNER_COUNT];
     } UI;
 
+// TODO(rami): Should we render a line in the full log to indicate what actions have taken place in
+// the players last action turn.
+
+internal void update_view_move(ViewMove *move);
 internal void ui_print_view(char *name, View view);
-internal void reset_all_view_moves(View *view);
 internal void render_scrollbar(Game *game, v4u rect, View *view, UI *ui);
 internal void clear_owner_from_character(Owner *owners, char *clear_c);
 internal void reset_all_owner_select_letters(Owner *owners);
 internal void set_view_at_end(View *view);
 internal void set_view_at_start(View *view);
 internal void log_add(char *text, UI *ui, ...);
-internal void update_view_scroll(Input *input, View *view);
-internal void set_view_at_start_and_reset_view_moves(View *view);
+internal void start_view_scrolling(Input *input, View *view);
+internal void set_view_and_move_at_start(View *view);
 internal void pos_newline(v2u *pos, u32 font_size, u32 count);
 internal char set_owner_src(Owner *owner, void *parent, OwnerType type);
 internal char add_new_char_to_owners(Owner *owners, void *parent, OwnerType type);
 internal u32 get_font_newline(u32 font_size);
 internal u32 get_view_end(View view);
-internal b32 is_view_scrolling(View view);
-internal b32 is_view_scrolling_with_count(View view, u32 count);
-internal b32 is_entry_in_view(View view, u32 entry);
+internal b32 is_view_scrollable(View view);
+internal b32 is_view_scrollable_with_count(View view, u32 count);
 internal b32 can_view_go_up(View view);
 internal b32 can_view_go_down(View view);
 internal u32 get_view_range(View view);

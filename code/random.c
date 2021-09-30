@@ -45,6 +45,8 @@ get_random_no_zero(Random *random, s32 min, s32 max)
     s32 result = 0;
     for(;;)
     {
+        assert_loop_count();
+        
         result = get_random(random, min, max);
         if(result != 0) break;
     }
@@ -59,6 +61,15 @@ get_random_from_v2u(Random *random, v2u a)
     assert(!is_v2u_zero(a));
     
     u32 result = get_random(random, a.min, a.max);
+    return(result);
+}
+
+internal u32
+get_random_index(Random *random, u32 array_count)
+{
+    assert(random);
+    
+    u32 result = get_random(random, 0, array_count - 1);
     return(result);
 }
 

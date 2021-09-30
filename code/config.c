@@ -179,6 +179,8 @@ eat_all_whitespace(Tokenizer *tokenizer)
 {
     for(;;)
     {
+        assert_loop_count();
+        
         if(is_whitespace(tokenizer->at[0]))
         {
             ++tokenizer->at;

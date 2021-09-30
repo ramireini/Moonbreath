@@ -1,3 +1,4 @@
+#define MAX_INVENTORY_SLOT_COUNT 52
 #define MAX_ITEM_COUNT 1024
 #define MAX_ITEM_STAT_COUNT (ItemStatType_Count - 1)
 
@@ -134,13 +135,13 @@ typedef enum
 {
     ItemSlot_None,
     
+    ItemSlot_Weapon,
+    ItemSlot_Shield,
     ItemSlot_Head,
     ItemSlot_Body,
     ItemSlot_Legs,
     ItemSlot_Feet,
     ItemSlot_Amulet,
-    ItemSlot_SecondHand,
-    ItemSlot_FirstHand,
     ItemSlot_Ring,
     
     ItemSlot_Count
@@ -156,30 +157,13 @@ typedef enum
 
 typedef enum
 {
-    InteractType_None,
+ ItemInteractType_None,
     
-    InteractType_Identify,
-    InteractType_EnchantWeapon,
-    InteractType_EnchantArmor,
-    InteractType_Uncurse
-} InteractType;
-
-typedef enum
-{
-    StatusType_None,
-    
-    StatusType_Damage,
-    StatusType_Heal,
-    StatusType_Stat,
-    StatusType_Poison,
-    StatusType_Burn,
-    StatusType_Bind,
-    StatusType_Bleed,
-    StatusType_BrokenArmor,
-    StatusType_Sightless,
-    StatusType_Confusion,
-    StatusType_Summon
-} StatusType;
+ ItemInteractType_Identify,
+ ItemInteractType_EnchantWeapon,
+ ItemInteractType_EnchantArmor,
+ ItemInteractType_Uncurse
+} ItemInteractType;
 
 typedef enum
 {
@@ -190,79 +174,6 @@ typedef enum
     ItemActionType_Equip,
     ItemActionType_Unequip
 } ItemActionType;
-
-typedef enum
-{
-    StatType_None,
-    
-    StatType_Str,
-    StatType_Int,
-    StatType_Dex,
-    StatType_Def,
-    StatType_EV,
-    StatType_StrIntDex
-} StatType;
-
-typedef enum
-{
-    DamageType_None,
-    
-    DamageType_Physical,
-    DamageType_Fire,
-    DamageType_Ice,
-    DamageType_Lightning,
-    DamageType_Poison,
-    DamageType_Holy,
-    DamageType_Dark,
-    
-    DamageType_Count
-} DamageType;
-
-typedef struct
-{
-    s32 min;
-    s32 max;
-    DamageType type;
-    DamageType second_type;
-} DamageInfo;
-
-typedef struct
-{
-    b32 test_bool;
-    b32 stat_value_applied;
-    b32 print_end_on_last_status;
-    
-    String32 name;
-    
-    String64 player_max_hp;
-    String64 player_start;
-    String64 player_end;
-    String64 player_active;
-    b32 is_player_active_custom;
-    Color player_active_color;
-    String32 player_active_target;
-    
-    String64 enemy_start;
-    String64 enemy_end;
-    String64 enemy_active;
-    
-    StatusType type;
-    StatType stat_type;
-    
-    u32 stored_value; // Store value of something and use it when status ends.
-    b32 is_value_percentage;
-    union
-    {
-        DamageInfo value;
-        DamageInfo damage;
-    };
-    
-    u32 duration;
-    u32 chance;
-    
-    Spell *spell;
-    ItemInfo *item_info;
-} Status;
 
 struct ItemInfo
 {
@@ -276,7 +187,7 @@ struct ItemInfo
 typedef struct
 {
     ItemHandedness handedness;
-    DamageInfo damage;
+    EntityDamage damage;
     s32 accuracy;
     u32 weight;
     f32 speed;
@@ -291,8 +202,9 @@ typedef struct
 typedef struct
 {
     ItemInfo *info;
-    
-    Status status;
+    EntityStatus status;
+ 
+ ItemInteractType interact_type;
     u32 stack_count;
     String32 depiction;
 } ConsumableItem;
@@ -301,7 +213,7 @@ typedef enum
 {
     ItemStatType_None,
     
-    // We render these on items in this order.
+    // These are rendered on items in this order.
     ItemStatType_Health,
     ItemStatType_Strength,
     ItemStatType_Intelligence,
@@ -325,17 +237,13 @@ typedef enum
 
 typedef struct
 {
-    ItemStatType type;
-    
-    b32 set;
+ ItemStatType type;
+ 
     s32 value;
-    DamageType resistance;
+    EntityDamageType resist_type;
      String64 description;
-    } ItemStat;
+} ItemStat;
 
-// TODO(rami): When we use a scroll that requires a target, we could check for the target and automatically
-// discard the scroll if we don't have one. This would mean the player doesn't have to press Escape into
-// choosing the Yes option for discard.
 struct Item
 {
     u32 flags;
@@ -361,8 +269,8 @@ struct Item
     ItemType type;
     union
     {
-        WeaponItem w;
         ArmorItem a;
+        WeaponItem w;
         ConsumableItem c;
     };
     
@@ -387,11 +295,11 @@ typedef struct
 typedef struct
 {
     u32 flags;
+    
+    b32 validate_view;
     DeferWindow window;
     
-    ItemType drop_type;
-    b32 update_view_after_interact;
-    InteractType interact_type;
+ ItemInteractType interact_type;
     DeferWindow interact_window;
     
     Item *examine_item;
@@ -399,14 +307,19 @@ typedef struct
     Owner item_owners[MAX_OWNER_COUNT];
 } Inventory;
 
+// TODO(rami): "You have nothing to use that on", only when the item is identified and we don't have a
+// target is when this should be said. If the item is unidentified then just use it.
+
 internal void remove_item_from_game(Item *item, Owner *item_owners);
-internal char *get_damage_type_string(DamageType damage_type);
+internal char *get_entity_damage_type_string(EntityDamageType damage_type);
 internal char *get_item_rarity_string(ItemRarity rarity);
 internal s32 get_index(s32 value);
-internal b32 is_item_valid_and_not_in_inventory(Item *item);
+internal s32 get_item_stat_type_value(ItemStat *stats, ItemStatType type);
+internal b32 is_valid_non_inventory_item(Item *item);
+internal v2u get_item_tile_pos(ItemID id, ItemRarity rarity);
 internal ItemType get_random_item_type(Random *random);
-internal Item *get_dungeon_pos_item(ItemState *items, u32 dungeon_level, v2u pos, ItemID id);
-internal Item *add_armor_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, b32 is_cursed);
-internal Item *add_consumable_item(Random *random, ItemState *items, u32 dungeon_level, ItemID id, u32 x, u32 y, u32 stack_count);
-internal Item *add_weapon_item(Random *random, ItemState *items, ItemID id, u32 dungeon_level, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
-internal DamageType get_random_damage_type(Random *random, DamageType exclude_type);
+internal Item *get_dungeon_pos_item(ItemState *item_state, u32 dungeon_level, v2u pos, ItemID id);
+internal Item *add_armor_item(Random *random, ItemState *item_state, u32 dungeon_level, ItemID id, u32 x, u32 y, b32 is_cursed);
+internal Item *add_consumable_item(Random *random, ItemState *item_state, u32 dungeon_level, ItemID id, u32 x, u32 y, u32 stack_count);
+internal Item *add_weapon_item(Random *random, ItemState *item_state, ItemID id, u32 dungeon_level, ItemRarity rarity, u32 x, u32 y, b32 is_cursed);
+internal EntityDamageType get_random_damage_type(Random *random, EntityDamageType exclude_type);
