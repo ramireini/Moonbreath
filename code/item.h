@@ -307,15 +307,14 @@ typedef struct
     Owner item_owners[MAX_OWNER_COUNT];
 } Inventory;
 
-// TODO(rami): "You have nothing to use that on", only when the item is identified and we don't have a
-// target is when this should be said. If the item is unidentified then just use it.
+// TODO(rami): Polish: Think about message colors, potions definitely want a color.
 
 internal void remove_item_from_game(Item *item, Owner *item_owners);
 internal char *get_entity_damage_type_string(EntityDamageType damage_type);
 internal char *get_item_rarity_string(ItemRarity rarity);
+internal b32 is_valid_non_inventory_item(Item *item);
 internal s32 get_index(s32 value);
 internal s32 get_item_stat_type_value(ItemStat *stats, ItemStatType type);
-internal b32 is_valid_non_inventory_item(Item *item);
 internal v2u get_item_tile_pos(ItemID id, ItemRarity rarity);
 internal ItemType get_random_item_type(Random *random);
 internal Item *get_dungeon_pos_item(ItemState *item_state, u32 dungeon_level, v2u pos, ItemID id);

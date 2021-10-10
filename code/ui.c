@@ -6,9 +6,7 @@ ui_print_view(char *name, View view)
     printf("%s - start: %u\n", name, view.start);
     printf("%s - end: %u\n\n", name, view.end);
 }
-#endif
 
-#if MOONBREATH_SLOW
 internal void
 print_owners(Owner *owners)
 {
@@ -28,6 +26,192 @@ print_owners(Owner *owners)
     printf("\n");
 }
 #endif
+
+internal b32
+update_mark_input(Input *input, Mark *mark)
+{
+ assert(input);
+ assert(mark);
+ 
+ b32 result = false;
+ 
+ if(mark->is_active)
+ {
+  assert(mark->view.end == 24);
+  mark->view.count = get_string_length(mark->array);
+  
+  if(was_pressed(&input->Key_Del))
+  {
+   result = true;
+   
+   // Don't do this if we are at the end of the buffer
+   if((mark->cursor < mark->view.count) && mark->view.count)
+   {
+    // Remove the character at mark->cursor and move the buffer
+    for(u32 index = mark->cursor; index < MAX_MARK_SIZE; ++index)
+    {
+     mark->array[index] = mark->array[index + 1];
+     mark->array[index + 1] = 0;
+    }
+    
+    force_render_mark_cursor(mark);
+   }
+  }
+  else if(was_pressed_core(&input->Key_Backspace))
+  {
+   result = true;
+   
+   if(input->Key_Control.is_down)
+   {
+    while(mark->cursor &&
+          mark->array[mark->cursor - 1] == ' ')
+    {
+     remove_mark_char(mark);
+    }
+    
+    while(mark->cursor &&
+          mark->array[mark->cursor - 1] != ' ')
+    {
+     remove_mark_char(mark);
+    }
+   }
+   else
+   {
+    remove_mark_char(mark);
+   }
+  }
+  else if(was_pressed(&input->Key_ArrowLeft))
+  {
+   result = true;
+   
+   if(mark->cursor)
+   {
+    if(input->Key_Control.is_down)
+    {
+     while(mark->cursor &&
+           mark->array[mark->cursor - 1] == ' ')
+     {
+      move_mark_cursor_left(mark);
+     }
+     
+     while(mark->cursor &&
+           mark->array[mark->cursor - 1] != ' ')
+     {
+      move_mark_cursor_left(mark);
+     }
+    }
+    else
+    {
+     move_mark_cursor_left(mark);
+    }
+   }
+  }
+  else if(was_pressed(&input->Key_ArrowRight))
+  {
+   result = true;
+   
+   if(input->Key_Control.is_down)
+   {
+    while(mark->cursor + 1 <= mark->view.count &&
+          mark->array[mark->cursor] == ' ')
+    {
+     move_mark_cursor_right(mark);
+    }
+    
+    while(mark->cursor + 1 <= mark->view.count &&
+          mark->array[mark->cursor] != ' ')
+    {
+     move_mark_cursor_right(mark);
+    }
+   }
+   else
+   {
+    move_mark_cursor_right(mark);
+   }
+  }
+  else if(was_pressed(&input->Key_Home))
+  {
+   result = true;
+   
+   set_mark_cursor_at_start(mark);
+   force_render_mark_cursor(mark);
+  }
+  else if(was_pressed(&input->Key_End))
+  {
+   result = true;
+   
+   set_mark_cursor_at_end(mark);
+   force_render_mark_cursor(mark);
+  }
+  else
+  {
+   char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Printable);
+   if(pressed)
+   {
+    result = true;
+    add_mark_character(mark, pressed);
+   }
+  }
+  
+#if 0
+  printf("mark->cursor: %u\n", mark->cursor);
+  ui_print_view("Mark View", mark->view);
+#endif
+  
+  return(result);
+ }
+}
+
+internal void
+set_mark_cursor_at_start(Mark *mark)
+{
+ assert(mark);
+ 
+ set_view_at_start(&mark->view);
+ mark->cursor = 0;
+}
+
+internal void
+set_mark_cursor_at_end(Mark *mark)
+{
+ assert(mark);
+ 
+ mark->cursor = mark->view.count;
+ if(is_view_scrollable_with_count(mark->view, mark->view.count + 1))
+ {
+  set_view_at_end(&mark->view);
+ }
+}
+
+internal b32
+is_mark_array_valid(char *mark_array)
+{
+ assert(mark_array);
+ 
+ b32 result = false;
+ 
+ for(u32 index = 0; index < MAX_MARK_SIZE; ++index)
+ {
+  if(mark_array[index] &&
+     mark_array[index] != ' ')
+  {
+   result = true;
+   break;
+  }
+ }
+ 
+ return(result);
+}
+
+internal void
+deselect_mark(Mark *mark)
+{
+ assert(mark);
+ 
+ mark->is_active = false;
+ mark->render_cursor = false;
+ mark->cursor_blink_start = 0;
+}
 
 internal String32
 get_text_padding_from_max_length(char *text, u32 max_length)
@@ -415,7 +599,7 @@ render_window_items(Game *game,
                 v2u item_tile_pos = render_tile_and_mouse_highlight(game->renderer, view, *window_pos, mouse_pos, item, OwnerType_Item, texture, ui);
                 v2u item_name_pos = get_window_entry_name_pos(item_tile_pos, ui);
                 String8 item_letter = get_item_letter_string(item);
-                String128 item_mark = get_item_mark_string(&item->flags, item->mark.array);
+                String128 item_mark = get_item_mark_string(item->flags, item->mark.array);
                 
                 if(is_item_consumable(item->type))
                 {
@@ -996,7 +1180,7 @@ render_header_string_and_separator(char *header, Game *game, v2u *pos, UI *ui, u
 }
 
 internal void
-render_entity_resistances(Game *game, EntityDamageType *resists, v2u *pos, UI *ui, b32 is_defer)
+render_entity_resistances(Game *game, EntityResist *resists, v2u *pos, UI *ui, b32 is_defer)
 {
     assert(game);
     assert(resists);
@@ -1008,20 +1192,20 @@ render_entity_resistances(Game *game, EntityDamageType *resists, v2u *pos, UI *u
     u32 max_damage_type_length = get_max_enum_string_length(EntityDamageType_None, EntityDamageType_Count, get_entity_damage_type_string);
     for(EntityDamageType damage_type = EntityDamageType_None + 1; damage_type < EntityDamageType_Count; ++damage_type)
     {
-        s32 resistance = resists[damage_type];
+        EntityResist resist = resists[damage_type];
         
         char sign = ' ';
-        if(resistance > 0)
+  if(resist.value > 0)
         {
             sign = '+';
         }
-        else if(resistance < 0)
+  else if(resist.value < 0)
         {
             sign = '-';
         }
         
-        u32 absolute_resistance = absolute(resistance);
-        u32 resistance_percent = absolute_resistance * (ENTITY_RESISTANCE_PER_POINT * 10);
+  u32 absolute_resist = absolute(resist.value);
+        u32 resistance_percent = absolute_resist * (ENTITY_RESISTANCE_PER_POINT * 10);
         
         char *damage_type_string = get_entity_damage_type_string(damage_type);
         String32 padding = get_text_padding_from_max_length(damage_type_string, max_damage_type_length);
@@ -1031,13 +1215,13 @@ render_entity_resistances(Game *game, EntityDamageType *resists, v2u *pos, UI *u
         {
             defer_string(format_string, pos, 0, 1, ui,
                              damage_type_string, padding.s, sign,
-                             absolute_resistance, resistance_percent);
+                             absolute_resist, resistance_percent);
         }
         else
         {
    render_string_and_move(game->renderer, format_string, pos, 0, 1, ui->font,
                                        damage_type_string, padding.s, sign,
-                                       absolute_resistance, resistance_percent);
+                                       absolute_resist, resistance_percent);
         }
         }
 }
@@ -1883,7 +2067,7 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
                    get_item_letter_string(item).s,
                    get_full_item_name(item).s,
                    get_item_stack_string(item->type, item->c.stack_count).s,
-                   get_item_mark_string(&item->flags, item->mark.array).s);
+                   get_item_mark_string(item->flags, item->mark.array).s);
     
         if(item->type == ItemType_Weapon)
         {
@@ -2107,7 +2291,7 @@ render_player_status_window(Game *game, Entity *player, Assets *assets, UI *ui)
                                            padding.s,
                                        get_item_status_color(&item->flags, item->rarity),
                                        get_full_item_name(item).s,
-                                       get_item_mark_string(&item->flags, item->mark.array).s);
+                                       get_item_mark_string(item->flags, item->mark.array).s);
             }
             else
             {
@@ -2382,7 +2566,7 @@ render_multiple_examine_window(Game *game,
         {
             if(examine_type == ExamineType_Entity)
             {
-                // Add entity to view count
+    // Add entity to view count
                 item_state->examine_window_entity = get_dungeon_pos_entity(entity_state, dungeon->level, examine->pos);
                 if(item_state->examine_window_entity) view->count += 2;
             }
@@ -2435,8 +2619,6 @@ render_multiple_examine_window(Game *game,
         }
         }
     }
- 
- printf("view->end: %u\n", view->end);
  
     set_enable_window_view_clip_rect(game->renderer, view, examine_rect, window_pos);
     
@@ -2494,10 +2676,90 @@ render_multiple_examine_window(Game *game,
     }
 
 internal void
-render_item_mark_window(Game *game, ItemState *item_state, Item *item, Assets *assets, UI *ui)
+update_and_render_mark_input(SDL_Renderer *renderer, Font *font, Mark *mark, v2u pos, u32 centering_width)
 {
-    v4u mark_rect = {0, 0, 250, 100};
-    render_centered_rect(game, &mark_rect, ui->window_scroll_start_y);
+ assert(renderer);
+ assert(font);
+ assert(mark);
+ assert(mark->cursor_blink_duration);
+ 
+ u32 height_pad = 4;
+ 
+ { // Render input rect
+  mark->input_rect.w = font->size * 14;
+  mark->input_rect.h = font->size + height_pad;
+  
+  if(centering_width)
+  {
+   pos.x += get_centering_offset(centering_width, mark->input_rect.w);
+  }
+  
+  mark->input_rect.x = pos.x;
+  mark->input_rect.y = pos.y;
+  
+  render_fill_rect(renderer, mark->input_rect, Color_WindowShadow, false);
+  render_outline_rect(renderer, mark->input_rect, Color_WindowBorder);
+  }
+ 
+ { // Update cursor
+  if(!mark->cursor_blink_start)
+  {
+   mark->cursor_blink_start = SDL_GetTicks();
+  }
+  
+  if(get_sdl_ticks_difference(mark->cursor_blink_start) >= mark->cursor_blink_duration)
+  {
+   mark->cursor_blink_start = 0;
+   mark->render_cursor = !mark->render_cursor;
+  }
+ }
+ 
+ u32 cursor_x = 0;
+ 
+ { // Render input
+  v2u text_pos =
+  {
+   mark->input_rect.x + 4,
+   mark->input_rect.y + get_centering_offset(mark->input_rect.h, font->size) + 1
+  };
+  
+  cursor_x = text_pos.x;
+  v2u character_pos = text_pos;
+  for(u32 index = mark->view.start; index < get_view_range(mark->view); ++index)
+  {
+   u32 mark_index = index - 1;
+   
+   render_string(renderer, "%c", &character_pos, font, mark->array[mark_index]);
+   character_pos.x += get_glyph_width(mark->array[mark_index], font);
+   
+   if(mark->render_cursor && (index == mark->cursor))
+   {
+    cursor_x = character_pos.x;
+   }
+  }
+ }
+ 
+ { // Render cursor
+  if(mark->is_active && mark->render_cursor)
+  {
+   v4u cursor_rect =
+   {
+    cursor_x,
+    mark->input_rect.y + (height_pad / 2),
+    1,
+    mark->input_rect.h - height_pad
+   };
+   
+   render_fill_rect(renderer, cursor_rect, Color_White, false);
+  }
+ }
+}
+
+internal void
+render_item_mark_window(Game *game, Item *item, Assets *assets, Mark *mark, Font *font, u32 window_scroll_start_y)
+{
+    v4u window_rect = {0, 0, 250, 100};
+ render_centered_rect(game, &window_rect, window_scroll_start_y);
     
     { // Render header
         char *header = "Mark with what?";
@@ -2506,81 +2768,31 @@ render_item_mark_window(Game *game, ItemState *item_state, Item *item, Assets *a
             header = "Replace mark with what?";
         }
         
-        u32 header_width = get_text_width(header, ui->font, false);
+        u32 header_width = get_text_width(header, font, false);
         v2u header_pos =
         {
-            mark_rect.x + get_centering_offset(mark_rect.w, header_width),
-            mark_rect.y + 25
+   window_rect.x + get_centering_offset(window_rect.w, header_width),
+   window_rect.y + 25
         };
         
-  render_string(game->renderer, header, &header_pos, ui->font);
+  render_string(game->renderer, header, &header_pos, font);
     }
-    
-    // Render input box
-    u32 height_pad = 4;
-    v4u input_rect =
-    {
-        mark_rect.x,
-        mark_rect.y,
-        ui->font->size * 14,
-        ui->font->size + height_pad
-    };
-    
-    input_rect.x += get_centering_offset(mark_rect.w, input_rect.w);
-    input_rect.y += get_font_newline(ui->font->size) * 3;
-    
-    render_fill_rect(game->renderer, input_rect, Color_WindowShadow, false);
-    render_outline_rect(game->renderer, input_rect, Color_WindowBorder);
-    
-    // Update cursor
-    Mark *temp_mark = &item_state->temp_mark;
-    if(!temp_mark->render_cursor_start_ms) temp_mark->render_cursor_start_ms = SDL_GetTicks();
-    
-    if(get_sdl_ticks_difference(temp_mark->render_cursor_start_ms) >= temp_mark->cursor_blink_duration)
-    {
-        temp_mark->render_cursor_start_ms = 0;
-        temp_mark->render_cursor = !temp_mark->render_cursor;
-    }
-    
-    // Render input
-    v2u text_pos =
-    {
-        input_rect.x + 4,
-        input_rect.y + get_centering_offset(input_rect.h, ui->font->size) + 1
-    };
-    
-    u32 cursor_x = text_pos.x;
-    v2u character_pos = text_pos;
-    for(u32 index = temp_mark->view.start; index < get_view_range(temp_mark->view); ++index)
-    {
-        u32 mark_index = index - 1;
-        
-  render_string(game->renderer, "%c", &character_pos, ui->font, temp_mark->array[mark_index]);
-        character_pos.x += get_glyph_width(temp_mark->array[mark_index], ui->font);
-        
-        if(temp_mark->render_cursor && (index == temp_mark->cursor)) cursor_x = character_pos.x;
-    }
-    
-    // Render cursor
-    if(temp_mark->render_cursor)
-    {
-        v4u cursor_rect =
-        {
-            cursor_x,
-            input_rect.y + (height_pad / 2),
-            1,
-            input_rect.h - height_pad
-        };
-        
-        render_fill_rect(game->renderer, cursor_rect, Color_White, false);
-    }
-    
-#if 0
-    printf("temp_mark->cursor_index: %u\n", temp_mark->cursor_index);
-    ui_print_view("Temp Mark View", temp_mark->view);
+ 
+ v2u mark_input_pos =
+ {
+  window_rect.x,
+  window_rect.y + get_font_newline(font->size) * 3
+ };
+ update_and_render_mark_input(game->renderer, font, mark, mark_input_pos, window_rect.w);
+ 
+ #if 0
+ printf("mark->cursor: %u\n", mark->cursor);
+ printf("mark->view.count: %u\n", mark->view.count);
+ printf("mark->view.start: %u\n", mark->view.start);
+ printf("mark->view.end: %u\n\n", mark->view.end);
 #endif
-    
-}
+ 
+    }
 
 internal void
 render_ui(Game *game,
@@ -2592,8 +2804,8 @@ render_ui(Game *game,
           Assets *assets,
           UI *ui)
 {
-    assert(MAX_LOG_MESSAGE_COUNT <= MAX_DEFER_COUNT); // Need enough space for deferred full log messages
-    assert(!ui->mouse_highlight.c); // This is not used, and therefore should not be set
+    assert(MAX_LOG_MESSAGE_COUNT <= MAX_DEFER_COUNT); // Need enough space for deferred full log messages.
+    assert(!ui->mouse_highlight.c); // Never used, should never be set.
     ui->mouse_highlight.type = OwnerType_None;
     
  ExamineMode *examine = &game->examine;
@@ -2755,7 +2967,7 @@ render_ui(Game *game,
     }
     else if(is_set(inventory->flags, InventoryFlag_Mark))
     {
-        render_item_mark_window(game, item_state, inventory->examine_item, assets, ui);
+        render_item_mark_window(game, inventory->examine_item, assets, &item_state->temp_mark, ui->font, ui->window_scroll_start_y);
     }
     else if(is_set(examine->flags, ExamineFlag_Open))
     {
@@ -2784,5 +2996,5 @@ render_ui(Game *game,
     else if(is_set(ui->flags, UIFlag_PlayerStatusOpen))
     {
         render_player_status_window(game, player, assets, ui);
-    }
+ }
 }

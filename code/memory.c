@@ -42,9 +42,10 @@ push_memory(MemoryArena *arena, memory_size size)
     
     void *result = arena->base + arena->used;
     arena->used += size;
-    
-    //printf("Used Game Memory: %lu/%lu (%lu added)\n", arena->used, arena->size, size);
-    return(result);
+ 
+ //printf("Used Game Memory: %lu/%lu (%lu added)\n", arena->used, arena->size, size);
+ 
+ return(result);
 }
 
 #define pop_memory_struct(arena, type) pop_memory(arena, sizeof(type))

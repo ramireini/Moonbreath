@@ -9,7 +9,9 @@
 #define ENEMY_ID_START (EntityID_EnemyStart + 1)
 #define ENEMY_ID_END (EntityID_EnemyEnd - ENEMY_ID_START)
 
-#define ENTITY_RESISTANCE_PER_POINT 2
+#define MAX_ENTITY_RESIST_VALUE 5
+#define MIN_ENTITY_RESIST_VALUE (-MAX_ENTITY_RESIST_VALUE)
+#define ENTITY_RESISTANCE_PER_POINT ((100 / MAX_ENTITY_RESIST_VALUE) / 10)
 #define get_player_entity() &entity_state->array[0];
 
 enum EntityID
@@ -106,13 +108,14 @@ typedef enum
 
 typedef enum
 {
- EnemyState_None,
+ EnemyEntityState_None,
  
- EnemyState_Wandering,
- EnemyState_Fighting,
- EnemyState_Fleeing,
- EnemyState_Cornered,
-} EnemyState;
+ EnemyEntityState_Wandering,
+ EnemyEntityState_Fighting,
+ EnemyEntityState_Chasing,
+ EnemyEntityState_Fleeing,
+ EnemyEntityState_Cornered,
+} EnemyEntityState;
 
 typedef enum
 {
@@ -168,6 +171,14 @@ typedef enum
  EnemyWanderingType_Random,
  EnemyWanderingType_Travel,
 } EnemyWanderingType;
+
+typedef enum
+{
+ UpdateEnemyPathfindType_None,
+ 
+ UpdateEnemyPathfindType_ReachedTarget,
+ UpdateEnemyPathfindType_CantMove,
+} UpdateEnemyPathfindType;
 
 typedef struct
 {
@@ -249,10 +260,10 @@ typedef struct
 
 typedef struct
 {
- EnemyState state;
+ EnemyEntityState state;
  
-    u32 level;
-    u32 turns_in_player_view;
+ u32 level;
+ u32 player_seen_count;
     f32 action_timer;
  v4u view_rect;
  EnemyWanderingType wandering_type;
@@ -280,6 +291,11 @@ typedef struct
     u32 flags;
 } EntityInfo;
 
+typedef struct
+{
+ s32 value;
+} EntityResist;
+
 // Entity evasion values
 // 0, None
 // 1 - 3, Very Low
@@ -289,8 +305,7 @@ typedef struct
 // 18 - 21, Very High
 // 22, Unhittable
 
-// Entity resistance values range from -5 to 5.
-// Each point equals to 20% resistance/susceptibility.
+// Entity resistance values range from MIN_ENTITY_RESIST_VALUE to MAX_ENTITY_RESIST_VALUE.
 
 struct Entity
 {
@@ -321,13 +336,14 @@ struct Entity
  
  v2u pathfind_target_pos;
  PathfindMap *pathfind_map;
+ PathfindMap chase_map;
  
     EntityStats stats;
     u32 hit_chance;
     f32 action_time;
     EntityRegen regen;
     
-    EntityDamageType resists[EntityDamageType_Count];
+ EntityResist resists[EntityDamageType_Count];
  EntityStatus statuses[MAX_ENTITY_STATUS_COUNT];
  
     EntityType type;
@@ -347,16 +363,21 @@ struct EntityState
  PathfindMap pathfind_map_to_player;
  };
 
+#if MOONBREATH_SLOW
+internal char *get_entity_type_string(EntityType type);
+internal char *get_enemy_entity_state_string(EnemyEntityState type);
+#endif
+
+internal void change_entity_resist(EntityResist *resist, s32 change, b32 is_add);
 internal void entity_move_force(Entity *entity, Dungeon *dungeon, v2u new_pos, u32 dungeon_level);
 internal void remove_entity(Entity *entity, DungeonTiles tiles);
 internal void log_add_entity_interact_string(Random *random, Entity *attacker, DungeonTrap *trap, Entity *defender, UI *ui, u32 value, EntityResistInfoType resist_type, EntityInteractInfoType info_type);
-internal void change_stat(u32 *value, s32 change, b32 is_add, b32 zero_clamp);
+internal void change_entity_stat(u32 *value, s32 change, b32 is_add);
 internal void update_entity_statuses(Game *game, Entity *entity, Dungeon *dungeon, Inventory *inventory, UI *ui);
 internal void cast_entity_spell(Random *random, Entity *caster, Entity *target, Dungeon *dungeon, UI *ui);
 internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui);
 internal void add_entity_status(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, EntityStatus *new_status);
 internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui, DungeonRandomPosType type);
-internal char *get_entity_type_string(EntityType type);
 internal s32 get_total_stat_status_value(EntityStatus *statuses, EntityStatusStatType type);
 internal u32 attack_entity(Random *random, Entity *attacker, DungeonTrap *trap, Entity *defender, Dungeon *dungeon, UI *ui, EntityDamage damage);
 internal u32 get_player_view_enemy_count(EntityState *entity_state, Dungeon *dungeon);

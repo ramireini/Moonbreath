@@ -128,18 +128,17 @@ get_pathfind_result(Entity *entity, Dungeon *dungeon, PathfindMap *map, Pathfind
  assert(map);
  assert(method);
  
-#if 0
- printf("map: %p\n", map);
- printf("entity->pathfind_map: %p\n", entity->pathfind_map);
-#endif
- 
- #if 0
- printf("entity->pos: %u, %u\n", entity->pos.x, entity->pos.y);
- printf("val: %u\n", get_pathfind_value(entity->explore_map, entity->pos));
+ #if MOONBREATH_SLOW
+ if(!get_pathfind_value(map, entity->pos)) // Map has to be initted
+ {
+  printf("map: %p\n", map);
+  printf("name: %s\n", entity->name.s);
+  printf("pos: %u, %u\n", entity->pos.x, entity->pos.y);
+  printf("pos pathfind value: %u\n", get_pathfind_value(map, entity->pos));
+  
+  assert(0);
+ }
  #endif
- 
- assert(get_pathfind_value(map, entity->pos)); // Map has to be initted
- //printf("Start Pos Value: %u\n", get_pathfind_value(pathfind_map, entity->pos));
  
  b32 is_result_set = false;
  PathfindResult result = {0};

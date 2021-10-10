@@ -64,7 +64,8 @@ get_config_uint(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_Uint && strings_match(token_name, token->name.s))
+  if(token->value == TokenValue_Uint &&
+     strings_match(token_name, token->name.s))
         {
             value.is_valid = true;
             value.uint = token->uint;
@@ -83,7 +84,8 @@ get_config_bool(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_Bool && strings_match(token_name, token->name.s))
+  if(token->value == TokenValue_Bool &&
+     strings_match(token_name, token->name.s))
         {
             value.is_valid = true;
             value.boolean = token->boolean;
@@ -102,7 +104,8 @@ get_config_string(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-        if(token->value == TokenValue_String && strings_match(token_name, token->name.s))
+  if(token->value == TokenValue_String &&
+     strings_match(token_name, token->name.s))
         {
             result.is_valid = true;
             strcpy(result.string.s, token->string.s);
@@ -136,14 +139,14 @@ read_file(MemoryArena *memory_arena, char *file_path)
 }
 
 internal b32
-is_end_of_file(char c)
+end_of_file(char c)
 {
     b32 result = (c == '\0');
     return(result);
 }
 
 internal b32
-is_end_of_line(char c)
+end_of_line(char c)
 {
     b32 result = ((c == '\n') ||
                   (c == '\r'));
@@ -152,19 +155,19 @@ is_end_of_line(char c)
 }
 
 internal b32
-is_whitespace(char c)
+whitespace(char c)
 {
     b32 result = ((c == ' ') ||
                   (c == '\t') ||
                   (c == '\v') ||
                   (c == '\f') ||
-                  is_end_of_line(c));
+                  end_of_line(c));
     
     return(result);
 }
 
 internal b32
-is_special(char c)
+special(char c)
 {
     b32 result = ((c >= '!') && (c <= '/') ||
                   (c >= ':') && (c <= '@') ||
@@ -181,7 +184,7 @@ eat_all_whitespace(Tokenizer *tokenizer)
     {
         assert_loop_count();
         
-        if(is_whitespace(tokenizer->at[0]))
+        if(whitespace(tokenizer->at[0]))
         {
             ++tokenizer->at;
         }
@@ -190,7 +193,7 @@ eat_all_whitespace(Tokenizer *tokenizer)
         {
             tokenizer->at += 2;
             
-            while(tokenizer->at[0] && !is_end_of_line(tokenizer->at[0]))
+            while(tokenizer->at[0] && !end_of_line(tokenizer->at[0]))
             {
                 ++tokenizer->at;
             }
@@ -227,7 +230,7 @@ get_token(Tokenizer *tokenizer)
     
     eat_all_whitespace(tokenizer);
     
-    if(is_end_of_file(tokenizer->at[0]))
+    if(end_of_file(tokenizer->at[0]))
     {
         token.error = TokenError_EndOfFile;
     }
@@ -236,7 +239,7 @@ get_token(Tokenizer *tokenizer)
         // Token name
         if(is_alpha(tokenizer->at[0]))
         {
-            while(tokenizer->at[0] && !is_whitespace(tokenizer->at[0]))
+            while(tokenizer->at[0] && !whitespace(tokenizer->at[0]))
             {
                 token.name.s[token_name_length++] = tokenizer->at[0];
                 ++tokenizer->at;
@@ -260,7 +263,7 @@ get_token(Tokenizer *tokenizer)
         }
         
         // Token value
-        if(tokenizer->at[0] && is_special(tokenizer->at[0]))
+        if(tokenizer->at[0] && special(tokenizer->at[0]))
         {
             token.value = TokenValue_String;
             

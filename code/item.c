@@ -115,23 +115,36 @@ can_interact_type_be_used_on_item(Item *item, ItemInteractType type)
 }
 
 internal b32
-inventory_has_an_item_to_interact_with(Inventory *inventory, ItemInteractType type)
+can_item_interact_with_inventory(Inventory *inventory, ItemInteractType type, u32 item_flags)
 {
  assert(inventory);
- assert(type);
  
  b32 result = false;
  
- for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+ if(type)
  {
-  Item *inventory_item = inventory->slots[index];
-  
-  if(inventory_item &&
-     can_interact_type_be_used_on_item(inventory_item, type))
+  if(!is_set(item_flags, ItemFlag_IsIdentified))
   {
    result = true;
-   break;
   }
+  else
+  {
+   for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+   {
+    Item *inventory_item = inventory->slots[index];
+    
+    if(inventory_item &&
+       can_interact_type_be_used_on_item(inventory_item, type))
+    {
+     result = true;
+     break;
+    }
+   }
+  }
+ }
+ else
+ {
+  result = true;
  }
  
  return(result);
@@ -296,45 +309,44 @@ apply_item_stats_to_player(Entity *player, Item *item, b32 is_add)
             {
                 ItemStat *stat = &item->stats[stat_type];
             if(stat->type)
-                {
+   {
+    EntityResist *resists = player->resists;
+    
                 switch(stat->type)
-                    {
+    {
                         case ItemStatType_Health:
                         {
-                            change_stat(&player->max_hp, stat->value, is_add, true);
-                            
-                            // Clamp player health in the case we remove an item that gave us more health.
-      if(player->max_hp < player->hp) player->hp = player->max_hp;
+      change_entity_stat(&player->max_hp, stat->value, is_add);
+      if(player->hp > player->max_hp) player->hp = player->max_hp;
                         } break;
                         
-                    case ItemStatType_Strength: change_stat(&player->stats.str, stat->value, is_add, true); break;
-                    case ItemStatType_Intelligence: change_stat(&player->stats.intel, stat->value, is_add, true); break;
-     case ItemStatType_Dexterity: change_stat(&player->stats.dex, stat->value, is_add, true); break;
+     case ItemStatType_Strength: change_entity_stat(&player->stats.str, stat->value, is_add); break;
+     case ItemStatType_Intelligence: change_entity_stat(&player->stats.intel, stat->value, is_add); break;
+     case ItemStatType_Dexterity: change_entity_stat(&player->stats.dex, stat->value, is_add); break;
      case ItemStatType_Evasion: break; // Updated later in this function.
      case ItemStatType_Defence: break; // Updated in player update.
-                        
-                    case ItemStatType_PhysicalResistance: change_stat(&player->resists[EntityDamageType_Physical], stat->value, is_add, false); break;
-                    case ItemStatType_FireResistance: change_stat(&player->resists[EntityDamageType_Fire], stat->value, is_add, false); break;
-                    case ItemStatType_IceResistance: change_stat(&player->resists[EntityDamageType_Ice], stat->value, is_add, false); break;
-                    case ItemStatType_LightningResistance: change_stat(&player->resists[EntityDamageType_Lightning], stat->value, is_add, false); break;
-                    case ItemStatType_PoisonResistance: change_stat(&player->resists[EntityDamageType_Poison], stat->value, is_add, false); break;
-                    case ItemStatType_HolyResistance: change_stat(&player->resists[EntityDamageType_Holy], stat->value, is_add, false); break;
-                    case ItemStatType_DarkResistance: change_stat(&player->resists[EntityDamageType_Dark], stat->value, is_add, false); break;
-                        
-                    case ItemStatType_ViewRange: change_stat(&player->stats.fov, stat->value, is_add, true); break;
-                        case ItemStatType_InvulnerableToTraps: toggle(player->flags, EntityFlag_InvulnerableToTraps); break;
+     case ItemStatType_ViewRange: change_entity_stat(&player->stats.fov, stat->value, is_add); break;
+     case ItemStatType_InvulnerableToTraps: toggle(player->flags, EntityFlag_InvulnerableToTraps); break;
+     
+     case ItemStatType_PhysicalResistance: change_entity_resist(&resists[EntityDamageType_Physical], stat->value, is_add); break;
+     case ItemStatType_FireResistance: change_entity_resist(&resists[EntityDamageType_Fire], stat->value, is_add); break;
+     case ItemStatType_IceResistance: change_entity_resist(&resists[EntityDamageType_Ice], stat->value, is_add); break;
+     case ItemStatType_LightningResistance: change_entity_resist(&resists[EntityDamageType_Lightning], stat->value, is_add); break;
+     case ItemStatType_PoisonResistance: change_entity_resist(&resists[EntityDamageType_Poison], stat->value, is_add); break;
+     case ItemStatType_HolyResistance: change_entity_resist(&resists[EntityDamageType_Holy], stat->value, is_add); break;
+     case ItemStatType_DarkResistance: change_entity_resist(&resists[EntityDamageType_Dark], stat->value, is_add); break;
                         
                         invalid_default_case;
                     }
             }
         }
         
-        change_stat(&player->p.weight, item->w.weight, is_add, true);
+  change_entity_stat(&player->p.weight, item->w.weight, is_add);
         }
     else if(item->type == ItemType_Armor)
     {
-        change_stat(&player->stats.def, item->a.defence + item->enchant_level, is_add, true);
-        change_stat(&player->p.weight, item->a.weight, is_add, true);
+  change_entity_stat(&player->stats.def, item->a.defence + item->enchant_level, is_add);
+  change_entity_stat(&player->p.weight, item->a.weight, is_add);
     }
  
  // Update player evasion
@@ -486,7 +498,7 @@ get_full_item_name(Item *item)
 }
 
 internal void
-update_item_adjust(Input *input,
+adjust_item_letter(Input *input,
                       Item *item,
                    ItemState *item_state,
                    Inventory *inventory,
@@ -752,7 +764,7 @@ remove_item_from_inventory_and_game(Item *item,
 }
 
 internal void
-end_consumable_use(Item *item,
+remove_consumable_from_inventory(Item *item,
                    ItemState *item_state,
                    Inventory *inventory,
                    u32 dungeon_level)
@@ -843,13 +855,12 @@ get_item_stack_string(ItemType type, u32 stack_count)
 }
 
 internal String128
-get_item_mark_string(u32 *flags, char *mark_array)
+get_item_mark_string(u32 item_flags, char *mark_array)
 {
-    assert(flags);
     assert(mark_array);
     
     String128 result = {0};
-    if(is_set(*flags, ItemFlag_IsMarked)) sprintf(result.s, " {%s}", mark_array);
+ if(is_set(item_flags, ItemFlag_IsMarked)) sprintf(result.s, " {%s}", mark_array);
     
     return(result);
 }
@@ -886,7 +897,7 @@ log_add_item_action_string(Item *item, UI *ui, ItemActionType action)
             get_item_status_color(&item->flags, item->rarity),
             get_full_item_name(item).s,
                 get_item_stack_string(item->type, item->c.stack_count).s,
-                get_item_mark_string(&item->flags, item->mark.array).s,
+                get_item_mark_string(item->flags, item->mark.array).s,
                 end_color());
     
     if(action == ItemActionType_Equip &&
@@ -1036,7 +1047,7 @@ internal void
 force_render_mark_cursor(Mark *mark)
 {
     mark->render_cursor = true;
-    mark->render_cursor_start_ms = 0;
+ mark->cursor_blink_start = 0;
 }
 
 internal void
@@ -1074,12 +1085,10 @@ add_mark_character(Mark *mark, char c)
         ++mark->view.count;
         
         // Move mark view if we are currently on the boundary of it
-        if(mark->cursor == get_view_range(mark->view) - 1)
+  if(mark->cursor == (get_view_range(mark->view) - 1) &&
+     is_view_scrollable(mark->view))
         {
-            if(is_view_scrollable(mark->view))
-            {
                 ++mark->view.start;
-            }
         }
         
         ++mark->cursor;
@@ -1151,188 +1160,6 @@ remove_mark_char(Mark *mark)
         }
     }
 
-internal void
-move_mark_to_start(Mark *mark)
-{
-    assert(mark);
-    
-    set_view_at_start(&mark->view);
-    mark->cursor = 0;
-}
-
-internal void
-move_mark_to_end(Mark *mark)
-{
-    assert(mark);
-    
-    if(is_view_scrollable_with_count(mark->view, mark->view.count + 1)) set_view_at_end(&mark->view);
-    mark->cursor = mark->view.count;
-}
-
-internal void
-update_item_mark(Input *input, Mark *mark, Item *item, u32 *inventory_flags)
-{
-    assert(input);
-    assert(mark);
-    assert(item);
-    assert(inventory_flags);
-    
-    assert(mark->view.end == 24);
-    mark->view.count = get_string_length(mark->array);
-    
-    if(was_pressed(&input->Key_Enter))
-    {
-        // The mark is not valid if it's empty or consists of only spaces
-        b32 is_mark_valid = false;
-        
-        for(u32 index = 0; index < MAX_MARK_SIZE; ++index)
-        {
-            if(mark->array[index] &&
-                   mark->array[index] != ' ')
-            {
-                is_mark_valid = true;
-                break;
-            }
-        }
-        
-        if(is_mark_valid)
-        {
-            // Copy the item mark to be the temp mark if it's valid
-            item->mark.view = mark->view;
-            strcpy(item->mark.array, mark->array);
-            
-            set(item->flags, ItemFlag_IsMarked);
-        }
-        else
-        {
-            unset(item->flags, ItemFlag_IsMarked);
-        }
-        
-        // This data has to be reset so it doesn't appear in the mark of other items
-        zero_array(mark->array, MAX_MARK_SIZE);
-        mark->view.count = 0;
-        mark->view.start = 0;
-        
-        unset(*inventory_flags, InventoryFlag_Mark);
-    }
-    else if(was_pressed(&input->Key_Escape))
-    {
-        zero_array(mark->array, MAX_MARK_SIZE);
-        unset(*inventory_flags, InventoryFlag_Mark);
-    }
-    else if(was_pressed(&input->Key_Del))
-    {
-        // Don't do this if we are at the end of the buffer
-        if((mark->cursor < mark->view.count) && mark->view.count)
-        {
-            // Remove the character at mark->cursor and move the buffer
-            for(u32 index = mark->cursor; index < MAX_MARK_SIZE; ++index)
-            {
-                mark->array[index] = mark->array[index + 1];
-                mark->array[index + 1] = 0;
-            }
-            
-            force_render_mark_cursor(mark);
-        }
-    }
-    else if(was_pressed_core(&input->Key_Backspace))
-    {
-        if(input->Key_Control.is_down)
-        {
-                while(mark->cursor && mark->array[mark->cursor - 1] == ' ')
-                {
-                    remove_mark_char(mark);
-                }
-            
-                    while(mark->cursor && mark->array[mark->cursor - 1] != ' ')
-                    {
-                        remove_mark_char(mark);
-                    }
-        }
-        else
-        {
-            remove_mark_char(mark);
-        }
-    }
-    else if(was_pressed(&input->Key_ArrowLeft))
-    {
-        if(mark->cursor)
-        {
-            if(input->Key_Control.is_down)
-            {
-                b32 should_return = false;
-                
-                while(mark->cursor && mark->array[mark->cursor - 1] != ' ')
-                    {
-                        should_return = true;
-                        move_mark_cursor_left(mark);
-                    }
-                
-                if(should_return) return;
-                
-                while(mark->cursor && mark->array[mark->cursor - 1] == ' ')
-                    {
-                        move_mark_cursor_left(mark);
-                    }
-            }
-            else
-            {
-                move_mark_cursor_left(mark);
-            }
-        }
-    }
-    else if(was_pressed(&input->Key_ArrowRight))
-    {
-        if(input->Key_Control.is_down)
-        {
-            b32 should_return = false;
-            
-                while(mark->cursor + 1 <= mark->view.count &&
-                      mark->array[mark->cursor] != ' ')
-            {
-                should_return = true;
-                    move_mark_cursor_right(mark);
-                }
-            
-            if(should_return) return;
-            
-                while(mark->cursor + 1 <= mark->view.count &&
-                      mark->array[mark->cursor] == ' ')
-                {
-                    move_mark_cursor_right(mark);
-                }
-        }
-        else
-        {
-            move_mark_cursor_right(mark);
-        }
-    }
-    else if(was_pressed(&input->Key_Home))
-    {
-        move_mark_to_start(mark);
-        force_render_mark_cursor(mark);
-    }
-    else if(was_pressed(&input->Key_End))
-    {
-        move_mark_to_end(mark);
-        force_render_mark_cursor(mark);
-    }
-    else
-    {
-  char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Printable);
-        if(pressed)
-        {
-            add_mark_character(mark, pressed);
-        }
-    }
-    
-#if 0
-    printf("mark->cursor: %u\n", mark->cursor);
-    ui_print_view("Mark View", mark->view);
-#endif
-    
-}
-
 internal u32
 get_inventory_item_count(Inventory *inventory)
 {
@@ -1352,7 +1179,7 @@ get_inventory_item_count(Inventory *inventory)
     }
 
 internal void
-unset_item_selections(ItemState *item_state, u32 dungeon_level)
+unset_all_item_is_selected_flags(ItemState *item_state, u32 dungeon_level)
 {
     assert(item_state);
     assert(is_dungeon_level_valid(dungeon_level));
@@ -1757,7 +1584,7 @@ set_item_resistance_stat(Random *random,
 }
 
 internal v2u
-get_stat_value_range(ItemStatType type, ItemRarity rarity)
+get_item_stat_value_range(ItemStatType type, ItemRarity rarity)
 {
     assert(type);
  assert(rarity == ItemRarity_Magical ||
@@ -1804,7 +1631,7 @@ get_stat_value_range(ItemStatType type, ItemRarity rarity)
             if(rarity == ItemRarity_Magical)
             {
                 result.min = 1;
-                result.max = 2;
+    result.max = 2;
             }
             else
             {
@@ -1880,14 +1707,14 @@ add_item_stats(Random *random, Item *item)
         
         invalid_default_case;
     }
-    stat_count = MAX_ITEM_STAT_COUNT; // Have all stat types
+    //stat_count = MAX_ITEM_STAT_COUNT; // Have all stat types
     
     for(u32 count = 0; count < stat_count; ++count)
  {
-  u32 stat_index = get_random_new_item_stat_index(random, item);
-  ItemStat *stat = &item->stats[stat_index];
+  u32 index = get_random_new_item_stat_index(random, item);
+  ItemStat *stat = &item->stats[index];
   
-  v2u value_range = get_stat_value_range(stat->type, item->rarity);
+  v2u value_range = get_item_stat_value_range(stat->type, item->rarity);
         if(!is_v2u_zero(value_range))
         {
             stat->value = get_random_no_zero(random, value_range.min, value_range.max);
@@ -1902,6 +1729,7 @@ add_item_stats(Random *random, Item *item)
             case ItemStatType_Evasion: set_item_stat_description(stat, "Evasion"); break;
             case ItemStatType_Defence: set_item_stat_description(stat, "Defence"); break;
             case ItemStatType_ViewRange: set_item_stat_description(stat, "View Range"); break;
+            case ItemStatType_InvulnerableToTraps: strcpy(stat->description.s, "Trap Invulnerability"); break;
             
             case ItemStatType_PhysicalResistance: set_item_resistance_stat(random, stat, EntityDamageType_Physical); break;
             case ItemStatType_FireResistance: set_item_resistance_stat(random, stat, EntityDamageType_Fire); break;
@@ -1910,14 +1738,15 @@ add_item_stats(Random *random, Item *item)
             case ItemStatType_PoisonResistance: set_item_resistance_stat(random, stat, EntityDamageType_Poison); break;
             case ItemStatType_HolyResistance: set_item_resistance_stat(random, stat, EntityDamageType_Holy); break;
             case ItemStatType_DarkResistance: set_item_resistance_stat(random, stat, EntityDamageType_Dark); break;
-            case ItemStatType_InvulnerableToTraps: strcpy(stat->description.s, "Trap Invulnerability"); break;
             
             invalid_default_case;
         }
         
-        #if 0
-        printf("stats[%u].is_set: %u (type: %u)\n", stat_index, item->stats[stat_index].is_set, item->stats[stat_index].type);
-        printf("stat->description: %s\n\n", stat->description.s);
+#if 0
+  printf("stats[%u]\n", index);
+  printf("value: %d\n", item->stats[stat_index].value);
+  printf("resist_type: %d\n", item->stats[stat_index].resist_type);
+  printf("description: %s\n\n", stat->description.s);
         #endif
         
     }
@@ -1963,7 +1792,7 @@ add_weapon_item(Random *random,
             
             if(item->rarity != ItemRarity_Common) add_item_stats(random, item);
             
-            // TODO(rami): Second item damage type isn't being used, remove all references if not used in the future.
+   // TODO(rami): Second item damage type isn't being used.
             //if(rarity == ItemRarity_Mythical) item->w.damage.second_type = get_random_damage_type(random, DamageType_Physical);
             
             switch(id)

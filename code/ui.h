@@ -98,22 +98,18 @@ typedef struct
     v4s content_rect;
 } View;
 
-// TODO(rami): Config: Different item mark styles:
-// {This is a mark!}
-// [This is a mark!]
-// This is a mark! (Gray color, like a code comment)
 typedef struct
 {
-    b32 render_cursor;
-    u32 render_cursor_start_ms;
+ b32 is_active;
+ v4u input_rect;
+ 
+ b32 render_cursor;
+ u32 cursor_blink_start;
+    u32 cursor_blink_duration; // If less than 650 when holding a key then blinking looks wrong.
     u32 cursor;
     
-    // If cursor_blink_duration is less than 650 when we hold down a key, the cursor will
-    // blink one extra time which looks bad.
-    u32 cursor_blink_duration;
-    
     View view;
-    char array[MAX_MARK_SIZE];
+ char array[MAX_MARK_SIZE];
 } Mark;
 
 typedef struct
@@ -154,6 +150,10 @@ typedef struct
 // TODO(rami): Should we render a line in the full log to indicate what actions have taken place in
 // the players last action turn.
 
+internal void set_mark_cursor_at_start(Mark *mark);
+internal void set_mark_cursor_at_end(Mark *mark);
+internal void update_and_render_mark_input(SDL_Renderer *renderer,Font *font, Mark *mark, v2u pos, u32 centering_width);
+internal void deselect_mark(Mark *mark);
 internal void update_view_move(ViewMove *move);
 internal void ui_print_view(char *name, View view);
 internal void render_scrollbar(Game *game, v4u rect, View *view, UI *ui);
@@ -167,12 +167,15 @@ internal void set_view_and_move_at_start(View *view);
 internal void pos_newline(v2u *pos, u32 font_size, u32 count);
 internal char set_owner_src(Owner *owner, void *parent, OwnerType type);
 internal char add_new_char_to_owners(Owner *owners, void *parent, OwnerType type);
-internal u32 get_font_newline(u32 font_size);
-internal u32 get_view_end(View view);
+internal b32 is_mark_array_valid(char *mark_array);
 internal b32 is_view_scrollable(View view);
 internal b32 is_view_scrollable_with_count(View view, u32 count);
 internal b32 can_view_go_up(View view);
 internal b32 can_view_go_down(View view);
+internal b32 update_mark_input(Input *input, Mark *mark);
 internal u32 get_view_range(View view);
+internal u32 get_font_newline(u32 font_size);
+internal u32 get_centering_offset(u32 total_size, u32 part_size);
+internal u32 get_view_end(View view);
 internal Owner *get_owner_from_letter(Owner *owners, char search_c);
 internal String8 get_item_letter_string(Item *item);

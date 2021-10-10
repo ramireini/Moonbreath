@@ -1,3 +1,5 @@
+#if MOONBREATH_SLOW
+
 internal void
 reset_debug_event(DebugEvent *event)
 {
@@ -721,6 +723,12 @@ update_and_render_debug_state(Game *game,
        add_debug_enum(new_tree, "Remains Type", entity->remains_type, get_entity_remains_string);
        add_debug_variable(new_tree, "Pathfind Target", entity->pathfind_target_pos, DebugVarType_V2U);
        
+       if(entity->type == EntityType_Enemy)
+       {
+        add_debug_enum(new_tree, "State", entity->e.state, get_enemy_entity_state_string);
+        add_debug_variable(new_tree, "Player Seen Count", entity->e.player_seen_count, DebugVarType_U32);
+       }
+       
        add_debug_newline(debug, new_tree);
        
        start_debug_group(debug, new_tree, "Flags", false);
@@ -731,7 +739,7 @@ update_and_render_debug_state(Game *game,
         add_debug_flag(new_tree, "UsesRangedAttacks", entity->flags, EntityFlag_UsesRangedAttacks);
         add_debug_flag(new_tree, "HasBeenSeen", entity->flags, EntityFlag_HasBeenSeen);
         add_debug_flag(new_tree, "Flipped", entity->flags, EntityFlag_Flipped);
-        add_debug_flag(new_tree, "EntityFlag_FightingWithInvisible", entity->flags, EntityFlag_FightingWithInvisible);
+        add_debug_flag(new_tree, "FightingWithInvisible", entity->flags, EntityFlag_FightingWithInvisible);
         add_debug_flag(new_tree, "Pathfinding", entity->flags, EntityFlag_Pathfinding);
         add_debug_flag(new_tree, "GhostEnabled", entity->flags, EntityFlag_GhostEnabled);
         add_debug_flag(new_tree, "GhostFlipped", entity->flags, EntityFlag_GhostFlipped);
@@ -877,3 +885,5 @@ update_and_render_debug_state(Game *game,
   }
  }
 }
+
+#endif

@@ -49,10 +49,10 @@ tile_mul(u32 value)
     return(result);
 }
 
-internal String8
+internal String32
 get_game_session_time_string(u32 time)
 {
- String8 result = {0};
+ String32 result = {0};
  
  if(time < 10)
  {
@@ -260,7 +260,7 @@ update_examine_mode(ExamineMode *examine,
     if(can_pathfind)
     {
      unset(examine->flags, ExamineFlag_Open);
-     init_pathfind(player, dungeon, player->pathfind_map, examine->pos);
+     init_entity_pathfind(player, dungeon, player->pathfind_map, examine->pos);
     }
             }
             else if(was_pressed(&input->GameKey_Yes))
@@ -313,7 +313,7 @@ update_examine_mode(ExamineMode *examine,
                         }
                     
                     examine->type = ExamineType_Tile;
-     examine->tile_id = get_dungeon_tile_id_from_pos(dungeon->tiles, examine->pos);
+     examine->tile_id = get_dungeon_pos_tile_id(dungeon->tiles, examine->pos);
                 }
                 }
             }
@@ -615,7 +615,7 @@ render_dungeon(Game *game, Dungeon *dungeon, Assets *assets)
             v2u tile_pos = {x, y};
             
             //printf("%u, %u: %u\n", x, y, get_dungeon_pos_tile(dungeon->tiles, tile_pos));
-   assert(get_dungeon_tile_id_from_pos(dungeon->tiles, tile_pos));
+   assert(get_dungeon_pos_tile_id(dungeon->tiles, tile_pos));
             
    v2u tileset_pos = get_dungeon_tileset_pos_from_tile_pos(dungeon->tiles, tile_pos);
    v4u tile_src = get_dungeon_tile_rect(tileset_pos);
@@ -700,35 +700,45 @@ get_index(s32 value)
 internal b32
 is_window_size(v2u window_size, u32 width, u32 height)
 {
-    b32 result = (window_size.w == width &&
-                  window_size.h == height);
+ b32 result = (window_size.w == width &&
+               window_size.h == height);
+ 
+ return(result);
 }
 
 internal void
 update_camera(Game *game, v2u player_pos, v2u dungeon_size)
 {
-  EditorMode *editor = &game->editor;
  ExamineMode *examine = &game->examine;
-    
-    v2u camera_pos = {0};
-    
-    if(is_set(examine->flags, ExamineFlag_Open) &&
+ v2u camera_pos = {0};
+ 
+#if MOONBREATH_SLOW
+ EditorMode *editor = &game->editor;
+ if(editor->is_open)
+ {
+  camera_pos = editor->pos;
+ }
+ 
+ else
+#endif
+ 
+ if(is_set(examine->flags, ExamineFlag_Open) &&
            is_set(examine->flags, ExamineFlag_CameraOnExaminePos))
     {
         camera_pos = examine->pos;
  }
- else if(editor->is_open)
- {
-  camera_pos = editor->pos;
- }
     else
-    {
+ {
         camera_pos = player_pos;
     }
-    
+ 
+ // TODO(rami): I would like to test having the game window size being decided by having in the config
+ // how many tiles you want the game to be in width and height.
+ // Also most of this code below could be nuked and figured out again.
+ 
     game->camera.x = tile_mul(camera_pos.x) - (game->camera.w / 2);
-    
-    if(is_window_size(game->window_size, 1920, 1080))
+ 
+ if(is_window_size(game->window_size, 1920, 1080))
     {
         game->camera.y = tile_mul(camera_pos.y) - (game->camera.h / 2) + 4;
     }
@@ -767,6 +777,7 @@ update_camera(Game *game, v2u player_pos, v2u dungeon_size)
     printf("camera_tile_offset_x: %u\n", tile_div(game->camera.x));
     printf("camera_tile_offset_y: %u\n\n", tile_div(game->camera.y));
 #endif
+ 
 }
 
 internal void
@@ -1722,13 +1733,13 @@ update_and_render_game(Game *game,
             }
         }
         #endif
-        
+  
   update_game_session_time(&game->timer);
         update_examine_mode(examine, input, player, entity_state, item_state, &inventory->flags, dungeon, ui);
         update_entities(game, input, entity_state, item_state, inventory, dungeon_state, assets, ui);
   update_camera(game, player->pos, dungeon->size);
   
-        render_dungeon(game, dungeon, assets);
+  render_dungeon(game, dungeon, assets);
         render_items(game, player, item_state, dungeon, assets);
         render_entities(game, entity_state, inventory, dungeon, assets);
   render_ui(game, input->mouse_pos, entity_state, item_state, inventory, dungeon, assets, ui);
@@ -1756,12 +1767,12 @@ get_seconds_elapsed(u64 old_counter, u64 new_counter, u64 performance_frequency)
     return(result);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *args[])
 {
-    u32 result = 0;
+ u32 result = 0;
     
     GameMemory memory = {0};
-    memory.size = megabytes(64);
+    memory.size = megabytes(128);
     memory.storage = calloc(1, memory.size);
     
     if(memory.size && memory.storage)
@@ -1771,39 +1782,36 @@ int main(int argc, char *argv[])
         
   init_memory_arena(&game->memory,
                     memory.storage + sizeof(Game),
-                    megabytes(48));
+                    megabytes(64));
   
   EntityState *entity_state = push_memory_struct(&game->memory, EntityState);
         Entity *player = get_player_entity();
-        
+  
         DungeonState *dungeon_state = push_memory_struct(&game->memory, DungeonState);
         for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
         {
    dungeon_state->levels[index].tiles.array = push_memory(&game->memory, MAX_DUNGEON_AREA * sizeof(DungeonTile));
         }
   
-#if MOONBREATH_SLOW
-        #endif
-        
         Assets *assets = push_memory_struct(&game->memory, Assets);
         UI *ui = push_memory_struct(&game->memory, UI);
         init_all_owner_letters(ui->temp_owners);
-        
+  
         ui->window_offset = 12;
         ui->short_log_view.end = 9;
         ui->default_view_step_multiplier = 0.14f;
-        
+  
         ItemState *item_state = push_memory_struct(&game->memory, ItemState);
         item_state->temp_mark.cursor_blink_duration = 800;
         item_state->temp_mark.view.end = 24;
         init_view_scrolling_data(&item_state->pickup_window.view, 32, ui->default_view_step_multiplier);
         init_view_scrolling_data(&item_state->examine_window.view, 32, ui->default_view_step_multiplier);
-        
-        Inventory *inventory = push_memory_struct(&game->memory, Inventory);
+  
+  Inventory *inventory = push_memory_struct(&game->memory, Inventory);
         init_all_owner_letters(inventory->item_owners);
         init_view_scrolling_data(&inventory->window.view, 32, ui->default_view_step_multiplier);
         init_view_scrolling_data(&inventory->interact_window.view, 32, ui->default_view_step_multiplier);
-        
+  
 #if 0
         // Config Example
         
@@ -1897,8 +1905,8 @@ int main(int argc, char *argv[])
                 printf("Error: Value could not be loaded for game.keybinds[%u].\n", index);
                 assert(0);
             }
-        }
-        
+  }
+  
 #else
         game->keybinds[GameKey_Up] = Key_W;
         game->keybinds[GameKey_Down] = Key_S;
@@ -1957,7 +1965,7 @@ int main(int argc, char *argv[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 17964442;
+                                u64 seed = 179642;
                                 printf("Seed: %lu\n\n", seed);
                                 game->random = set_random_seed(seed);
                                 
@@ -2059,16 +2067,16 @@ int main(int argc, char *argv[])
         EditorMode *editor = &game->editor;
         editor->font = &assets->fonts[FontName_DosVga];
         
-        u32 editor_x = 1;
-        u32 editor_y = 1;
+        u32 editor_x = 2;
+        u32 editor_y = 2;
         
-        EditorGroup *tile_group = add_editor_group(editor, "Tiles", editor_x, editor_y, 8);
+        EditorGroup *tile_group = add_editor_group(editor, "Tiles", editor_x, editor_y, 8, false);
         {
          add_editor_source_tile(tile_group, EditorSourceType_Wall, DungeonTileID_StoneWall1);
          add_editor_source_tile(tile_group, EditorSourceType_Water, DungeonTileID_Water1);
          }
         
-        EditorGroup *trap_group = add_editor_group(editor, "Traps", editor_x, editor_y + 2, 8);
+        EditorGroup *trap_group = add_editor_group(editor, "Traps", editor_x, editor_y + 3, 8, false);
         {
          for(DungeonTrapType type = DungeonTrapType_None + 1; type < DungeonTrapType_Count; ++type)
          {
@@ -2076,7 +2084,7 @@ int main(int argc, char *argv[])
          }
         }
         
-        EditorGroup *entity_group = add_editor_group(editor, "Entities", editor_x, editor_y + 4, 8);
+        EditorGroup *entity_group = add_editor_group(editor, "Entities", editor_x, editor_y + 6, 8, true);
         {
          for(EntityID id = EntityID_EnemyStart + 1; id < EntityID_EnemyEnd; ++id)
          {

@@ -190,7 +190,12 @@ get_dungeon_pos_examine_source_count(Dungeon *dungeon, EntityState *entity_state
  
  result += get_dungeon_pos_item_count(item_state, dungeon->level, pos);
  if(get_dungeon_pos_trap(&dungeon->traps, pos)) ++result;
- if(get_dungeon_pos_entity(entity_state, dungeon->level, pos)) ++result;
+ 
+ Entity *entity = get_dungeon_pos_entity(entity_state, dungeon->level, pos);
+ if(entity && entity->type != EntityType_Player)
+ {
+  ++result;
+ }
  
     return(result);
 }
@@ -753,7 +758,7 @@ add_dungeon_room_feature(DungeonRoom *room, u32 max_feature_count, DungeonRoomFe
 }
 
 internal DungeonTileID
-get_dungeon_tile_id_from_pos(DungeonTiles tiles, v2u pos)
+get_dungeon_pos_tile_id(DungeonTiles tiles, v2u pos)
 {
  DungeonTileID result = tiles.array[(pos.y * tiles.width) + pos.x].tile_id;
     return(result);
@@ -974,7 +979,7 @@ get_dungeon_tileset_pos_from_tile_id(DungeonTileID id)
 internal v2u
 get_dungeon_tileset_pos_from_tile_pos(DungeonTiles tiles, v2u tile_pos)
 {
- DungeonTileID id = get_dungeon_tile_id_from_pos(tiles, tile_pos);
+ DungeonTileID id = get_dungeon_pos_tile_id(tiles, tile_pos);
  v2u result = get_dungeon_tileset_pos_from_tile_id(id);
     
     return(result);
@@ -1269,7 +1274,7 @@ is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos)
 internal b32
 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile_id)
 {
- b32 result = (get_dungeon_tile_id_from_pos(tiles, pos) == tile_id);
+ b32 result = (get_dungeon_pos_tile_id(tiles, pos) == tile_id);
     return(result);
 }
 
@@ -1752,7 +1757,7 @@ place_dungeon_automaton_room(DungeonTiles src_tiles,
             v2u src_pos = {x, y};
             v2u dest_pos = {src_room.x + x, src_room.y + y};
             
-   DungeonTileID src_tile = get_dungeon_tile_id_from_pos(src_tiles, src_pos);
+   DungeonTileID src_tile = get_dungeon_pos_tile_id(src_tiles, src_pos);
    
             if(is_water && !is_dungeon_pos_water(src_tiles, src_pos)) continue;
             set_dungeon_pos_tile(dest_tiles, dest_pos, src_tile);
@@ -2188,7 +2193,7 @@ create_dungeon(Game *game,
             }
         }
     
-#if 1
+#if 0
     // Test room
     dungeon->can_pathfind = true;
     
@@ -2196,119 +2201,15 @@ create_dungeon(Game *game,
     {
         for(u32 x = 1; x < dungeon->size.w - 1; ++x)
   {
-   //set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(x, y));
    set_dungeon_pos_floor(random, dungeon->tiles, make_v2u(x, y));
         }
     }
     
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(20, 16));
-    //set_dungeon_pos_wall(random, dungeon->tiles, make_v2u(18, 9));
-    
-    //add_enemy_entity(entities, dungeon, EntityID_Zarimahar, 16, 8);
-    //add_enemy_entity(entities, dungeon, EntityID_AbyssalHexmaster, 16, 8);
-    //add_enemy_entity(entities, dungeon, EntityID_DwarfTinkerer, 14, 14);
-    //add_enemy_entity(entities, dungeon, EntityID_Bat, 12, 8);
-    //add_enemy_entity(entities, dungeon, EntityID_SkeletonWarrior, 21, 8);
-    
- entity_move(random, player, dungeon, ui, make_v2u(10, 16));
+ entity_move(random, player, dungeon, ui, make_v2u(10, 1));
     //player->hp = player->max_hp - 1;
     //player->hp = 1;
  
- //add_enemy_entity(entity_state, dungeon, EntityID_KoboldWarrior, 12, 16);
- 
 #if 0
- // Rooms for testing
- 
- v4u first_room = {4, 4, 6, 6};
- v2u first_room_center = rect_center(first_room);
- debug_place_dungeon_room(random, dungeon->tiles, first_room);
- 
- v4u second_room = {14, 4, 6, 6};
- v2u second_room_center = rect_center(second_room);
- debug_place_dungeon_room(random, dungeon->tiles, second_room);
- 
- place_dungeon_corridor(random, dungeon->tiles, first_room_center, second_room_center, DungeonCorridorType_Turn);
- 
- //v2u trap_pos = {12, 7};
- //add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, trap_pos);
- 
- #if 1
- set_dungeon_pos_closed_door(dungeon->tiles, make_v2u(10, 7));
- set_dungeon_pos_closed_door(dungeon->tiles, make_v2u(13, 7));
- #endif
- 
- entity_move(random, player, dungeon, ui, first_room_center);
- //add_player_starting_item(game, player, item_state, inventory, ui, ItemID_Sword);
- 
- //add_enemy_entity(entity_state, dungeon, EntityID_SkeletonWarrior, 19, 4);
- Entity *test = add_enemy_entity(entity_state, dungeon, EntityID_KoboldWarrior, 15, 9);
- test->e.wandering_type = EnemyWanderingType_Random;
- //add_enemy_entity(entity_state, dungeon, EntityID_OrcWarrior, 15, 7);
- 
- //add_weapon_item(random, item_state, dungeon_level, ItemID_Sword, ItemRarity_Common, 12, 7, false);
- //add_weapon_item(random, item_state, dungeon_level, ItemID_Warhammer, ItemRarity_Common, 12, 7, false);
- 
- #if 0
- // Traps around enemy
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(14, 6));
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(15, 6));
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(16, 6));
- 
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(14, 7));
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(16, 7));
- 
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(14, 8));
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(15, 8));
- add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(16, 8));
- #endif
- 
- #endif
-    
- #if 0
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(8, 12));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(9, 12));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(10, 12));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(11, 12));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(12, 12));
-    
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(8, 13));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(12, 13));
-    
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(8, 14));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(12, 14));
-    
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(8, 15));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(9, 15));
-    // Blank
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(11, 15));
-    set_dungeon_pos_wall(random, spec, dungeon->tiles, make_v2u(12, 15));
-    #endif
-    
-    //add_enemy_entity(entity_state, dungeon, EntityID_Python, 19, 1);
-    
-    //Entity *test = add_enemy_entity(entity_state, dungeon, EntityID_Lich, 1, 13);
-    //Entity *test = add_enemy_entity(entity_state, dungeon, EntityID_SkeletonArcher, 1, 13);
-    //Entity *test = add_enemy_entity(entity_state, dungeon, EntityID_SkeletonWarrior, 1, 13);
-    //test->stats.def = 20;
-    
-    //add_enemy_entity(entity_state, dungeon, EntityID_SkeletonArcher, 10, 13);
-    
-    //set_dungeon_pos_water(random, dungeon->tiles, make_v2u(6, 10));
-    
-    #if 0
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(21, 11));
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(22, 11));
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(23, 11));
-    
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(21, 12));
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(23, 12));
-    
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(21, 13));
-    //add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(22, 13));
-    add_dungeon_trap(&dungeon->spec, &dungeon->traps, DungeonTrapType_Sword, make_v2u(23, 13));
-    #endif
-    
-    #if 0
     add_consumable_item(random, items, dungeon_level, ItemID_MightPotion, 10, 10, 1);
     add_consumable_item(random, items, dungeon_level, ItemID_MightPotion, 10, 11, 1);
     #endif
@@ -2976,7 +2877,7 @@ create_dungeon(Game *game,
     }
     #endif
     
-#if 1
+#if 0
     // Place enemies
     for(u32 count = 0; count < spec->enemy_count; ++count)
     {

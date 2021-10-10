@@ -129,10 +129,6 @@ update_player_view(Entity *player, Dungeon *dungeon)
     assert(is_entity_valid(player));
     assert(dungeon);
     
-#if MOONBREATH_SLOW
- if(debug_toggles[1]) return;
-    #endif
-    
     // Reset visibility
     for(u32 y = 0; y < dungeon->size.h; ++y)
     {

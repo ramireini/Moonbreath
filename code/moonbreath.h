@@ -118,7 +118,7 @@ internal v4u get_game_dest(v4s camera, v2u pos);
 internal v4u render_game_dest_tile(Game *game, SDL_Texture *texture, v4u tile_src, v2u pos, b32 flipped);
 internal v2u get_direction_pos(v2u pos, Direction direction);
 internal String8 get_printable_key(Input *input, Key key);
-internal String8 get_game_session_time_string(u32 time);
+internal String32 get_game_session_time_string(u32 time);
 internal String128 get_os_path(char *path);
 internal Direction get_random_direction(Random *random);
 internal Direction get_direction_between_positions(v2u a_pos, v2u b_pos);

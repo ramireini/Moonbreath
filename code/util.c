@@ -78,32 +78,44 @@ is_v4s_zero(v4s a)
 }
 
 internal b32
+is_v2u_any_set(v2u a)
+{
+ b32 result = (a.x || a.y);
+ return(result);
+}
+
+internal b32
+is_v2u_all_set(v2u a)
+{
+ b32 result = (a.x && a.y);
+ return(result);
+}
+
+internal b32
 is_v2u_zero(v2u a)
 {
-    b32 result = (a.x == 0 &&
-                  a.y == 0);
-    
+    b32 result = (a.x == 0 && a.y == 0);
     return(result);
 }
 
 internal b32
 is_v4u_zero(v4u a)
 {
-    b32 result = (a.x == 0 &&
-                      a.y == 0 &&
-                      a.w == 0 &&
-                      a.h == 0);
-    
+    b32 result = (a.x == 0 && a.y == 0 && a.w == 0 && a.h == 0);
     return(result);
 }
 
 internal u32
 get_string_length(char *string)
 {
-    u32 length = 0;
-    while(*string++) ++length;
+ u32 result = 0;
+ 
+ while(*string++)
+ {
+  ++result;
+ }
     
-    return(length);
+ return(result);
 }
 
 internal char
@@ -242,17 +254,108 @@ is_uppercase(char c)
 internal b32
 is_alpha(char c)
 {
-    b32 result = is_lowercase(c) || is_uppercase(c);
+ b32 result = (is_lowercase(c) || is_uppercase(c));
     return(result);
+}
+
+internal b32
+is_alpha_or_space(char c)
+{
+ b32 result = (is_alpha(c) || c == ' ');
+ return(result);
+}
+
+internal char
+make_lowercase(char c)
+{
+ assert(is_uppercase(c));
+ 
+ char result = (c + 32);
+ return(result);
 }
 
 internal char
 make_uppercase(char c)
 {
-    assert(is_lowercase(c));
+ assert(is_lowercase(c));
+ 
+ char result = (c - 32);
+ return(result);
+}
+
+internal b32
+are_chars_equal_no_case(char a, char b)
+{
+ b32 result = false;
+ 
+ if(is_alpha_or_space(a) &&
+    is_alpha_or_space(b))
+ {
+  if(is_uppercase(a)) a = make_lowercase(a);
+   if(is_uppercase(b)) b = make_lowercase(b);
+   
+   result = (a == b);
+ }
+ 
+ return(result);
+}
+
+internal b32
+string_has_string(char *a, char *b, b32 case_sensitive)
+{
+ assert(a);
+ assert(b);
+ 
+ while(a[0])
+ {
+  // Start substring search
+  if(are_chars_equal_no_case(a[0], b[0]))
+  {
+   char *sub_a = a;
+   char *sub_b = b;
+   
+   // While matching
+   while(sub_a[0] && sub_b[0] &&
+         are_chars_equal_no_case(sub_a[0], sub_b[0]))
+   {
+    ++sub_a;
+    ++sub_b;
     
-    char result = c - 32;
-    return(result);
+    // Has been matching and search string ended
+    if(sub_b[0] == '\0')
+    {
+     return(true);
+    }
+   }
+   
+  }
+  
+  ++a;
+ }
+ 
+ return(false);
+}
+
+internal b32
+strings_match(char *a, char *b)
+{
+ assert(a);
+ assert(b);
+ 
+ b32 result = false;
+ 
+ while(*a && *b &&
+       *a++ == *b++)
+ {
+  if(*a == '\0' &&
+     *b == '\0')
+  {
+   result = true;
+   break;
+  }
+ }
+ 
+ return(result);
 }
 
 internal u32
@@ -267,20 +370,6 @@ get_rect_height(v4u rect)
 {
     u32 result = rect.y + rect.h;
     return(result);
-}
-
-internal b32
-strings_match(char *a, char *b)
-{
-    assert(a);
-    assert(b);
-    
-    while(*a && *b && *a++ == *b++)
-    {
-        if(*a == '\0' && *b == '\0') return(true);
-    }
-    
-    return(false);
 }
 
 internal f32

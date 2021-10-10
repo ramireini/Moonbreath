@@ -6,8 +6,10 @@ typedef enum
     EntityStatusStatType_Int,
     EntityStatusStatType_Dex,
     EntityStatusStatType_Def,
-    EntityStatusStatType_EV,
-    EntityStatusStatType_StrIntDex
+ EntityStatusStatType_EV,
+ EntityStatusStatType_FOV,
+ EntityStatusStatType_StrIntDex,
+ EntityStatusStatType_Darkness,
 } EntityStatusStatType;
 
 typedef enum
@@ -22,10 +24,10 @@ typedef enum
     EntityStatusType_Bind,
     EntityStatusType_Bleed,
     EntityStatusType_BrokenArmor,
-    EntityStatusType_Sightless,
     EntityStatusType_Confusion,
     EntityStatusType_Summon,
-    EntityStatusType_Invisible,
+ EntityStatusType_Invisible,
+ EntityStatusType_Darkness,
 } EntityStatusType;
 
 typedef enum
@@ -76,7 +78,6 @@ struct EntityStatus
     EntityStatusType type;
     EntityStatusStatType stat_type;
     
-    u32 stored_value; // Store value for use when status ends.
     b32 is_value_percent;
     union
     {
