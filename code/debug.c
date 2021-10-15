@@ -603,7 +603,7 @@ update_and_render_debug_state(Game *game,
    else
    {
     Item *item = get_dungeon_pos_item(item_state, dungeon->level, input->mouse_tile_pos, 0);
-    Entity *entity = get_dungeon_pos_entity(entity_state, dungeon->level, input->mouse_tile_pos);
+    Entity *entity = get_dungeon_pos_entity(dungeon->tiles, input->mouse_tile_pos);
     
 #if 0
     printf("item: %p\n", item);
@@ -712,6 +712,7 @@ update_and_render_debug_state(Game *game,
        add_debug_newline(debug, new_tree);
        
        add_debug_variable(new_tree, "Dungeon Level", entity->dungeon_level, DebugVarType_U32);
+       add_debug_enum(new_tree, "Direction", entity->direction, get_direction_string);
        add_debug_variable(new_tree, "New Pos", entity->new_pos, DebugVarType_V2U);
        add_debug_variable(new_tree, "Pos", entity->pos, DebugVarType_V2U);
        

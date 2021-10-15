@@ -191,7 +191,7 @@ get_dungeon_pos_examine_source_count(Dungeon *dungeon, EntityState *entity_state
  result += get_dungeon_pos_item_count(item_state, dungeon->level, pos);
  if(get_dungeon_pos_trap(&dungeon->traps, pos)) ++result;
  
- Entity *entity = get_dungeon_pos_entity(entity_state, dungeon->level, pos);
+ Entity *entity = get_dungeon_pos_entity(dungeon->tiles, pos);
  if(entity && entity->type != EntityType_Player)
  {
   ++result;
@@ -293,7 +293,7 @@ get_random_dungeon_feature_pos(Random *random, Dungeon *dungeon, ItemState *item
         
         result = get_random_dungeon_pos(random, dungeon->size);
         if(is_dungeon_pos_traversable(dungeon->tiles, result) &&
-     !get_dungeon_pos_occupier(dungeon->tiles, result) &&
+     !get_dungeon_pos_entity(dungeon->tiles, result) &&
                !get_dungeon_pos_item_count(item_state, dungeon->level, result) &&
                !get_dungeon_pos_trap(&dungeon->traps, result) &&
            !is_dungeon_pos_passage(dungeon->tiles, result))
@@ -1139,9 +1139,9 @@ get_dungeon_tile_description(DungeonTileID tile_id)
 }
 
 internal Entity *
-get_dungeon_pos_occupier(DungeonTiles tiles, v2u pos)
+get_dungeon_pos_entity(DungeonTiles tiles, v2u pos)
 {
-      Entity *result = tiles.array[(pos.y * tiles.width) + pos.x].occupier;
+ Entity *result = tiles.array[(pos.y * tiles.width) + pos.x].entity;
     return(result);
 }
 
@@ -1158,7 +1158,7 @@ internal b32
 is_dungeon_pos_traversable_and_occupied(DungeonTiles tiles, v2u pos)
 {
  b32 result = (is_dungeon_pos_traversable(tiles, pos) &&
-               get_dungeon_pos_occupier(tiles, pos));
+               get_dungeon_pos_entity(tiles, pos));
  
     return(result);
 }
@@ -1167,7 +1167,7 @@ internal b32
 is_dungeon_pos_traversable_and_unoccupied(DungeonTiles tiles, v2u pos)
 {
  b32 result = (is_dungeon_pos_traversable(tiles, pos) &&
-               !get_dungeon_pos_occupier(tiles, pos));
+               !get_dungeon_pos_entity(tiles, pos));
  
     return(result);
 }
@@ -1427,7 +1427,7 @@ can_place_entity_remains_on_dungeon_pos(Dungeon *dungeon, v2u pos, EntityRemains
     
     if(type == EntityRemainsPlaceType_Wound &&
            is_dungeon_pos_valid_for_base_entity_remains(dungeon, pos) &&
-    !get_dungeon_pos_occupier(dungeon->tiles, pos) &&
+    !get_dungeon_pos_entity(dungeon->tiles, pos) &&
            !get_dungeon_pos_remains_tile_id(dungeon->tiles, pos))
     {
         result = true;
@@ -1448,9 +1448,9 @@ set_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile_id)
 }
 
 internal void
-set_dungeon_pos_occupier(DungeonTiles tiles, v2u pos, Entity *entity)
+set_dungeon_pos_entity(DungeonTiles tiles, v2u pos, Entity *entity)
 {
-    tiles.array[(pos.y * tiles.width) + pos.x].occupier = entity;
+ tiles.array[(pos.y * tiles.width) + pos.x].entity = entity;
 }
 
 internal void
@@ -2188,7 +2188,7 @@ create_dungeon(Game *game,
             v2u pos = {x, y};
             
             set_dungeon_pos_wall(random, spec, dungeon->tiles, pos);
-   set_dungeon_pos_occupier(dungeon->tiles, pos, 0);
+   set_dungeon_pos_entity(dungeon->tiles, pos, 0);
             set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
             }
         }
@@ -2877,13 +2877,13 @@ create_dungeon(Game *game,
     }
     #endif
     
-#if 0
+#if 1
     // Place enemies
-    for(u32 count = 0; count < spec->enemy_count; ++count)
+ for(u32 count = 0; count < spec->enemy_count; ++count)
     {
         v2u enemy_pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
-        EntityID enemy_id = get_random_enemy_id_for_dungeon_level(random, dungeon->level);
-        
+  EntityID enemy_id = get_random_enemy_id_for_dungeon_level(random, dungeon->level);
+  
         // We don't want enemies inside the player view range.
         v4u player_view_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, player->stats.fov);
         if(!is_dungeon_pos_inside_rect(enemy_pos, player_view_rect))

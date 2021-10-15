@@ -251,16 +251,18 @@ update_examine_mode(ExamineMode *examine,
      
                     // Start manual player pathfind
     if(!can_pathfind &&
-       can_entity_move_to_pos(player, dungeon, examine->pos, false) &&
+       is_dungeon_pos_traversable(dungeon->tiles, examine->pos) &&
                            has_tile_been_seen(dungeon->tiles, examine->pos))
     {
+     // This only wants that the position is traversable and that the tile has been
+     // seen. Even if there's something on the tile like a dungeon trap or an entity.
      can_pathfind = true;
     }
     
     if(can_pathfind)
     {
      unset(examine->flags, ExamineFlag_Open);
-     init_entity_pathfind(player, dungeon, player->pathfind_map, examine->pos);
+     init_entity_pathfind(player, dungeon, &player->pathfind_map, examine->pos);
     }
             }
             else if(was_pressed(&input->GameKey_Yes))
@@ -1772,7 +1774,7 @@ int main(int argc, char *args[])
  u32 result = 0;
     
     GameMemory memory = {0};
-    memory.size = megabytes(128);
+    memory.size = megabytes(256);
     memory.storage = calloc(1, memory.size);
     
     if(memory.size && memory.storage)
@@ -1782,7 +1784,7 @@ int main(int argc, char *args[])
         
   init_memory_arena(&game->memory,
                     memory.storage + sizeof(Game),
-                    megabytes(64));
+                    megabytes(128));
   
   EntityState *entity_state = push_memory_struct(&game->memory, EntityState);
         Entity *player = get_player_entity();
@@ -1965,7 +1967,7 @@ int main(int argc, char *args[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 179642;
+                                u64 seed = 953464343462;
                                 printf("Seed: %lu\n\n", seed);
                                 game->random = set_random_seed(seed);
                                 
@@ -2074,6 +2076,7 @@ int main(int argc, char *args[])
         {
          add_editor_source_tile(tile_group, EditorSourceType_Wall, DungeonTileID_StoneWall1);
          add_editor_source_tile(tile_group, EditorSourceType_Water, DungeonTileID_Water1);
+         add_editor_source_tile(tile_group, EditorSourceType_DungeonTile, DungeonTileID_StoneDoorClosed);
          }
         
         EditorGroup *trap_group = add_editor_group(editor, "Traps", editor_x, editor_y + 3, 8, false);

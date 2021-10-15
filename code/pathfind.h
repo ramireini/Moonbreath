@@ -8,16 +8,11 @@ typedef enum
 
 typedef struct
 {
+ b32 can_move;
  v2u pos;
- u32 pathfind_value;
+ u32 value;
  Direction direction;
 } PathfindPosInfo;
-
-typedef struct
-{
- b32 can_move;
- PathfindPosInfo info;
-} PathfindResult;
 
 typedef struct PathfindMap PathfindMap;
 

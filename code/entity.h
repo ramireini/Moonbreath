@@ -254,7 +254,7 @@ typedef struct
     
     Item *equipment[ItemSlot_Count];
     
- // We store a pointer to it so we don't have to pass it around everywhere.
+ // Store a pointer because otherwise we'd have to pass it many times.
  PathfindMap *pathfind_map_to_player;
 } PlayerEntity;
 
@@ -293,10 +293,10 @@ typedef struct
 
 typedef struct
 {
- s32 value;
+ s32 value; // MIN_ENTITY_RESIST_VALUE - MAX_ENTITY_RESIST_VALUE
 } EntityResist;
 
-// Entity evasion values
+// Entity evasion value ranges
 // 0, None
 // 1 - 3, Very Low
 // 4 - 7, Low
@@ -304,8 +304,6 @@ typedef struct
 // 14 - 17, High
 // 18 - 21, Very High
 // 22, Unhittable
-
-// Entity resistance values range from MIN_ENTITY_RESIST_VALUE to MAX_ENTITY_RESIST_VALUE.
 
 struct Entity
 {
@@ -334,10 +332,6 @@ struct Entity
     v4u tile_src;
     EntityRemainsType remains_type;
  
- v2u pathfind_target_pos;
- PathfindMap *pathfind_map;
- PathfindMap chase_map;
- 
     EntityStats stats;
     u32 hit_chance;
     f32 action_time;
@@ -345,6 +339,9 @@ struct Entity
     
  EntityResist resists[EntityDamageType_Count];
  EntityStatus statuses[MAX_ENTITY_STATUS_COUNT];
+ 
+ v2u pathfind_target_pos;
+ PathfindMap pathfind_map;
  
     EntityType type;
     union
@@ -357,9 +354,6 @@ struct Entity
 struct EntityState
 {
     Entity array[MAX_ENTITY_COUNT];
-    
- PathfindMap player_pathfind_map;
- PathfindMap enemy_pathfind_map;
  PathfindMap pathfind_map_to_player;
  };
 
@@ -395,4 +389,3 @@ internal EntityID get_random_enemy_entity_id(Random *random);
 internal EntityInfo get_enemy_entity_info(EntityID id);
 internal EntityInfo get_random_enemy_entity_info(Random *random);
 internal Entity *add_enemy_entity(EntityState *entity_state, Dungeon *dungeon, EntityID id, u32 x, u32 y);
-internal Entity *get_dungeon_pos_entity(EntityState *entity_state, u32 dungeon_level, v2u pos);

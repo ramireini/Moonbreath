@@ -89,12 +89,12 @@ print_enemy_entity_state(EnemyEntityState type)
 #endif
 
 internal void
-reset_enemy_pathfind(Entity *enemy)
+reset_entity_pathfind(Entity *entity)
 {
- assert(is_enemy_entity_valid(enemy));
+ assert(is_entity_valid(entity));
  
- unset(enemy->flags, EntityFlag_Pathfinding);
- zero_struct(enemy->pathfind_target_pos);
+ unset(entity->flags, EntityFlag_Pathfinding);
+ zero_struct(entity->pathfind_target_pos);
 }
 
 internal char *
@@ -192,12 +192,26 @@ reset_player_pathfind_trail(Entity *player)
 }
 
 internal void
-update_enemy_facing_direction(Entity *enemy, Entity *player, b32 update_from_moving)
+set_enemy_facing_direction(Entity *enemy, Entity *player, b32 update_from_moving)
 {
+ 
+#if 0
+ if(enemy->index == 10)
+ {
+  printf("enemy->pos: %u, %u\n", enemy->pos.x, enemy->pos.y);
+ printf("enemy->new_pos: %u, %u\n\n", enemy->new_pos.x, enemy->new_pos.y);
+ }
+ #endif
+ 
     assert(is_enemy_entity_valid(enemy));
     
  if(update_from_moving)
-    {
+ {
+  assert(!is_v2u_equal(enemy->pos, enemy->new_pos));
+  
+  // Set direction from pos and new_pos.
+   enemy->direction = get_direction_between_positions(enemy->new_pos, enemy->pos);
+  
         // Update based on move direction
             switch(enemy->direction)
             {
@@ -347,7 +361,7 @@ windows_are_closed(ExamineMode *examine, u32 inventory_flags, u32 ui_flags)
 internal b32
 was_pressed_and_windows_are_closed(InputState *state, ExamineMode *examine, u32 inventory_flags, u32 ui_flags)
 {
-    b32 result = was_pressed(state) && windows_are_closed(examine, inventory_flags, ui_flags);
+ b32 result = (was_pressed(state) && windows_are_closed(examine, inventory_flags, ui_flags));
     return(result);
     }
 
@@ -1156,11 +1170,11 @@ place_entity_remains(Random *random,
                 {
                     assert(entity->remains_type == EntityRemainsType_GreenBlood);
                     remains = get_random(random, DungeonTileID_GreenBloodGroundMedium1, DungeonTileID_GreenBloodGroundLarge2);
-                }
-            }
-            
+    }
+    
             assert(remains);
             }
+   }
         
         if(remains)
         {
@@ -1168,7 +1182,7 @@ place_entity_remains(Random *random,
 #if 0
             printf("\nName: %s\n", entity->name.s);
             printf("Remains Type: %u\n\n", entity->remains_type);
-            printf("Remains Place Type: %u\n", type);
+            printf("Remains Place Type: %u\n", place_type);
             printf("Remains ID: %u\n", remains);
             printf("Remains Pos: %u, %u\n", remains_pos.x, remains_pos.y);
             printf("Is Remains Pos Wall: %u\n", is_dungeon_pos_wall(dungeon->tiles, remains_pos));
@@ -1183,6 +1197,10 @@ internal b32
 can_enemy_see_entity(Entity *enemy, Entity *target, DungeonTiles tiles)
 {
     b32 result = false;
+ 
+#if MOONBREATH_SLOW
+ if(debug_toggles[DebugToggleType_TraverseAll]) return(false);
+ #endif
  
  if(enemy->dungeon_level == target->dungeon_level)
  {
@@ -1331,6 +1349,11 @@ get_enemy_entity_flags(EntityID id)
 {
     u32 result = 0;
  
+ // nocheckin When a door is opened/closed and it isn't in player view, we should set it as changed
+ // and have a tile_id of what it was before the change. That tile_id before the change should be
+ // still rendered for the player as the door isn't in player view. If the door comes into player
+ // view then we should start rendering the actual up to date version of it.
+ 
     switch(id)
     {
         
@@ -1349,12 +1372,14 @@ get_enemy_entity_flags(EntityID id)
         case EntityID_SkeletonArcher:
   {
    set(result, EntityFlag_Undead);
-            set(result, EntityFlag_UsesRangedAttacks);
+   set(result, EntityFlag_CanOpenDoors);
+   set(result, EntityFlag_UsesRangedAttacks);
         } break;
         
         case EntityID_SkeletonMage:
         {
-            set(result, EntityFlag_Undead);
+   set(result, EntityFlag_Undead);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Bat:
@@ -1368,11 +1393,13 @@ get_enemy_entity_flags(EntityID id)
         case EntityID_KoboldWarrior:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_KoboldShaman:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Snail:
@@ -1392,17 +1419,20 @@ get_enemy_entity_flags(EntityID id)
         case EntityID_OrcWarrior:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_OrcArcher:
         {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
    set(result, EntityFlag_UsesRangedAttacks);
         } break;
         
         case EntityID_OrcShaman:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Python:
@@ -1415,17 +1445,20 @@ get_enemy_entity_flags(EntityID id)
         } break;
         
         case EntityID_ElfKnight:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_ElfArbalest:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
             set(result, EntityFlag_UsesRangedAttacks);
         } break;
         
         case EntityID_ElfMage:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_GiantSlime:
@@ -1440,15 +1473,18 @@ get_enemy_entity_flags(EntityID id)
         case EntityID_OrcAssassin:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_OrcSorcerer:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Minotaur:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Treant:
@@ -1460,16 +1496,19 @@ get_enemy_entity_flags(EntityID id)
         } break;
         
         case EntityID_CentaurWarrior:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_CentaurSpearman:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_CentaurArcher:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
             set(result, EntityFlag_UsesRangedAttacks);
         } break;
         
@@ -1482,23 +1521,27 @@ get_enemy_entity_flags(EntityID id)
         } break;
         
         case EntityID_OgreWarrior:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_OgreArcher:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
             set(result, EntityFlag_UsesRangedAttacks);
         } break;
         
         case EntityID_OgreMage:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Cyclops:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_ShadowWalker:
@@ -1508,16 +1551,19 @@ get_enemy_entity_flags(EntityID id)
         } break;
         
         case EntityID_DwarfKnight:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_DwarfSoldier:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_DwarfTinkerer:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_ScarletSnake:
@@ -1526,7 +1572,8 @@ get_enemy_entity_flags(EntityID id)
         
         case EntityID_Lich:
         {
-            set(result, EntityFlag_Undead);
+   set(result, EntityFlag_Undead);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_AbyssalFiend:
@@ -1537,10 +1584,12 @@ get_enemy_entity_flags(EntityID id)
         case EntityID_BloodTroll:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_IronGolem:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Griffin:
@@ -1553,11 +1602,13 @@ get_enemy_entity_flags(EntityID id)
         } break;
         
         case EntityID_BlackKnight:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_GiantDemon:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Hellhound:
@@ -1567,10 +1618,12 @@ get_enemy_entity_flags(EntityID id)
         case EntityID_AbyssalHexmaster:
   {
    set(result, EntityFlag_FleeOnLowHP);
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_Zarimahar:
-        {
+  {
+   set(result, EntityFlag_CanOpenDoors);
         } break;
         
         invalid_default_case;
@@ -1900,9 +1953,9 @@ entity_move_force(Entity *entity,
     assert(dungeon);
     assert(is_dungeon_level_valid(dungeon_level));
     
- set_dungeon_pos_occupier(dungeon->tiles, entity->pos, 0);
+ set_dungeon_pos_entity(dungeon->tiles, entity->pos, 0);
  entity->new_pos = entity->pos = new_pos;
- set_dungeon_pos_occupier(dungeon->tiles, entity->new_pos, entity);
+ set_dungeon_pos_entity(dungeon->tiles, entity->new_pos, entity);
     
     if(entity->type == EntityType_Player)
     {
@@ -2103,16 +2156,16 @@ update_player_pathfind(Entity *player,
     
     if(result)
  {
-  PathfindResult pathfind_result = get_pathfind_result(player, dungeon, player->pathfind_map, PathfindMethod_Toward);
-  if(pathfind_result.can_move)
+  PathfindPosInfo pathfind = get_pathfind_result(player, dungeon, &player->pathfind_map, PathfindMethod_Toward, true);
+  if(pathfind.can_move)
    {
-   player->new_pos = pathfind_result.info.pos;
+   player->new_pos = pathfind.pos;
    
    // Reached pathfind target
    if(is_v2u_equal(player->new_pos, player->pathfind_target_pos))
    {
+    reset_entity_pathfind(player);
     player->p.wait_before_pathfind_reset = true; // Wait before pathfind reset so it can be reset by a game time advancing player action.
-    unset(player->flags, EntityFlag_Pathfinding);
    }
    
    // Add to pathfind trail
@@ -2227,25 +2280,6 @@ get_enemy_turn_count(f32 *available_time, f32 action_time)
     *available_time -= action_time;
     
     return(result);
-}
-
-internal Entity *
-get_dungeon_pos_entity(EntityState *entity_state, u32 dungeon_level, v2u pos)
-{
- assert(entity_state);
- assert(is_dungeon_level_valid(dungeon_level));
- 
-    for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
-    {
-        Entity *entity = &entity_state->array[index];
-  if(is_entity_valid_in_level(entity, dungeon_level) &&
-     is_v2u_equal(entity->pos, pos))
-        {
-            return(entity);
-        }
-    }
-    
-    return(0);
 }
 
 internal void
@@ -3065,25 +3099,25 @@ will_entity_hit(Random *random, Entity *attacker, Entity *defender)
 }
 
 internal b32
-entity_can_move(Entity *entity, UI *ui)
+entity_has_statuses_that_stop_movement(Entity *entity, UI *ui)
 {
     assert(is_entity_valid(entity));
     assert(ui);
     
-    b32 result = true;
+    b32 result = false;
      
     for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
     {
         EntityStatus *status = &entity->statuses[index];
         if(status->type && status->type == EntityStatusType_Bind)
         {
-            result = false;
+            result = true;
             if(entity->type == EntityType_Player) log_add("You aren't able to move!", ui);
             
             break;
             }
     }
-    
+ 
     return(result);
 }
 
@@ -3102,7 +3136,6 @@ move_player_between_dungeons(Game *game,
     // Unset player occupancy on the passage tile before moving to another dungeon level.
     Entity *player = get_player_entity();
     Dungeon *current_dungeon = get_dungeon_from_level(dungeon_state, dungeon_state->current_level);
- set_dungeon_pos_occupier(current_dungeon->tiles, player->pos, 0);
     
     Dungeon *new_dungeon = get_dungeon_from_level(dungeon_state, new_dungeon_level);
     if(new_dungeon->level)
@@ -3111,7 +3144,8 @@ move_player_between_dungeons(Game *game,
   entity_move_force(player, new_dungeon, new_pos, new_dungeon_level);
     }
     else
-    {
+ {
+  set_dungeon_pos_entity(current_dungeon->tiles, player->pos, 0); // Unset for the level we came from
         create_dungeon(game, player, entity_state, dungeon_state, item_state, inventory, ui, new_dungeon_level, player->pos);
     }
 }
@@ -3160,8 +3194,8 @@ entity_move(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_po
     assert(ui);
     
     b32 result = false;
-    
-    if(entity_can_move(entity, ui))
+ 
+ if(!entity_has_statuses_that_stop_movement(entity, ui))
     {
             result = true;
             
@@ -3202,13 +3236,30 @@ entity_move(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_po
   #if MOONBREATH_SLOW
   if(!can_entity_move_to_pos(entity, dungeon, new_pos, false))
   {
+   printf("- Mover -\n");
+   printf("Name: %s (index: %u)\n", entity->name.s, entity->index);
+   printf("Pos: %u, %u\n", entity->pos.x, entity->pos.y);
    printf("New Pos: %u, %u\n", new_pos.x, new_pos.y);
-   printf("Traversable or closed door: %u\n", is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, new_pos));
-   printf("Occupier: %p\n\n", get_dungeon_pos_occupier(dungeon->tiles, new_pos));
+   printf("New pos is traversable or closed door: %u\n\n", is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, new_pos));
+   
+   Entity *occupier = get_dungeon_pos_entity(dungeon->tiles, new_pos);
+   if(occupier)
+   {
+    printf("- Occupier -\n");
+    printf("Name: %s (index: %u)\n", occupier->name.s, occupier->index);
+    printf("Pos: %u, %u\n", occupier->pos.x, occupier->pos.y);
+    printf("New Pos: %u, %u\n\n\n", occupier->new_pos.x, occupier->new_pos.y);
+    
+   }
    
    assert(0);
   }
   #endif
+  
+  if(entity->type == EntityType_Enemy)
+  {
+   set_enemy_facing_direction(entity, 0, true);
+  }
   
   entity_move_force(entity, dungeon, new_pos, dungeon->level);
   
@@ -3216,10 +3267,6 @@ entity_move(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_po
   {
    set_new_player_view_dungeon_traps_as_seen(&dungeon->traps, dungeon->tiles);
   }
-        else if(entity->type == EntityType_Enemy)
-        {
-            update_enemy_facing_direction(entity, 0, true);
-        }
     }
     
     return(result);
@@ -3249,7 +3296,7 @@ remove_entity(Entity *entity, DungeonTiles tiles)
 {
     assert(is_entity_valid(entity));
     
- set_dungeon_pos_occupier(tiles, entity->pos, 0);
+ set_dungeon_pos_entity(tiles, entity->pos, 0);
     zero_struct(*entity);
 }
 
@@ -3535,20 +3582,25 @@ was_pressed(InputState *state)
 }
 
 internal UpdateEnemyPathfindType
-update_enemy_pathfind(Entity *enemy, Dungeon *dungeon, PathfindMap *pathfind_map, v2u pathfind_target_pos)
+update_enemy_pathfind(Entity *enemy, Dungeon *dungeon, PathfindMap *map, v2u target_pos)
 {
+ assert(is_enemy_entity_valid(enemy));
+ assert(dungeon);
+ assert(map);
+ 
  UpdateEnemyPathfindType result = UpdateEnemyPathfindType_None;
  
+ // target_pos is used only for pathfind init and not after that.
  if(!is_set(enemy->flags, EntityFlag_Pathfinding))
  {
-  init_entity_pathfind(enemy, dungeon, pathfind_map, pathfind_target_pos);
+  init_entity_pathfind(enemy, dungeon, map, target_pos);
  }
  assert(is_set(enemy->flags, EntityFlag_Pathfinding));
  
-  PathfindResult pathfind_result = get_pathfind_result(enemy, dungeon, pathfind_map, PathfindMethod_Toward);
-  if(pathfind_result.can_move)
+ PathfindPosInfo pathfind = get_pathfind_result(enemy, dungeon, map, PathfindMethod_Toward, true);
+  if(pathfind.can_move)
   {
-   enemy->new_pos = pathfind_result.info.pos;
+   enemy->new_pos = pathfind.pos;
    if(is_v2u_equal(enemy->new_pos, enemy->pathfind_target_pos))
    {
     unset(enemy->flags, EntityFlag_Pathfinding);
@@ -3560,6 +3612,11 @@ update_enemy_pathfind(Entity *enemy, Dungeon *dungeon, PathfindMap *pathfind_map
    unset(enemy->flags, EntityFlag_Pathfinding);
    result = UpdateEnemyPathfindType_CantMove;
   }
+ 
+ #if 0
+ printf("pathfind.can_move: %u\n", pathfind.can_move);
+ printf("result: %u\n\n", result);
+ #endif
  
  return(result);
 }
@@ -3575,16 +3632,15 @@ update_enemy_wandering(Random *random, Entity *enemy, Dungeon *dungeon)
  {
   for(;;)
   {
-  enemy->direction = get_random_direction(random);
-   enemy->new_pos = get_direction_pos(enemy->pos, enemy->direction);
+   Direction direction = get_random_direction(random);
+   enemy->new_pos = get_direction_pos(enemy->pos, direction);
    
    #if 0
    printf("enemy->new_pos: %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
    printf("enemy->direction: %s\n", get_direction_string(enemy->direction));
 #endif
    
-   if(!get_dungeon_pos_occupier(dungeon->tiles, enemy->new_pos) &&
-      can_entity_move_to_pos(enemy, dungeon, enemy->new_pos, false))
+   if(can_entity_move_to_pos(enemy, dungeon, enemy->new_pos, false))
    {
     break;
    }
@@ -3594,23 +3650,23 @@ update_enemy_wandering(Random *random, Entity *enemy, Dungeon *dungeon)
  {
   assert(enemy->e.wandering_type == EnemyWanderingType_Travel);
   
-  v2u pathfind_target = {0};
+  v2u target_pos = {0};
   if(!is_set(enemy->flags, EntityFlag_Pathfinding))
   {
    for(;;)
    {
     assert_loop_count();
     
-    pathfind_target = get_random_dungeon_pos(random, dungeon->size);
-    if(!is_dungeon_pos_inside_rect(pathfind_target, enemy->e.view_rect) &&
-       can_entity_move_to_pos(enemy, dungeon, pathfind_target, false))
+     target_pos = get_random_dungeon_pos(random, dungeon->size);
+    if(!is_dungeon_pos_inside_rect(target_pos, enemy->e.view_rect) &&
+       can_entity_move_to_pos(enemy, dungeon, target_pos, false))
     {
      break;
     }
    }
   }
   
-  update_enemy_pathfind(enemy, dungeon, enemy->pathfind_map, pathfind_target);
+  update_enemy_pathfind(enemy, dungeon, &enemy->pathfind_map, target_pos);
   }
 }
 
@@ -3641,8 +3697,7 @@ update_enemy_entities(Game *game,
             
 #if MOONBREATH_SLOW
    //if(enemy->id == EntityID_SkeletonWarrior) continue;
-            if(enemy->id == EntityID_Dummy) continue;
-            //continue;
+   if(enemy->id == EntityID_Dummy) continue;
 #endif
             
             // We use passed_time instead of game->passed_time because this functions is called from places that
@@ -3715,7 +3770,7 @@ update_enemy_entities(Game *game,
       
       if(can_enemy_see_entity(enemy, player, dungeon->tiles))
       {
-       reset_enemy_pathfind(enemy);
+       reset_entity_pathfind(enemy);
        
        enemy->e.state = EnemyEntityState_Fighting;
        goto update_states;
@@ -3732,7 +3787,7 @@ update_enemy_entities(Game *game,
       if(print_state) print_enemy_entity_state(enemy->e.state);
 #endif
       
-      update_enemy_facing_direction(enemy, player, false);
+      set_enemy_facing_direction(enemy, player, false);
       
       if(!is_set(enemy->flags, EntityFlag_FightingFromCornered) && // If enemy fights out of desparation then don't go back to fleeing.
          is_set(enemy->flags, EntityFlag_FleeOnLowHP) &&
@@ -3774,24 +3829,25 @@ update_enemy_entities(Game *game,
        {
         if(can_enemy_see_entity(enemy, player, dungeon->tiles))
         {
-         PathfindResult pathfind_result = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Toward);
+         PathfindPosInfo pathfind = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Toward, false);
+         
          if(enemy->e.spell_count)
          {
           EntitySpellCastResult cast_result = select_and_cast_entity_spell(random, entity_state, enemy, dungeon, ui);
           if(cast_result.target_not_in_spell_range)
           {
-           enemy->new_pos = pathfind_result.info.pos;
+           enemy->new_pos = pathfind.pos;
           }
          }
          else if((is_dungeon_pos_inside_rect(player->pos, enemy->e.view_rect) &&
                   is_set(enemy->flags, EntityFlag_UsesRangedAttacks)) ||
-                 is_v2u_equal(pathfind_result.info.pos, player->pos))
+                 is_v2u_equal(pathfind.pos, player->pos))
          {
           attack_entity(random, enemy, 0, player, dungeon, ui, enemy->e.damage);
          }
-         else if(pathfind_result.can_move)
+         else if(pathfind.can_move)
          {
-          enemy->new_pos = pathfind_result.info.pos;
+          enemy->new_pos = pathfind.pos;
          }
         }
         else
@@ -3811,21 +3867,23 @@ update_enemy_entities(Game *game,
       
       if(can_enemy_see_entity(enemy, player, dungeon->tiles))
       {
-       reset_enemy_pathfind(enemy);
+       reset_entity_pathfind(enemy);
        
        enemy->e.state = EnemyEntityState_Fighting;
        goto update_states;
       }
       else
       {
-       UpdateEnemyPathfindType type = update_enemy_pathfind(enemy, dungeon, &enemy->chase_map, player->pos);
+       UpdateEnemyPathfindType type = update_enemy_pathfind(enemy, dungeon, &enemy->pathfind_map, player->pos);
        if(type == UpdateEnemyPathfindType_ReachedTarget)
        {
-        // No goto update_states so that we actually move to the target pos.
+        // Don't goto update_states so we actually move to the target pos.
+        reset_entity_pathfind(enemy);
         enemy->e.state = EnemyEntityState_Wandering;
        }
        else if(type == UpdateEnemyPathfindType_CantMove)
        {
+        reset_entity_pathfind(enemy);
         enemy->e.state = EnemyEntityState_Wandering;
         goto update_states;
        }
@@ -3840,15 +3898,16 @@ update_enemy_entities(Game *game,
       if(print_state) print_enemy_entity_state(enemy->e.state);
       #endif
       
-      update_enemy_facing_direction(enemy, player, false);
+      set_enemy_facing_direction(enemy, player, false);
       
-      PathfindResult pathfind_result = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Away);
-      if(pathfind_result.can_move)
+      PathfindPosInfo pathfind = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Away, false);
+      if(pathfind.can_move)
       {
-       enemy->new_pos = pathfind_result.info.pos;
+       enemy->new_pos = pathfind.pos;
       }
       else
       {
+       reset_entity_pathfind(enemy);
        enemy->e.state = EnemyEntityState_Cornered;
        goto update_states;
       }
@@ -3861,7 +3920,7 @@ update_enemy_entities(Game *game,
       if(print_state) print_enemy_entity_state(enemy->e.state);
 #endif
       
-      update_enemy_facing_direction(enemy, player, false);
+      set_enemy_facing_direction(enemy, player, false);
       
       if(can_enemy_see_entity(enemy, player, dungeon->tiles))
       {
@@ -3877,6 +3936,11 @@ update_enemy_entities(Game *game,
        goto update_states;
       }
       }
+     
+     #if 0
+     printf("enemy->pos: %u, %u\n", enemy->pos.x, enemy->pos.y);
+     printf("enemy->new_pos: %u, %u\n\n", enemy->new_pos.x, enemy->new_pos.y);
+     #endif
      
      // new_pos will be zero for example in situations when we can't pathfind.
      if(!is_v2u_zero(enemy->new_pos) &&
@@ -3895,7 +3959,8 @@ update_enemy_entities(Game *game,
        enemy->e.saved_pos_for_ghost = enemy->pos;
       }
       
-      if(is_dungeon_pos_closed_door(dungeon->tiles, enemy->new_pos))
+      if(is_set(enemy->flags, EntityFlag_CanOpenDoors) &&
+         is_dungeon_pos_closed_door(dungeon->tiles, enemy->new_pos))
       {
        set_dungeon_pos_open_door(dungeon->tiles, enemy->new_pos);
       }
@@ -3919,7 +3984,6 @@ update_player_input(Game *game,
                     ItemState *item_state,
                     Inventory *inventory,
                     DungeonState *dungeon_state,
-                    Assets *assets,
                     UI *ui)
 {
     assert(game);
@@ -3928,7 +3992,6 @@ update_player_input(Game *game,
     assert(item_state);
     assert(inventory);
     assert(dungeon_state);
-    assert(assets);
     assert(ui);
     
     b32 result = true;
@@ -3939,8 +4002,8 @@ update_player_input(Game *game,
  #endif
  
     Random *random = &game->random;
-    Entity *player = get_player_entity();
  ExamineMode *examine = &game->examine;
+    Entity *player = get_player_entity();
     Dungeon *dungeon = get_dungeon_from_level(dungeon_state, dungeon_state->current_level);
  
     game->should_update = false;
@@ -4234,6 +4297,18 @@ update_player_input(Game *game,
             if(was_pressed(&input->Button_Left))
    {
     
+    #if 0
+    Entity *entity = get_dungeon_pos_entity(dungeon->tiles, input->mouse_tile_pos);
+    if(entity)
+    {
+     printf("Name: %s (index: %u)\n", entity->name.s, entity->index);
+    }
+    else
+    {
+     printf("No entity on pos.\n");
+    }
+    #endif
+    
     { // Debug stuff
 #if 0
      printf("player->p.base_stats.str: %u\n", player->p.base_stats.str);
@@ -4249,11 +4324,7 @@ update_player_input(Game *game,
 #endif
      
 #if 0
-     printf("player_pathfind_map: %u\n", get_pathfind_value(&entity_state->player_pathfind_map, input->mouse_tile));
-     printf("enemy_pathfind_map: %u\n", get_pathfind_value(&entity_state->enemy_pathfind_map, input->mouse_tile));
-     printf("enemy_to_player_pathfind_map: %u\n", get_pathfind_value(&entity_state->enemy_to_player_pathfind_map, input->mouse_tile));
-     printf("is_dungeon_pos_occupied: %u\n", is_dungeon_pos_occupied(dungeon->tiles, input->mouse_tile));
-     printf("is_dungeon_pos_traversable: %u\n\n", is_dungeon_pos_traversable(dungeon->tiles, input->mouse_tile));
+     printf("pathfind_map_to_player_value: %u\n", get_pathfind_value(&entity_state->pathfind_map_to_player, input->mouse_tile_pos));
 #endif
      
 #if 0
@@ -4412,7 +4483,7 @@ update_player_input(Game *game,
                 }
             else if(was_pressed_and_windows_are_closed(&input->GameKey_AutoExplore, examine, inventory->flags, ui->flags) &&
                         can_player_auto_explore(&examine->flags, entity_state, dungeon, ui) &&
-                        entity_can_move(player, ui))
+           !entity_has_statuses_that_stop_movement(player, ui))
             {
                 // Start player pathfind
                             assert(!is_set(player->flags, EntityFlag_Pathfinding));
@@ -4434,7 +4505,7 @@ update_player_input(Game *game,
                 
                 if(pathfind_target_set)
                             {
-     init_entity_pathfind(player, dungeon, player->pathfind_map, pathfind_target);
+     init_entity_pathfind(player, dungeon, &player->pathfind_map, pathfind_target);
                             }
                             else
                             {
@@ -4452,8 +4523,9 @@ update_player_input(Game *game,
             }
             else if(was_pressed_and_windows_are_closed(&input->GameKey_Log, examine, inventory->flags, ui->flags))
             {
-                set(ui->flags, UIFlag_FullLogOpen);
-                set_view_and_move_at_start(&ui->full_log.view);
+    set(ui->flags, UIFlag_FullLogOpen);
+    set_view_and_move_at_start(&ui->full_log.view);
+    ui->full_log.view.set_at_end_on_open = true;
                 }
             else if(was_pressed_and_windows_are_closed(&input->GameKey_Wait, examine, inventory->flags, ui->flags))
             {
@@ -4524,9 +4596,13 @@ update_player_input(Game *game,
                     else if(was_pressed(&input->Key_End) && (mark->cursor < mark->view.count))
                     {
                         // Set mark at end
-                        mark->cursor = mark->view.count;
-                        set_view_at_end(&mark->view);
-                        
+      mark->cursor = mark->view.count;
+      
+      if(is_view_scrollable(mark->view))
+      {
+      set_view_at_end(&mark->view);
+       }
+      
                         force_render_mark_cursor(mark);
                         }
                 }
@@ -4862,7 +4938,7 @@ UI *ui)
     Dungeon *dungeon = get_dungeon_from_level(dungeon_state, dungeon_state->current_level);
  
     // Update player
-    if(update_player_input(game, input, entity_state, item_state, inventory, dungeon_state, assets, ui))
+ if(update_player_input(game, input, entity_state, item_state, inventory, dungeon_state, ui))
     {
         
     #if 0
@@ -4884,7 +4960,7 @@ UI *ui)
         
         if(!is_v2u_equal(player->pos, player->new_pos))
    {
-    Entity *target = get_dungeon_pos_occupier(dungeon->tiles, player->new_pos);
+    Entity *target = get_dungeon_pos_entity(dungeon->tiles, player->new_pos);
     if(target)
     {
      assert(is_entity_valid_in_level(target, player->dungeon_level));
@@ -5030,7 +5106,7 @@ UI *ui)
                 log_add("There are multiple items here.", ui);
         }
    
-   // Reset player pathfind
+   // Reset player pathfind trail after waiting.
    if(!is_set(player->flags, EntityFlag_Pathfinding) && player->p.render_pathfind)
    {
     if(player->p.wait_before_pathfind_reset)
@@ -5300,9 +5376,7 @@ add_player_entity(EntityState *entity_state)
     
     player->p.action_time = 1.0f;
     player->p.weight_evasion_ratio = 4;
-    
- player->pathfind_map = &entity_state->player_pathfind_map;
- player->p.pathfind_map_to_player = &entity_state->pathfind_map_to_player;
+    player->p.pathfind_map_to_player = &entity_state->pathfind_map_to_player;
     
 #if 0
     player->resists[DamageType_Physical] = 1;
@@ -6111,24 +6185,16 @@ add_enemy_entity(EntityState *entity_state,
             }
             
             enemy->e.view_rect = get_dungeon_dimension_rect(dungeon->size, enemy->pos, enemy->stats.fov);
-   
-   switch(enemy->e.wandering_type)
-   {
-    case EnemyWanderingType_Random: break;
-    case EnemyWanderingType_Travel: enemy->pathfind_map = &entity_state->enemy_pathfind_map; break;
-    
-    invalid_default_case;
-   }
    enemy->e.pathfind_map_to_player = &entity_state->pathfind_map_to_player;
    
             #if 0
-            enemy->resists[DamageType_Physical] = 1;
-            enemy->resists[DamageType_Fire] = 3;
-            enemy->resists[DamageType_Ice] = 5;
-            enemy->resists[DamageType_Lightning] = -1;
-            enemy->resists[DamageType_Poison] = -3;
-            enemy->resists[DamageType_Holy] = -5;
-            enemy->resists[DamageType_Dark] = 0;
+            enemy->resists[EntityDamageType_Physical].value = 1;
+   enemy->resists[EntityDamageType_Fire].value = 3;
+   enemy->resists[EntityDamageType_Ice].value = 5;
+   enemy->resists[EntityDamageType_Lightning].value = -1;
+   enemy->resists[EntityDamageType_Poison].value = -3;
+   enemy->resists[EntityDamageType_Holy].value = -5;
+   enemy->resists[EntityDamageType_Dark].value = 0;
 #endif
             
 #if MOONBREATH_SLOW

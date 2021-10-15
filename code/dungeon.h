@@ -292,15 +292,15 @@ struct PathfindMap
 
 typedef struct
 {
- DungeonTileID tile_id;
  v4u src;
+ DungeonTileID tile_id;
 } DungeonRemainsInfo;
 
 typedef struct
 {
     b32 is_seen;
     b32 has_been_seen;
- Entity *occupier;
+ Entity *entity;
  
     DungeonTileID tile_id;
     DungeonTileID remains_tile_id;
@@ -502,4 +502,4 @@ internal DungeonTrap *get_dungeon_pos_trap(DungeonTraps *traps, v2u pos);
 internal DungeonTileID get_dungeon_pos_remains_tile_id(DungeonTiles tiles, v2u pos);
 internal DungeonRemainsInfo get_dungeon_pos_remains_info();
 internal Dungeon *get_dungeon_from_level(DungeonState *dungeon_state, u32 level);
-internal Entity *get_dungeon_pos_occupier(DungeonTiles tiles, v2u pos);
+internal Entity *get_dungeon_pos_entity(DungeonTiles tiles, v2u pos);

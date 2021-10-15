@@ -8,6 +8,7 @@ typedef enum
  EditorSourceType_Wall,
  EditorSourceType_Floor,
  EditorSourceType_Water,
+ EditorSourceType_DungeonTile,
  
  EditorSourceType_Trap,
  EditorSourceType_Entity,
@@ -32,6 +33,7 @@ typedef struct
  v2u pos;
  v4u tile_src;
  v4u tile_dest;
+ DungeonTileID tile_id;
 } EditorSource;
 
 typedef struct

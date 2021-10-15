@@ -85,8 +85,9 @@ typedef struct
 
 typedef struct
 {
+ b32 set_at_end_on_open;
+ 
     u32 entry_size;
-    
     u32 count;
     u32 start;
     u32 end;
@@ -149,6 +150,9 @@ typedef struct
 
 // TODO(rami): Should we render a line in the full log to indicate what actions have taken place in
 // the players last action turn.
+
+// TODO(rami): Polish: Having descriptive words for enemies attacking you instead of saying "The blah
+// attacks you for 5 damage."
 
 internal void set_mark_cursor_at_start(Mark *mark);
 internal void set_mark_cursor_at_end(Mark *mark);

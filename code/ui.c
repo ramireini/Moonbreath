@@ -1657,11 +1657,8 @@ set_view_at_end(View *view)
 {
     assert(view);
     
-    if(is_view_scrollable(*view))
-    {
         view->start = get_view_end(*view);
         view->move.offset = get_view_offset_from_start(view->start, view->move.size);
-    }
     }
 
 internal v2u
@@ -2484,9 +2481,11 @@ render_inventory_window(Game *game,
  // If inventory view has gone over the bottom, set it at end.
     if(inventory->validate_view &&
            inventory->window.view.count < (inventory->window.view.start + inventory->window.view.end - 1))
-    {
-            set_view_at_end(view);
-        inventory->validate_view = false;
+ {
+  assert(is_view_scrollable(*view));
+  
+  set_view_at_end(view);
+  inventory->validate_view = false;
     }
     
     v4u inventory_rect = init_rect_window(game, &view->move, 512, ui->window_scroll_start_y);
@@ -2567,7 +2566,7 @@ render_multiple_examine_window(Game *game,
             if(examine_type == ExamineType_Entity)
             {
     // Add entity to view count
-                item_state->examine_window_entity = get_dungeon_pos_entity(entity_state, dungeon->level, examine->pos);
+    item_state->examine_window_entity = get_dungeon_pos_entity(dungeon->tiles, examine->pos);
                 if(item_state->examine_window_entity) view->count += 2;
             }
             else if(examine_type == ExamineType_Item)
@@ -2937,7 +2936,14 @@ render_ui(Game *game,
     if(update_window_test_pos(full_log_view, &test_pos, ui->window_scroll_start_y, 1)) break;
             }
         }
-        
+  
+  if(full_log_view->set_at_end_on_open &&
+     is_view_scrollable(*full_log_view))
+  {
+   full_log_view->set_at_end_on_open = false;
+   set_view_at_end(full_log_view);
+  }
+  
         set_enable_window_view_clip_rect(game->renderer, full_log_view, full_log_rect, full_log_pos);
         
         // Render full log contents
@@ -2949,7 +2955,6 @@ render_ui(Game *game,
                 v2u message_pos =
                 {
                     full_log_pos.x,
-                    //full_log_pos.y + full_log_view->move.offset
                     full_log_pos.y + full_log_view->content_rect.y
                 };
                 

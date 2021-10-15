@@ -34,6 +34,13 @@ add_editor_source(EditorGroup *group,
      source->tile_src = get_dungeon_tileset_rect(tile_id);
     } break;
     
+    case EditorSourceType_DungeonTile:
+    {
+     assert(tile_id);
+     source->tile_id = tile_id;
+     source->tile_src = get_dungeon_tileset_rect(tile_id);
+    } break;
+    
     case EditorSourceType_Trap:
     {
      assert(trap_type);
@@ -211,6 +218,11 @@ place_editor_source(Random *random,
    set_dungeon_pos_water(random, dungeon->tiles, mouse_tile_pos);
   } break;
   
+  case EditorSourceType_DungeonTile:
+  {
+   set_dungeon_pos_tile(dungeon->tiles, mouse_tile_pos, source->tile_id);
+  } break;
+  
   case EditorSourceType_Trap:
   {
    assert(source->subtype);
@@ -225,7 +237,7 @@ place_editor_source(Random *random,
   {
    assert(source->subtype);
    
-   if(!get_dungeon_pos_entity(entity_state, dungeon->level, mouse_tile_pos))
+   if(!get_dungeon_pos_entity(dungeon->tiles, mouse_tile_pos))
    {
     add_enemy_entity(entity_state, dungeon, source->subtype, mouse_tile_pos.x, mouse_tile_pos.y);
    }
@@ -253,7 +265,7 @@ get_editor_target_pos(EditorTarget *target)
 }
 
 internal void
-deselect_editor_target_if_on_pos(EditorTarget *target, v2u pos)
+zero_editor_target_if_on_pos(EditorTarget *target, v2u pos)
 {
  if(target->type)
  {
@@ -272,10 +284,10 @@ delete_editor_target(Random *random,
                      v2u mouse_tile_pos,
                      EditorTarget *target)
 {
- Entity *entity = get_dungeon_pos_entity(entity_state, dungeon->level, mouse_tile_pos);
+ Entity *entity = get_dungeon_pos_entity(dungeon->tiles, mouse_tile_pos);
  if(entity && entity->type != EntityType_Player)
  {
-  deselect_editor_target_if_on_pos(target, entity->pos);
+  zero_editor_target_if_on_pos(target, entity->pos);
   remove_entity(entity, dungeon->tiles);
  }
  else
@@ -283,7 +295,7 @@ delete_editor_target(Random *random,
   DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, mouse_tile_pos);
   if(trap)
   {
-   deselect_editor_target_if_on_pos(target, trap->pos);
+   zero_editor_target_if_on_pos(target, trap->pos);
    remove_dungeon_trap(trap);
   }
   else
@@ -291,7 +303,7 @@ delete_editor_target(Random *random,
    EditorDungeonTile *tile = &target->tile;
    if(tile->id)
    {
-    deselect_editor_target_if_on_pos(target, tile->pos);
+     zero_editor_target_if_on_pos(target, mouse_tile_pos);
     set_dungeon_pos_floor(random, dungeon->tiles, mouse_tile_pos);
    }
    else
@@ -314,7 +326,7 @@ set_editor_target(EditorMode *editor,
 {
  EditorTarget *target = &editor->active_target;
  
- Entity *entity = get_dungeon_pos_entity(entity_state, dungeon->level, mouse_tile_pos);
+ Entity *entity = get_dungeon_pos_entity(dungeon->tiles, mouse_tile_pos);
  if(entity)
  {
   target->type = EditorTargetType_Entity;
@@ -349,10 +361,10 @@ update_editor_target(Random *random,
  
  if(target->entity)
  {
-  Entity *entity = get_dungeon_pos_entity(entity_state, dungeon->level, mouse_tile_pos);
+  Entity *entity = get_dungeon_pos_entity(dungeon->tiles, mouse_tile_pos);
   if(entity)
   {
-   deselect_editor_target_if_on_pos(target, entity->pos);
+   zero_editor_target_if_on_pos(target, entity->pos);
   }
   else
   {
@@ -364,7 +376,7 @@ update_editor_target(Random *random,
   DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, mouse_tile_pos);
   if(trap)
   {
-   deselect_editor_target_if_on_pos(target, trap->pos);
+   zero_editor_target_if_on_pos(target, trap->pos);
   }
   else
   {
@@ -375,7 +387,7 @@ update_editor_target(Random *random,
  {
   if(is_v2u_equal(tile->pos, mouse_tile_pos))
   {
-   deselect_editor_target_if_on_pos(target, tile->pos);
+   zero_editor_target_if_on_pos(target, tile->pos);
    }
   else
   {

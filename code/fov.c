@@ -128,8 +128,24 @@ update_player_view(Entity *player, Dungeon *dungeon)
 {
     assert(is_entity_valid(player));
     assert(dungeon);
-    
-    // Reset visibility
+ 
+#if MOONBREATH_SLOW
+ if(debug_toggles[DebugToggleType_TraverseAll])
+ {
+  for(u32 y = 0; y < dungeon->size.h; ++y)
+  {
+   for(u32 x = 0; x < dungeon->size.w; ++x)
+   {
+    v2u pos = {x, y};
+    set_tile_is_seen(dungeon->tiles, pos, true);
+   }
+  }
+  
+ return;
+ }
+ #endif
+ 
+ // Reset visibility
     for(u32 y = 0; y < dungeon->size.h; ++y)
     {
         for(u32 x = 0; x < dungeon->size.w; ++x)

@@ -2,10 +2,11 @@
 internal void
 print_pathfind_pos_info(PathfindPosInfo info)
 {
- printf("Pos: %u, %u - Value: %u - Direction: %s\n",
+ printf("Pos: %u, %u - Val: %u - Dir: %s - CanMove: %s\n",
         info.pos.x, info.pos.y,
-        info.pathfind_value,
-        get_direction_string(info.direction));
+        info.value,
+        get_direction_string(info.direction),
+        info.can_move ? "True": "False");
 }
 
 internal void
@@ -31,6 +32,28 @@ print_pathfind_map(Dungeon *dungeon, PathfindMap *pathfind_map)
 }
 #endif
 
+internal b32
+is_new_pathfind_value_better(u32 current_value, u32 new_value, PathfindMethod method)
+{
+ assert(method == PathfindMethod_Toward ||
+        method == PathfindMethod_Away);
+ 
+ b32 result = false;
+ 
+ if(method == PathfindMethod_Toward &&
+    new_value < current_value)
+ {
+  result = true;
+ }
+ else if(method == PathfindMethod_Away &&
+         new_value > current_value)
+ {
+  result = true;
+ }
+ 
+ return(result);
+}
+
 internal u32
 get_pathfind_value(PathfindMap *map, v2u pos)
 {
@@ -49,22 +72,16 @@ get_pathfind_pos_info(PathfindMap *map, v2u pos, Direction direction)
  
  PathfindPosInfo result = {0};
  result.pos = get_direction_pos(pos, direction);
- result.pathfind_value = get_pathfind_value(map, result.pos);
+ result.value = get_pathfind_value(map, result.pos);
  result.direction = direction;
- 
- #if 0
- printf("result.pos: %u, %u\n", result.pos.x, result.pos.y);
-  printf("result.pathfind_value: %u\n", result.pathfind_value);
-  printf("result.direction: %u\n", direction);
-#endif
  
     return(result);
 }
 
 internal void
-set_pathfind_map_value(PathfindMap *pathfind_map, v2u pos, u32 value)
+set_pathfind_map_value(PathfindMap *map, v2u pos, u32 value)
 {
-    pathfind_map->array[(pos.y * pathfind_map->width) + pos.x] = value;
+    map->array[(pos.y * map->width) + pos.x] = value;
 }
 
 internal b32
@@ -77,7 +94,7 @@ can_entity_move_to_pos(Entity *entity, Dungeon *dungeon, v2u pos, b32 came_from_
  
     if(entity->type == EntityType_Player &&
     is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos) &&
-    !get_dungeon_pos_occupier(dungeon->tiles, pos))
+    !get_dungeon_pos_entity(dungeon->tiles, pos))
  {
   if(came_from_entity_pathfind && get_dungeon_pos_trap(&dungeon->traps, pos))
   {
@@ -89,7 +106,7 @@ can_entity_move_to_pos(Entity *entity, Dungeon *dungeon, v2u pos, b32 came_from_
   }
     else if(entity->type == EntityType_Enemy &&
          is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos) &&
-         !get_dungeon_pos_occupier(dungeon->tiles, pos))
+         !get_dungeon_pos_entity(dungeon->tiles, pos))
  {
   if(came_from_entity_pathfind && get_dungeon_pos_trap(&dungeon->traps, pos))
   {
@@ -119,97 +136,128 @@ is_pathfind_map_pos_default(PathfindMap *map, v2u pos)
  return(result);
 }
 
-internal PathfindResult
-get_pathfind_result(Entity *entity, Dungeon *dungeon, PathfindMap *map, PathfindMethod method)
+internal PathfindPosInfo
+get_pathfind_result(Entity *entity,
+                    Dungeon *dungeon,
+                    PathfindMap *map,
+                    PathfindMethod method,
+                    b32 best_pathfind_value_only)
 {
  assert(is_entity_valid(entity));
  assert(!is_v2u_zero(entity->pos));
  assert(dungeon);
  assert(map);
- assert(method);
+ assert(method == PathfindMethod_Toward ||
+        method == PathfindMethod_Away);
  
  #if MOONBREATH_SLOW
  if(!get_pathfind_value(map, entity->pos)) // Map has to be initted
  {
   printf("map: %p\n", map);
-  printf("name: %s\n", entity->name.s);
-  printf("pos: %u, %u\n", entity->pos.x, entity->pos.y);
-  printf("pos pathfind value: %u\n", get_pathfind_value(map, entity->pos));
+  printf("name: %s (index: %u)\n", entity->name.s, entity->index);
+  printf("entity pos: %u, %u\n", entity->pos.x, entity->pos.y);
+  printf("entity pos pathfind value: %u\n\n", get_pathfind_value(map, entity->pos));
   
   assert(0);
  }
  #endif
  
  b32 is_result_set = false;
- PathfindResult result = {0};
+ PathfindPosInfo result = {0};
  
-    // Save positions
+ // Set direction positions
  PathfindPosInfo info_array[Direction_Count] = {0};
  for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
  {
-  PathfindPosInfo info = get_pathfind_pos_info(map, entity->pos, direction);
-  info_array[direction] = info;
+  PathfindPosInfo *info = &info_array[direction];
+  *info = get_pathfind_pos_info(map, entity->pos, direction);
+  
+  info->can_move = can_entity_move_to_pos(entity, dungeon, info->pos, true);
+  
+  // Set can_move if there is an entity on the pos we can fight with.
+  if(!info->can_move && !info->value)
+  {
+   Entity *on_pos_entity = get_dungeon_pos_entity(dungeon->tiles, info->pos);
+   if(on_pos_entity &&
+      entity->type == EntityType_Enemy &&
+      on_pos_entity->type == EntityType_Player)
+   {
+    info->can_move = true;
+   }
+  }
   }
  
- // Find the best position out of the directions
+ // Find the best direction position
         for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
  {
   PathfindPosInfo *info = &info_array[direction];
   if(is_result_set)
   {
-    b32 is_info_better = false;
-    
-    switch(method)
+    b32 is_better = false;
+   
+   // Sometimes the function caller doesn't want to get the 2nd best etc. position when
+   // pathfinding, this is for that situation.
+   if(best_pathfind_value_only)
+   {
+    is_better = is_new_pathfind_value_better(result.value, info->value, method);
+   }
+   else
+   {
+    if(result.can_move)
     {
-     case PathfindMethod_Away:
+     if(info->can_move)
      {
-      if(info->pathfind_value > result.info.pathfind_value)
-      {
-       is_info_better = true;
-      }
-     } break;
-     
-     case PathfindMethod_Toward:
-     {
-      if(info->pathfind_value < result.info.pathfind_value)
-      {
-       is_info_better = true;
-      }
-     } break;
-     
-     invalid_default_case;
+      is_better = is_new_pathfind_value_better(result.value, info->value, method);
+     }
     }
-    
-   // Set better result info
-    if(is_info_better)
+    else
     {
-     result.info = *info;
+     if(info->can_move)
+     {
+      u32 entity_pos_value = get_pathfind_value(map, entity->pos);
+      
+      if(method == PathfindMethod_Toward &&
+         info->value < entity_pos_value)
+      {
+       is_better = true;
+      }
+      else if(method == PathfindMethod_Away &&
+              info->value > entity_pos_value)
+      {
+       is_better = true;
+      }
+     }
+    }
+   }
+   
+   // Set better result
+    if(is_better)
+    {
+     result = *info;
     }
         }
         else
             {
-   // Set first result info
+   // Set first result
    is_result_set = true;
-   result.info = *info;
+   result = *info;
    }
  }
  
- result.can_move = can_entity_move_to_pos(entity, dungeon, result.info.pos, true);
- 
- #if 0
- // Print array positions
+#if 0
+ //if(entity->index == 12)
+ {
+ // Print direction info
  for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
  {
   print_pathfind_pos_info(info_array[direction]);
  }
- //assert(0);
  
  printf("\nResult Pos Info\n");
- print_pathfind_pos_info(result.info);
- 
- printf("\n\n");
-    //assert(0);
- 
+ print_pathfind_pos_info(result);
+  
+  printf("\n\n");
+ }
  #endif
  
  assert(is_result_set);
@@ -242,7 +290,7 @@ pathfind_map_has_default_values(Entity *entity, Dungeon *dungeon, PathfindMap *m
 }
 
 internal void
-update_pathfind_map(Entity *entity, PathfindMap *map, Dungeon *dungeon, v2u start)
+update_pathfind_map(Entity *entity, PathfindMap *map, Dungeon *dungeon, v2u start_pos)
 {
     assert(is_entity_valid(entity));
     assert(map);
@@ -256,7 +304,7 @@ update_pathfind_map(Entity *entity, PathfindMap *map, Dungeon *dungeon, v2u star
     printf("Dungeon Can Pathfind: %u\n\n", dungeon->can_pathfind);
     #endif
     
-    if(dungeon->can_pathfind && is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, start))
+ if(dungeon->can_pathfind && is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, start_pos))
     {
         // Init pathfind map
         for(u32 y = 0; y < dungeon->size.h; ++y)
@@ -269,7 +317,7 @@ update_pathfind_map(Entity *entity, PathfindMap *map, Dungeon *dungeon, v2u star
         }
         
         // Set pathfind map start_pos value
-  set_pathfind_map_value(map, start, 0);
+  set_pathfind_map_value(map, start_pos, 0);
   
         while(pathfind_map_has_default_values(entity, dungeon, map))
   {
@@ -281,23 +329,22 @@ update_pathfind_map(Entity *entity, PathfindMap *map, Dungeon *dungeon, v2u star
                 {
      v2u pos = {x, y};
      
-     // This does not care about what the entity can traverse on, this is just so we can
-     // set the pathfind map value, whether the entity can move to a pathfind map pos
-     // pos is decided elsewhere.
+     // This doesn't care if the entity can move to the pos. It just wants to set the
+     // pathfind values and nothing more.
      if(is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, pos))
                     {
                         assert(is_pos_inside_dungeon(dungeon->size, pos));
                         u32 lowest_target_dist = get_pathfind_value(map, pos);
                             
                             for(Direction direction = Direction_Up; direction <= Direction_DownRight; ++direction)
-                        {
+      {
        PathfindPosInfo neighbour = get_pathfind_pos_info(map, pos, direction);
                             assert(is_pos_inside_dungeon(dungeon->size, neighbour.pos));
                             
                             // See if any of the neighbouring positions has a smaller value than current position.
-       if(neighbour.pathfind_value < lowest_target_dist)
+       if(neighbour.value < lowest_target_dist)
                                 {
-        lowest_target_dist = neighbour.pathfind_value;
+        lowest_target_dist = neighbour.value;
         set_pathfind_map_value(map, pos, lowest_target_dist + 1);
                                 }
                         }
@@ -310,5 +357,5 @@ update_pathfind_map(Entity *entity, PathfindMap *map, Dungeon *dungeon, v2u star
         print_pathfind_map(dungeon, pathfind_map);
 #endif
         
-    }
+ }
 }
