@@ -24,17 +24,17 @@ typedef struct
     ExamineType type;
     
     b32 key_pressed[GameKey_Count];
- u32 key_pressed_start[GameKey_Count];
- u32 hold_time_for_move;
+    u32 key_pressed_start[GameKey_Count];
+    u32 hold_time_for_move;
     v2u pos;
     
     // Not in a union because we want to be able to do things like go from an entity spell examine window
     // back to the entity examine window.
-        Item *item;
-        Spell *spell;
-        Entity *entity;
-        DungeonTrap *trap;
- DungeonTileID tile_id;
+    Item *item;
+    Spell *spell;
+    Entity *entity;
+    DungeonTrap *trap;
+    DungeonTileID tile_id;
     
     u32 selected_passage;
 } ExamineMode;
@@ -56,33 +56,39 @@ typedef struct
 
 typedef struct
 {
- u32 seconds;
- u32 minutes;
- u32 hours;
- 
- u32 start;
- u32 end;
-} SessionTimer;
+    u32 seconds;
+    u32 minutes;
+    u32 hours;
+    
+    u32 start;
+    u32 end;
+} GameTimer;
+
+typedef struct
+{
+    v4s rect;
+} GameCamera;
 
 struct Game
 {
     b32 is_set;
     
- #if MOONBREATH_SLOW
- // TODO(rami): Final: Things like Debug and Editor have to be #ifdef'd out of the final build.
+#if MOONBREATH_SLOW
+    // TODO(rami): Final: Things like Debug and Editor have to be #ifdef'd out of the final build.
     DebugState debug;
- EditorMode editor;
- #endif
- 
- b32 should_update;
-    MemoryArena memory;
-    GameMode mode;
- ExamineMode examine;
- SessionTimer timer;
-    Random random;
-    v4s camera;
+    EditorMode editor;
+#endif
+    
+    b32 should_update;
     f32 passed_time;
     f32 time;
+    
+    Random random;
+    GameMode mode;
+    GameTimer timer;
+    GameCamera camera;
+    ExamineMode examine;
+    MemoryArena memory;
     
     v2u window_size;
     SDL_Window *window;
@@ -90,7 +96,7 @@ struct Game
     Key keybinds[GameKey_Count];
     
     b32 show_item_ground_outline;
-    };
+};
 
 // TODO(rami): Goal with keys is to let you bind anything to anything as long as you don't have more
 // than one key bound to a gamekey. Make sure we are taking into account all the SDLK keys and that they

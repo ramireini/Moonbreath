@@ -253,7 +253,7 @@ typedef enum
     Key_X,
     Key_Y,
     Key_Z,
- 
+    
     Key_0,
     Key_1,
     Key_2,
@@ -272,10 +272,10 @@ typedef enum
     Key_Comma,
     Key_Period,
     Key_LessThan,
- Key_GreaterThan,
- Key_PrintableEnd,
- 
- // Non-printable characters
+    Key_GreaterThan,
+    Key_PrintableEnd,
+    
+    // Non-printable characters
     Key_Shift,
     Key_Control,
     Key_Alt,
@@ -339,7 +339,7 @@ typedef struct
     InputState fkeys[13];
     
     v2u mouse_pos;
- v2u mouse_tile_pos;
+    v2u mouse_tile_pos;
     union
     {
         InputState mouse_buttons[Button_Count];
@@ -499,10 +499,7 @@ internal void log_add_okay(UI *ui);
 internal void log_add_item_action_string(Item *item, UI *ui, ItemActionType action);
 internal void add_player_starting_item(Game *game, Entity *player, ItemState *item_state, Inventory *inventory, UI *ui, ItemID item_id);
 internal void set_render_color(SDL_Renderer *renderer, Color color);
-internal u32 get_potion_chance_index(ItemID id);
-internal u32 get_scroll_chance_index(ItemID id);
 internal u32 get_dungeon_pos_item_count(ItemState *item_state, u32 dungeon_level, v2u pos);
-internal b32 is_item_equipment(ItemType type);
 internal ItemID get_random_leather_armor(Random *random);
 internal ItemID get_random_steel_armor(Random *random);
 internal ItemID get_random_weapon(Random *random);
@@ -512,11 +509,11 @@ internal ItemID get_random_scroll(Random *random);
 #if MOONBREATH_SLOW
 typedef enum
 {
- DebugToggleType_TraverseAll,
- DebugToggleType_SkipHasBeenUp,
- DebugToggleType_EntityHitTest,
- 
- DebugToggleType_Count
+    DebugToggleType_TraverseAll,
+    DebugToggleType_SkipHasBeenUp,
+    DebugToggleType_EntityHitTest,
+    
+    DebugToggleType_Count
 } DebugToggleType;
 
 global b32 debug_toggles[DebugToggleType_Count];

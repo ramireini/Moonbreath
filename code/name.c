@@ -1,8 +1,10 @@
 typedef enum
 {
-    NameType_Item,
-    NameType_NPC
-} NameType;
+    RandomNameType_None,
+    
+    RandomNameType_Item,
+    RandomNameType_NPC
+} RandomNameType;
 
 internal b32
 is_vowel(char c)
@@ -11,7 +13,10 @@ is_vowel(char c)
     
     for(u32 index = 0; index < array_count(vowels); ++index)
     {
-        if(c == vowels[index]) return(true);
+        if(c == vowels[index])
+        {
+            return(true);
+        }
     }
     
     return(false);
@@ -24,7 +29,10 @@ is_consonant(char c)
     
     for(u32 index = 0; index < array_count(consonants); ++index)
     {
-        if(c == consonants[index]) return(true);
+        if(c == consonants[index])
+        {
+            return(true);
+        }
     }
     
     return(false);
@@ -59,20 +67,24 @@ get_random_upper_char(Random *random)
 }
 
 internal char *
-set_random_name(Random *random, char *name, NameType type)
+set_random_name(Random *random, char *name, RandomNameType type)
 {
+    assert(random);
+    assert(name);
+    assert(type);
+    
     u32 space_index = 0;
-    u32 name_length = 0;
     u32 name_index = 0;
+    u32 name_length = 0;
     
     switch(type)
     {
-        case NameType_Item:
+        case RandomNameType_Item:
         {
             name_length = get_random(random, 3, 8);
         } break;
         
-        case NameType_NPC:
+        case RandomNameType_NPC:
         {
             name_length = get_random(random, 8, 12);
             space_index = get_random(random, 3, name_length - 3);
@@ -102,8 +114,8 @@ set_random_name(Random *random, char *name, NameType type)
                 name[name_index++] = get_random_consonant(random);
                 
                 if(!is_consonant(prev_prev) &&
-                       !get_random(random, 0, 2) &&
-                       name_index < name_length)
+                   !get_random(random, 0, 2) &&
+                   name_index < name_length)
                 {
                     name[name_index++] = get_random_consonant(random);
                 }
@@ -113,7 +125,7 @@ set_random_name(Random *random, char *name, NameType type)
                 name[name_index++] = get_random_vowel(random);
                 
                 if(!is_vowel(prev_prev) &&
-                       !get_random(random, 0, 2) &&
+                   !get_random(random, 0, 2) &&
                    name_index < name_length)
                 {
                     name[name_index++] = get_random_vowel(random);

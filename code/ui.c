@@ -30,225 +30,225 @@ print_owners(Owner *owners)
 internal void
 render_entity_health_regen_string(SDL_Renderer *renderer, Entity *entity, v2u *pos, UI *ui, b32 is_defer)
 {
- assert(renderer);
- assert(is_entity_valid(entity));
- assert(pos);
- assert(ui);
- 
- // Figure out how many turns it takes to regen
- EntityRegen *regen = &entity->regen;
- u32 regen_turn_count = 0;
- u32 temp_max = regen->max;
- u32 temp_advance = regen->advance;
-  while(!is_zero(temp_max))
-  {
-  ++regen_turn_count;
-   temp_max -= temp_advance;
-  }
- 
- // Set turn string
- char *regen_turn_string = "turn";
- if(regen_turn_count > 1)
- {
-  regen_turn_string = "turns";
- }
- 
- // Set and render regen string
- char *regen_string = "Regeneration: %u health / %u %s";
- if(is_defer)
- {
-  defer_string(regen_string, pos, 0, 1, ui, entity->regen.percent, regen_turn_count, regen_turn_string);
- }
- else
- {
-  render_string_and_move(renderer, regen_string, pos, 0, 1, ui->font, entity->regen.percent, regen_turn_count, regen_turn_string);
- }
- }
+    assert(renderer);
+    assert(is_entity_valid(entity));
+    assert(pos);
+    assert(ui);
+    
+    // Figure out how many turns it takes to regen
+    EntityRegen *regen = &entity->regen;
+    u32 regen_turn_count = 0;
+    u32 temp_max = regen->max;
+    u32 temp_advance = regen->advance;
+    while(!is_zero(temp_max))
+    {
+        ++regen_turn_count;
+        temp_max -= temp_advance;
+    }
+    
+    // Set turn string
+    char *regen_turn_string = "turn";
+    if(regen_turn_count > 1)
+    {
+        regen_turn_string = "turns";
+    }
+    
+    // Set and render regen string
+    char *regen_string = "Regeneration: %u health / %u %s";
+    if(is_defer)
+    {
+        defer_string(regen_string, pos, 0, 1, ui, entity->regen.percent, regen_turn_count, regen_turn_string);
+    }
+    else
+    {
+        render_string_and_move(renderer, regen_string, pos, 0, 1, ui->font, entity->regen.percent, regen_turn_count, regen_turn_string);
+    }
+}
 
 internal b32
 update_mark_input(Input *input, Mark *mark)
 {
- assert(input);
- assert(mark);
- 
- b32 result = false;
- 
- if(mark->is_active)
- {
-  assert(mark->view.end == 24);
-  mark->view.count = get_string_length(mark->array);
-  
-  if(was_pressed(&input->Key_Del))
-  {
-   result = true;
-   
-   // Don't do this if we are at the end of the buffer
-   if((mark->cursor < mark->view.count) && mark->view.count)
-   {
-    // Remove the character at mark->cursor and move the buffer
-    for(u32 index = mark->cursor; index < MAX_MARK_SIZE; ++index)
-    {
-     mark->array[index] = mark->array[index + 1];
-     mark->array[index + 1] = 0;
-    }
+    assert(input);
+    assert(mark);
     
-    force_render_mark_cursor(mark);
-   }
-  }
-  else if(was_pressed_core(&input->Key_Backspace))
-  {
-   result = true;
-   
-   if(input->Key_Control.is_down)
-   {
-    while(mark->cursor &&
-          mark->array[mark->cursor - 1] == ' ')
-    {
-     remove_mark_char(mark);
-    }
+    b32 result = false;
     
-    while(mark->cursor &&
-          mark->array[mark->cursor - 1] != ' ')
+    if(mark->is_active)
     {
-     remove_mark_char(mark);
-    }
-   }
-   else
-   {
-    remove_mark_char(mark);
-   }
-  }
-  else if(was_pressed(&input->Key_ArrowLeft))
-  {
-   result = true;
-   
-   if(mark->cursor)
-   {
-    if(input->Key_Control.is_down)
-    {
-     while(mark->cursor &&
-           mark->array[mark->cursor - 1] == ' ')
-     {
-      move_mark_cursor_left(mark);
-     }
-     
-     while(mark->cursor &&
-           mark->array[mark->cursor - 1] != ' ')
-     {
-      move_mark_cursor_left(mark);
-     }
-    }
-    else
-    {
-     move_mark_cursor_left(mark);
-    }
-   }
-  }
-  else if(was_pressed(&input->Key_ArrowRight))
-  {
-   result = true;
-   
-   if(input->Key_Control.is_down)
-   {
-    while(mark->cursor + 1 <= mark->view.count &&
-          mark->array[mark->cursor] == ' ')
-    {
-     move_mark_cursor_right(mark);
-    }
-    
-    while(mark->cursor + 1 <= mark->view.count &&
-          mark->array[mark->cursor] != ' ')
-    {
-     move_mark_cursor_right(mark);
-    }
-   }
-   else
-   {
-    move_mark_cursor_right(mark);
-   }
-  }
-  else if(was_pressed(&input->Key_Home))
-  {
-   result = true;
-   
-   set_mark_cursor_at_start(mark);
-   force_render_mark_cursor(mark);
-  }
-  else if(was_pressed(&input->Key_End))
-  {
-   result = true;
-   
-   set_mark_cursor_at_end(mark);
-   force_render_mark_cursor(mark);
-  }
-  else
-  {
-   char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Printable);
-   if(pressed)
-   {
-    result = true;
-    add_mark_character(mark, pressed);
-   }
-  }
-  
+        assert(mark->view.end == 24);
+        mark->view.count = get_string_length(mark->array);
+        
+        if(was_pressed(&input->Key_Del))
+        {
+            result = true;
+            
+            // Don't do this if we are at the end of the buffer
+            if((mark->cursor < mark->view.count) && mark->view.count)
+            {
+                // Remove the character at mark->cursor and move the buffer
+                for(u32 index = mark->cursor; index < MAX_MARK_SIZE; ++index)
+                {
+                    mark->array[index] = mark->array[index + 1];
+                    mark->array[index + 1] = 0;
+                }
+                
+                force_render_mark_cursor(mark);
+            }
+        }
+        else if(was_pressed_core(&input->Key_Backspace))
+        {
+            result = true;
+            
+            if(input->Key_Control.is_down)
+            {
+                while(mark->cursor &&
+                      mark->array[mark->cursor - 1] == ' ')
+                {
+                    remove_mark_char(mark);
+                }
+                
+                while(mark->cursor &&
+                      mark->array[mark->cursor - 1] != ' ')
+                {
+                    remove_mark_char(mark);
+                }
+            }
+            else
+            {
+                remove_mark_char(mark);
+            }
+        }
+        else if(was_pressed(&input->Key_ArrowLeft))
+        {
+            result = true;
+            
+            if(mark->cursor)
+            {
+                if(input->Key_Control.is_down)
+                {
+                    while(mark->cursor &&
+                          mark->array[mark->cursor - 1] == ' ')
+                    {
+                        move_mark_cursor_left(mark);
+                    }
+                    
+                    while(mark->cursor &&
+                          mark->array[mark->cursor - 1] != ' ')
+                    {
+                        move_mark_cursor_left(mark);
+                    }
+                }
+                else
+                {
+                    move_mark_cursor_left(mark);
+                }
+            }
+        }
+        else if(was_pressed(&input->Key_ArrowRight))
+        {
+            result = true;
+            
+            if(input->Key_Control.is_down)
+            {
+                while(mark->cursor + 1 <= mark->view.count &&
+                      mark->array[mark->cursor] == ' ')
+                {
+                    move_mark_cursor_right(mark);
+                }
+                
+                while(mark->cursor + 1 <= mark->view.count &&
+                      mark->array[mark->cursor] != ' ')
+                {
+                    move_mark_cursor_right(mark);
+                }
+            }
+            else
+            {
+                move_mark_cursor_right(mark);
+            }
+        }
+        else if(was_pressed(&input->Key_Home))
+        {
+            result = true;
+            
+            set_mark_cursor_at_start(mark);
+            force_render_mark_cursor(mark);
+        }
+        else if(was_pressed(&input->Key_End))
+        {
+            result = true;
+            
+            set_mark_cursor_at_end(mark);
+            force_render_mark_cursor(mark);
+        }
+        else
+        {
+            char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Printable);
+            if(pressed)
+            {
+                result = true;
+                add_mark_character(mark, pressed);
+            }
+        }
+        
 #if 0
-  printf("mark->cursor: %u\n", mark->cursor);
-  ui_print_view("Mark View", mark->view);
+        printf("mark->cursor: %u\n", mark->cursor);
+        ui_print_view("Mark View", mark->view);
 #endif
-  
-  return(result);
- }
+        
+        return(result);
+    }
 }
 
 internal void
 set_mark_cursor_at_start(Mark *mark)
 {
- assert(mark);
- 
- set_view_at_start(&mark->view);
- mark->cursor = 0;
+    assert(mark);
+    
+    set_view_at_start(&mark->view);
+    mark->cursor = 0;
 }
 
 internal void
 set_mark_cursor_at_end(Mark *mark)
 {
- assert(mark);
- 
- mark->cursor = mark->view.count;
- if(is_view_scrollable_with_count(mark->view, mark->view.count + 1))
- {
-  set_view_at_end(&mark->view);
- }
+    assert(mark);
+    
+    mark->cursor = mark->view.count;
+    if(is_view_scrollable_with_count(mark->view, mark->view.count + 1))
+    {
+        set_view_at_end(&mark->view);
+    }
 }
 
 internal b32
 is_mark_array_valid(char *mark_array)
 {
- assert(mark_array);
- 
- b32 result = false;
- 
- for(u32 index = 0; index < MAX_MARK_SIZE; ++index)
- {
-  if(mark_array[index] &&
-     mark_array[index] != ' ')
-  {
-   result = true;
-   break;
-  }
- }
- 
- return(result);
+    assert(mark_array);
+    
+    b32 result = false;
+    
+    for(u32 index = 0; index < MAX_MARK_SIZE; ++index)
+    {
+        if(mark_array[index] &&
+           mark_array[index] != ' ')
+        {
+            result = true;
+            break;
+        }
+    }
+    
+    return(result);
 }
 
 internal void
 deselect_mark(Mark *mark)
 {
- assert(mark);
- 
- mark->is_active = false;
- mark->render_cursor = false;
- mark->cursor_blink_start = 0;
+    assert(mark);
+    
+    mark->is_active = false;
+    mark->render_cursor = false;
+    mark->cursor_blink_start = 0;
 }
 
 internal String32
@@ -291,7 +291,7 @@ render_mouse_highlight(SDL_Renderer *renderer, v2u mouse_pos, v2u tile_pos, v4u 
         clip_rect.w - 8,
         entry_size
     };
-        
+    
     // This is tested against mouse pos so that only one thing can be highlighted at a time.
     v4u test_highlight_rect =
     {
@@ -300,13 +300,13 @@ render_mouse_highlight(SDL_Renderer *renderer, v2u mouse_pos, v2u tile_pos, v4u 
         highlight_rect.w,
         highlight_rect.h - 1
     };
-        
-        if(is_pos_inside_rect(test_highlight_rect, mouse_pos) && is_pos_inside_rect(clip_rect, mouse_pos))
+    
+    if(is_pos_inside_rect(test_highlight_rect, mouse_pos) && is_pos_inside_rect(clip_rect, mouse_pos))
     {
         render_fill_rect(renderer, highlight_rect, Color_MouseHighlightBackground, true);
         render_outline_rect(renderer, highlight_rect, Color_MouseHighlightBorder);
         result = true;
-        }
+    }
     
     //render_outline_rect(renderer, highlight_rect, Color_Yellow); // Debug
     return(result);
@@ -320,8 +320,8 @@ render_tile(SDL_Renderer *renderer, SDL_Texture *texture, v4u tile_src, v2u pos)
     assert(!is_v4u_zero(tile_src));
     assert(!is_v2u_zero(pos));
     
- v4u tile_dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
- render_texture(renderer, texture, &tile_src, &tile_dest, false, false);
+    v4u tile_dest = {pos.x, pos.y, TILE_SIZE, TILE_SIZE};
+    render_texture(renderer, texture, &tile_src, &tile_dest, false, false);
 }
 
 internal v2u
@@ -420,7 +420,7 @@ render_wide_separator(Game *game, v2u pos, v4u rect, s32 fill_rect_y)
     separator_rect.h = 1;
     
     render_fill_rect(game->renderer, separator_rect, Color_WindowShadow, false);
-    };
+};
 
 internal void
 next_defer_window_entry(v2u *pos, u32 entry_size)
@@ -448,12 +448,12 @@ get_examine_type_header_pos(v2u pos, View *view)
 
 internal void
 render_examine_type_header(Game *game,
-  char *string,
-  v4u rect,
-  v2u *window_pos,
-  v2u *trap_header_pos,
-  u32 view_entry_size,
-  UI *ui)
+                           char *string,
+                           v4u rect,
+                           v2u *window_pos,
+                           v2u *trap_header_pos,
+                           u32 view_entry_size,
+                           UI *ui)
 {
     assert(game);
     assert(string);
@@ -469,12 +469,12 @@ render_examine_type_header(Game *game,
 }
 
 internal b32
-can_render_non_inventory_item(Item *item, ItemType type, v2u pos)
+can_render_not_inventory_item(Item *item, ItemType type, v2u pos)
 {
     assert(type);
     assert(!is_v2u_zero(pos));
     
-    b32 result = (is_valid_non_inventory_item_on_pos(item, pos) && item->type == type);
+    b32 result = (is_valid_not_inventory_item_on_pos(item, pos) && item->type == type);
     return(result);
 }
 
@@ -489,7 +489,7 @@ can_render_inventory_item(Item *item, ItemType type)
 
 internal b32
 can_render_inventory_item_and_fits_interact_type(Item *item,
-                                                  ItemType item_type,
+                                                 ItemType item_type,
                                                  ItemInteractType interact_type)
 {
     assert(item_type);
@@ -498,7 +498,7 @@ can_render_inventory_item_and_fits_interact_type(Item *item,
     // Check the item since it could be from inventory
     b32 result = (item &&
                   can_render_inventory_item(item, item_type) &&
-               can_interact_type_be_used_on_item(item, interact_type));
+                  can_interact_type_be_used_on_item(item, interact_type));
     
     return(result);
 }
@@ -520,9 +520,9 @@ add_items_to_view_count(ItemState *item_state, v2u required_item_pos, u32 *view_
             b32 is_valid = false;
             if(is_v2u_zero(required_item_pos) && can_render_inventory_item(item, item_type))
             {
-                    is_valid = true;
+                is_valid = true;
             }
-            else if(!is_v2u_zero(required_item_pos) && can_render_non_inventory_item(item, item_type, required_item_pos))
+            else if(!is_v2u_zero(required_item_pos) && can_render_not_inventory_item(item, item_type, required_item_pos))
             {
                 is_valid = true;
             }
@@ -559,9 +559,9 @@ internal void
 render_window_items(Game *game,
                     ItemState *item_state,
                     UI *ui,
-  View *view,
-  v4u rect,
-  v2u required_item_pos,
+                    View *view,
+                    v4u rect,
+                    v2u required_item_pos,
                     v2u *window_pos,
                     v2u mouse_pos,
                     ItemInteractType interact_type,
@@ -591,7 +591,7 @@ render_window_items(Game *game,
                 {
                     if(interact_type)
                     {
-      if(can_interact_type_be_used_on_item(item, interact_type))
+                        if(can_interact_type_be_used_on_item(item, interact_type))
                         {
                             is_valid = true;
                         }
@@ -602,7 +602,7 @@ render_window_items(Game *game,
                     }
                 }
             }
-            else if(can_render_non_inventory_item(item, item_type, required_item_pos))
+            else if(can_render_not_inventory_item(item, item_type, required_item_pos))
             {
                 is_valid = true;
             }
@@ -639,15 +639,15 @@ render_window_items(Game *game,
                 String8 item_letter = get_item_letter_string(item);
                 String128 item_mark = get_item_mark_string(item->flags, item->mark.array);
                 
-                if(is_item_consumable(item->type))
+                if(is_set(item->flags, ItemFlag_CanConsume))
                 {
                     if(is_set(item->flags, ItemFlag_IsIdentified))
                     {
-      render_string(game->renderer, "%s%s%s%s", &item_name_pos, ui->font, item_letter.s, item->name.s, get_item_stack_string(item->type, item->c.stack_count).s, item_mark.s);
+                        render_string(game->renderer, "%s%s%s%s", &item_name_pos, ui->font, item_letter.s, item->name.s, get_consumable_item_stack_count_string(item->type, item->c.stack_count).s, item_mark.s);
                     }
                     else
                     {
-      render_string(game->renderer, "%s%s%s%s%s", &item_name_pos, ui->font, item_letter.s, item->c.depiction.s, get_item_id_string(item->id), get_item_stack_string(item->type, item->c.stack_count).s, item_mark.s);
+                        render_string(game->renderer, "%s%s%s%s%s", &item_name_pos, ui->font, item_letter.s, item->c.depiction.s, get_item_id_string(item->id, false), get_consumable_item_stack_count_string(item->type, item->c.stack_count).s, item_mark.s);
                     }
                 }
                 else
@@ -661,16 +661,16 @@ render_window_items(Game *game,
                             strcpy(equipped_string.s, " (equipped)");
                         }
                         
-      render_string(game->renderer, "%s%s%s%s%s", &item_name_pos, ui->font,
-                                        get_item_status_color(&item->flags, item->rarity),
-                                        item_letter.s,
-                                        get_full_item_name(item).s,
-                                    equipped_string.s,
-                                    item_mark.s);
+                        render_string(game->renderer, "%s%s%s%s%s", &item_name_pos, ui->font,
+                                      get_item_status_color(&item->flags, item->rarity),
+                                      item_letter.s,
+                                      get_full_item_name(item).s,
+                                      equipped_string.s,
+                                      item_mark.s);
                     }
                     else
                     {
-      render_string(game->renderer, "%s%s%s", &item_name_pos, ui->font, item_letter.s, get_item_id_string(item->id), item_mark.s);
+                        render_string(game->renderer, "%s%s%s", &item_name_pos, ui->font, item_letter.s, get_item_id_string(item->id, false), item_mark.s);
                     }
                 }
                 
@@ -689,16 +689,16 @@ update_window_test_pos(View *view, v2u *test_pos, u32 window_scroll_start_y, u32
     assert(window_scroll_start_y);
     
     b32 should_break = false;
- 
- if(can_fit_view_entry(test_pos->y, view->entry_size, window_scroll_start_y))
- {
-  // The reason we add a variable amount is because dungeon traps and entities need to have their
-  // header and content added to the view which is + 2, while items add their header first and then
-  // the content so 1 + 1. This of course assumes we won't have more than one dungeon trap or
-  // entity on a dungeon pos ever.
-  view->end += view_end_add;
-  next_defer_window_entry(test_pos, view->entry_size);
-  }
+    
+    if(can_fit_view_entry(test_pos->y, view->entry_size, window_scroll_start_y))
+    {
+        // The reason we add a variable amount is because dungeon traps and entities need to have their
+        // header and content added to the view which is + 2, while items add their header first and then
+        // the content so 1 + 1. This of course assumes we won't have more than one dungeon trap or
+        // entity on a dungeon pos ever.
+        view->end += view_end_add;
+        next_defer_window_entry(test_pos, view->entry_size);
+    }
     else
     {
         should_break = true;
@@ -709,10 +709,10 @@ update_window_test_pos(View *view, v2u *test_pos, u32 window_scroll_start_y, u32
 
 internal b32
 set_view_end_from_inventory_items(Inventory *inventory,
-             View *view,
-             v2u pos,
-             u32 window_scroll_start_y,
-             b32 came_from_interact)
+                                  View *view,
+                                  v2u pos,
+                                  u32 window_scroll_start_y,
+                                  b32 came_from_interact)
 {
     assert(inventory);
     assert(view);
@@ -733,7 +733,7 @@ set_view_end_from_inventory_items(Inventory *inventory,
             Item *item = inventory->slots[index];
             
             if(came_from_interact
-                   && can_render_inventory_item_and_fits_interact_type(item, item_type, inventory->interact_type))
+               && can_render_inventory_item_and_fits_interact_type(item, item_type, inventory->interact_type))
             {
                 is_valid = true;
             }
@@ -750,7 +750,7 @@ set_view_end_from_inventory_items(Inventory *inventory,
                     if(update_window_test_pos(view, &test_pos, window_scroll_start_y, 1)) return(true);
                 }
                 
-    if(update_window_test_pos(view, &test_pos, window_scroll_start_y, 1)) return(true);
+                if(update_window_test_pos(view, &test_pos, window_scroll_start_y, 1)) return(true);
             }
         }
     }
@@ -779,16 +779,16 @@ set_enable_window_view_clip_rect(SDL_Renderer *renderer, View *view, v4u window_
     view->clip_rect.x = pos.x - horizontal_offset;
     view->clip_rect.y = pos.y;
     view->clip_rect.w = width + (horizontal_offset * 2);
- view->clip_rect.h = view->entry_size * view->end;
- set_render_clip_rect(renderer, &view->clip_rect);
+    view->clip_rect.h = view->entry_size * view->end;
+    set_render_clip_rect(renderer, &view->clip_rect);
 }
 
 internal b32
 set_view_end_from_items(ItemState *item_state,
-                   View *view,
-                   v2u *test_pos,
-                   v2u examine_pos,
-                   u32 window_scroll_start_y)
+                        View *view,
+                        v2u *test_pos,
+                        v2u examine_pos,
+                        u32 window_scroll_start_y)
 {
     assert(item_state);
     assert(view);
@@ -806,21 +806,21 @@ set_view_end_from_items(ItemState *item_state,
         {
             Item *item = &item_state->array[index];
             
-            if(can_render_non_inventory_item(item, item_type, examine_pos))
+            if(can_render_not_inventory_item(item, item_type, examine_pos))
             {
                 if(render_item_type)
                 {
                     render_item_type = false;
-     if(update_window_test_pos(view, test_pos, window_scroll_start_y, 1)) return(true);
+                    if(update_window_test_pos(view, test_pos, window_scroll_start_y, 1)) return(true);
                 }
                 
-    if(update_window_test_pos(view, test_pos, window_scroll_start_y, 1)) return(true);
+                if(update_window_test_pos(view, test_pos, window_scroll_start_y, 1)) return(true);
             }
         }
     }
     
     return(result);
-    }
+}
 
 internal v2u
 get_window_content_start_pos(v4u rect, u32 window_offset)
@@ -930,7 +930,7 @@ start_view_move(ViewMove *move, ViewMoveParams params)
     
     assert(!move->count);
     extend_view_move(move, params);
-    }
+}
 
 internal void
 update_view_move(ViewMove *move)
@@ -959,9 +959,9 @@ update_view_move(ViewMove *move)
             move->can_extend = false;
             move->count = 0;
             
-                move->moving_offset = move->moving_offset_target;
-                move->offset = (s32)move->moving_offset;
-                
+            move->moving_offset = move->moving_offset_target;
+            move->offset = (s32)move->moving_offset;
+            
 #if MOONBREATH_SLOW
             if(move->print_info)
             {
@@ -973,18 +973,18 @@ update_view_move(ViewMove *move)
             }
 #endif
             
-            }
-            else
-            {
+        }
+        else
+        {
             move->offset = (s32)move->moving_offset;
-                
+            
 #if MOONBREATH_SLOW
-                if(move->print_info)
-                {
+            if(move->print_info)
+            {
                 printf("move->moving_offset: %.02f\n", move->moving_offset);
-                }
-#endif
             }
+#endif
+        }
     }
 }
 
@@ -1029,7 +1029,7 @@ update_defer_window_rect(char *text, v2u *pos, u32 lines_after, UI *ui)
     }
     
     if(lines_after) pos_newline(pos, ui->font->size, lines_after);
-    }
+}
 
 internal void
 defer_string(char *string, v2u *pos, u32 lines_before, u32 lines_after, UI *ui, ...)
@@ -1165,13 +1165,13 @@ process_defers(Game *game, Texture tileset, UI *ui)
         {
             defer->rect.x + ui->defer_window_rect.x,
             defer->rect.y + ui->defer_window_rect.y,
-                defer->rect.w,
+            defer->rect.w,
             defer->rect.h
         };
         
         if(defer->type == DeferType_Text)
         {
-   render_string(game->renderer, "%s", &real_defer_pos, ui->font, defer->text.s);
+            render_string(game->renderer, "%s", &real_defer_pos, ui->font, defer->text.s);
         }
         else if(defer->type == DeferType_Tile)
         {
@@ -1210,7 +1210,7 @@ render_header_string_and_separator(char *header, Game *game, v2u *pos, UI *ui, u
     }
     else
     {
-  render_string_and_move(game->renderer, header, pos, lines_before, 1, ui->font);
+        render_string_and_move(game->renderer, header, pos, lines_before, 1, ui->font);
         render_header_text_separator(game->renderer, header, pos->x, pos->y + 4, ui->font);
     }
     
@@ -1233,16 +1233,16 @@ render_entity_resistances(Game *game, EntityResist *resists, v2u *pos, UI *ui, b
         EntityResist resist = resists[damage_type];
         
         char sign = ' ';
-  if(resist.value > 0)
+        if(resist.value > 0)
         {
             sign = '+';
         }
-  else if(resist.value < 0)
+        else if(resist.value < 0)
         {
             sign = '-';
         }
         
-  u32 absolute_resist = absolute(resist.value);
+        u32 absolute_resist = absolute(resist.value);
         u32 resistance_percent = absolute_resist * (ENTITY_RESISTANCE_PER_POINT * 10);
         
         char *damage_type_string = get_entity_damage_type_string(damage_type);
@@ -1252,16 +1252,16 @@ render_entity_resistances(Game *game, EntityResist *resists, v2u *pos, UI *ui, b
         if(is_defer)
         {
             defer_string(format_string, pos, 0, 1, ui,
-                             damage_type_string, padding.s, sign,
-                             absolute_resist, resistance_percent);
+                         damage_type_string, padding.s, sign,
+                         absolute_resist, resistance_percent);
         }
         else
         {
-   render_string_and_move(game->renderer, format_string, pos, 0, 1, ui->font,
-                                       damage_type_string, padding.s, sign,
-                                       absolute_resist, resistance_percent);
+            render_string_and_move(game->renderer, format_string, pos, 0, 1, ui->font,
+                                   damage_type_string, padding.s, sign,
+                                   absolute_resist, resistance_percent);
         }
-        }
+    }
 }
 
 internal void
@@ -1290,11 +1290,11 @@ render_entity_status_effects(Game *game, EntityStatus *statuses, v2u *pos, UI *u
                 {
                     if(status->type == EntityStatusType_Stat)
                     {
-      render_string_and_move(game->renderer, "%s", pos, 0, 1, ui->font, status->name.s);
+                        render_string_and_move(game->renderer, "%s", pos, 0, 1, ui->font, status->name.s);
                     }
                     else
                     {
-      render_string_and_move(game->renderer, "%s", pos, 0, 1, ui->font, get_status_type_string(status->type));
+                        render_string_and_move(game->renderer, "%s", pos, 0, 1, ui->font, get_status_type_string(status->type));
                     }
                 }
             }
@@ -1308,10 +1308,10 @@ render_entity_status_effects(Game *game, EntityStatus *statuses, v2u *pos, UI *u
         }
         else
         {
-   render_string_and_move(game->renderer, "None", pos, 0, 1, ui->font);
+            render_string_and_move(game->renderer, "None", pos, 0, 1, ui->font);
         }
     }
-    }
+}
 
 internal void
 center_rect_to_game_window(v2u game_window_size, v4u *rect, u32 window_scroll_start_y)
@@ -1325,9 +1325,9 @@ center_rect_to_game_window(v2u game_window_size, v4u *rect, u32 window_scroll_st
         rect->x = get_rect_x_centering_offset(game_window_size.w, rect->w);
         rect->y = get_centering_offset(window_scroll_start_y, rect->h);
         
-        #if MOONBREATH_SLOW
+#if MOONBREATH_SLOW
         if(rect->y > game_window_size.h) rect->y = 0; // Clamp if wrong
-        #endif
+#endif
         
     }
 }
@@ -1356,7 +1356,7 @@ init_defer_window(DeferWindow *window, u32 x_multiplier, u32 y_multiplier, UI *u
     window->pos.y = ui->defer_window_rect.y + ui->defer_window_padding.y;
     
     return(&window->pos);
-    }
+}
 
 internal void
 end_defer_window(Game *game, DeferWindow *window, Assets *assets, UI *ui)
@@ -1370,10 +1370,10 @@ end_defer_window(Game *game, DeferWindow *window, Assets *assets, UI *ui)
     
     // Width padding
     if(!ui->defer_window_has_custom_width &&
-           ui->defer_window_padding.x)
+       ui->defer_window_padding.x)
     {
-            ui->defer_window_rect.w += ui->defer_window_padding.x;
-        }
+        ui->defer_window_rect.w += ui->defer_window_padding.x;
+    }
     
     // Height padding
     if(ui->defer_window_padding.y)
@@ -1486,7 +1486,7 @@ reset_all_owner_select_letters(Owner *owners)
             }
             
             owner->type = OwnerType_None;
-            }
+        }
     }
 }
 
@@ -1514,7 +1514,7 @@ init_all_owner_letters(Owner *owners)
         }
         
         assert(is_alpha(owner->c));
-        }
+    }
 }
 
 internal void
@@ -1583,7 +1583,7 @@ set_owner_src(Owner *owner, void *parent, OwnerType type)
     }
     
     return(owner->c);
-    }
+}
 
 internal char
 add_new_char_to_owners(Owner *owners, void *parent, OwnerType type)
@@ -1623,7 +1623,7 @@ defer_window_option(char *text, v2u *pos, UI *ui)
     
     defer_string(text, pos, 0, 0, ui);
     pos->x += (get_text_width(text, ui->font, false) + 10);
-    }
+}
 
 internal b32
 is_view_scrollable_with_count(View view, u32 view_count)
@@ -1654,14 +1654,14 @@ reset_view_move(ViewMove *move)
     
     move->step = 0.0f;
     move->count = 0;
-    }
+}
 
 internal void
 set_view_at_start(View *view)
 {
     assert(view);
     view->start = 1;
-    }
+}
 
 internal void
 set_view_and_move_at_start(View *view)
@@ -1695,9 +1695,9 @@ set_view_at_end(View *view)
 {
     assert(view);
     
-        view->start = get_view_end(*view);
-        view->move.offset = get_view_offset_from_start(view->start, view->move.size);
-    }
+    view->start = get_view_end(*view);
+    view->move.offset = get_view_offset_from_start(view->start, view->move.size);
+}
 
 internal v2u
 get_examine_window_header_pos(v2u pos, UI *ui)
@@ -1738,45 +1738,45 @@ start_view_scrolling(Input *input, View *view)
             params.can_extend = true;
             params.move_count = 1;
             params.direction = Direction_Down;
-    }
+        }
         else if(was_pressed(&input->Key_Home) && can_view_go_up(*view))
         {
             params.move_count = view->start - 1;
             params.direction = Direction_Up;
-            }
+        }
         else if(was_pressed(&input->Key_End) && can_view_go_down(*view))
         {
             params.move_count = get_view_end(*view) - view->start;
             params.direction = Direction_Down;
         }
         
-        #if 0
+#if 0
         printf("params.move_count: %u\n", params.move_count);
-    printf("params.direction is vertical: %u\n", is_direction_vertical(params.direction));
+        printf("params.direction is vertical: %u\n", is_direction_vertical(params.direction));
         printf("params.step_multiplier: %.02f\n\n", params.step_multiplier);
-        #endif
+#endif
         
         if(are_view_params_valid(params))
         {
             if(params.can_extend &&
                view->move.direction == params.direction &&
-                   view->move.is_moving)
+               view->move.is_moving)
             {
                 assert(params.move_count == 1);
                 move_view_in_direction(view, params);
                 extend_view_move(&view->move, params);
-                }
+            }
             else if(!view->move.is_moving)
             {
                 //view->move.print_info = true;
                 //view->scrollbar_move.print_info = true;
                 
                 move_view_in_direction(view, params);
-            start_view_move(&view->move, params);
+                start_view_move(&view->move, params);
+            }
         }
     }
 }
-    }
 
 internal void
 render_scrollbar(Game *game, v4u window_rect, View *view, UI *ui)
@@ -1785,10 +1785,10 @@ render_scrollbar(Game *game, v4u window_rect, View *view, UI *ui)
     assert(!is_v4u_zero(window_rect));
     assert(view);
     assert(ui);
- 
- //printf("is_view_scrollable(*view): %u\n", is_view_scrollable(*view));
- //ui_print_view("test", *view);
- 
+    
+    //printf("is_view_scrollable(*view): %u\n", is_view_scrollable(*view));
+    //ui_print_view("test", *view);
+    
     if(is_view_scrollable(*view))
     {
         // Render gutter
@@ -1812,7 +1812,7 @@ render_scrollbar(Game *game, v4u window_rect, View *view, UI *ui)
         scrollbar.h = (gutter.h * gutter_h_scale) + 1; // + 1 so we're not off by one at the end of the gutter
         render_fill_rect(game->renderer, scrollbar, Color_WindowBorder, false);
         
-        #if 0
+#if 0
         gutter.x -= 2;
         render_fill_rect(game->renderer, gutter, Color_WindowShadow, false);
         
@@ -1821,9 +1821,9 @@ render_scrollbar(Game *game, v4u window_rect, View *view, UI *ui)
         print_v4s(view->content_rect);
         print_v4u(gutter);
         print_v4u(scrollbar);
-        #endif
+#endif
         
-        }
+    }
 }
 
 internal void
@@ -1837,7 +1837,7 @@ disable_window_view_clip_rect_and_render_scrollbar(Game *game, View *view, v4u w
     //render_outline_rect(game->renderer, view->clip_rect, Color_Yellow); // Render clip rect
     SDL_RenderSetClipRect(game->renderer, 0);
     render_scrollbar(game, window_rect, view, ui);
-    }
+}
 
 internal v4u
 get_border_adjusted_rect(v4u rect, u32 border_size)
@@ -1879,17 +1879,17 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         defer_string("%s%s", &name_pos, 0, 1, ui, get_letter_string(entity->select_letter).s, entity->name.s);
         defer_tile(pos, entity->tile_src, ui, true);
         
-  v2u spells_pos = {pos->x + 352, pos->y};
+        v2u spells_pos = {pos->x + 352, pos->y};
         v2u resistances_pos = {spells_pos.x + 192, spells_pos.y};
         
         // Render entity stats
         render_header_string_and_separator("Stats", game, pos, ui, 1, true);
         
-        #if MOONBREATH_SLOW
+#if MOONBREATH_SLOW
         defer_string("Health: %u/%u", pos, 0, 1, ui, entity->hp, entity->max_hp);
 #else
         defer_string("Max Health: %u", pos, 0, 1, ui, entity->max_hp);
-        #endif
+#endif
         
         if(is_entity_damage_valid(entity->e.damage)) defer_string("Damage: %u-%u", pos, 0, 1, ui, entity->e.damage.min, entity->e.damage.max);
         defer_string("Defence: %u", pos, 0, 1, ui, entity->stats.def);
@@ -1916,17 +1916,17 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
         else if(entity->stats.ev <= 17)
         {
             strcpy(evasion_text, "High");
-    }
+        }
         else if(entity->stats.ev <= 21)
-    {
-        strcpy(evasion_text, "Very High");
-    }
-    
+        {
+            strcpy(evasion_text, "Very High");
+        }
+        
         defer_string("Evasion: %s (%u)", pos, 0, 1, ui, evasion_text, entity->stats.ev);
         defer_string("View Range: %u", pos, 0, 1, ui, entity->stats.fov);
-  defer_string("Action Time: %.01f", pos, 0, 1, ui, entity->action_time);
-  render_entity_health_regen_string(game->renderer, entity, pos, ui, true);
-  
+        defer_string("Action Time: %.01f", pos, 0, 1, ui, entity->action_time);
+        render_entity_health_regen_string(game->renderer, entity, pos, ui, true);
+        
         { // Render spells
             render_header_string_and_separator("Spells", game, &spells_pos, ui, 1, true);
             
@@ -1972,34 +1972,34 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
             
             b32 affected_by_any_spell = false;
             for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
-        {
+            {
                 EntityStatus *status = &entity->statuses[index];
-            if(status->type && status->spell)
+                if(status->type && status->spell)
                 {
                     affected_by_any_spell = true;
                     
-                Spell *spell = status->spell;
+                    Spell *spell = status->spell;
                     if(!spell->select_letter)
                     {
                         spell->select_letter = add_new_char_to_owners(ui->temp_owners, status->spell, OwnerType_Spell);
                     }
-                
+                    
                     defer_string("%s%s", &spells_affected_by_pos, 0, 1, ui, get_letter_string(spell->select_letter).s, status->name.s);
-            }
+                }
             }
             
             if(!affected_by_any_spell) defer_string("None", &spells_affected_by_pos, 0, 1, ui);
-            }
+        }
         
         if(entity->e.spell_count) defer_string("Press the key next to a spell to view it.", pos, 2, 1, ui);
-        }
+    }
     
     end_defer_window(game, &window, assets, ui);
-        }
+}
 
 internal void
 render_spell_examine_window(Game *game,
-                                   Assets *assets,
+                            Assets *assets,
                             UI *ui,
                             Spell *spell,
                             v2u attacker_pos,
@@ -2042,7 +2042,7 @@ internal void
 render_tile_examine_window(Game *game, DungeonTileID tile_id, Assets *assets, UI *ui)
 {
     assert(game);
- assert(tile_id);
+    assert(tile_id);
     assert(assets);
     assert(ui);
     
@@ -2051,20 +2051,20 @@ render_tile_examine_window(Game *game, DungeonTileID tile_id, Assets *assets, UI
     
     // Name
     v2u header_pos = get_examine_window_header_pos(*pos, ui);
- defer_string("%s", &header_pos, 0, 0, ui, get_dungeon_tile_name(tile_id));
+    defer_string("%s", &header_pos, 0, 0, ui, get_dungeon_tile_name(tile_id));
     
     // Tile
- defer_tile(pos, get_dungeon_tileset_rect(tile_id), ui, true);
+    defer_tile(pos, get_dungeon_tileset_rect(tile_id), ui, true);
     
     // Description
- char *description = get_dungeon_tile_description(tile_id);
+    char *description = get_dungeon_tile_description(tile_id);
     if(description)
     {
         defer_string(description, pos, 1, 1, ui);
-        }
+    }
     
     end_defer_window(game, &window, assets, ui);
-    }
+}
 
 internal void
 render_trap_examine_window(Game *game, DungeonTrap *trap, Assets *assets, UI *ui)
@@ -2099,56 +2099,56 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
     
     v2u header_pos = get_examine_window_header_pos(*pos, ui);
     defer_string("%s%s%s%s%s", &header_pos, 0, 1, ui,
-                   get_item_status_color(&item->flags, item->rarity),
-                   get_item_letter_string(item).s,
-                   get_full_item_name(item).s,
-                   get_item_stack_string(item->type, item->c.stack_count).s,
-                   get_item_mark_string(item->flags, item->mark.array).s);
+                 get_item_status_color(&item->flags, item->rarity),
+                 get_item_letter_string(item).s,
+                 get_full_item_name(item).s,
+                 get_consumable_item_stack_count_string(item->type, item->c.stack_count).s,
+                 get_item_mark_string(item->flags, item->mark.array).s);
     
-        if(item->type == ItemType_Weapon)
-        {
-            if(is_set(item->flags, ItemFlag_IsIdentified))
+    if(item->type == ItemType_Weapon)
+    {
+        if(is_set(item->flags, ItemFlag_IsIdentified))
         {
             defer_string("Damage: %u-%u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max + item->enchant_level);
             defer_string("Accuracy: %d", pos, 1, 0, ui, item->w.accuracy + item->enchant_level);
             defer_string("Attack Speed: %.1f", pos, 1, 0, ui, item->w.speed);
-            }
-            else
+        }
+        else
         {
             defer_string("Base Damage: %u-%u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max);
             defer_string("Base Accuracy: %d", pos, 1, 0, ui, item->w.accuracy);
             defer_string("Base Attack Speed: %.1f", pos, 1, 0, ui, item->w.speed);
-            }
         }
-        else if(item->type == ItemType_Armor)
+    }
+    else if(item->type == ItemType_Armor)
+    {
+        if(is_set(item->flags, ItemFlag_IsIdentified))
         {
-            if(is_set(item->flags, ItemFlag_IsIdentified))
-            {
             defer_string("Defence: %d", pos, 3, 0, ui, item->a.defence + item->enchant_level);
             defer_string("Weight: %d", pos, 1, 0, ui, item->a.weight);
-            }
-            else
-            {
+        }
+        else
+        {
             defer_string("Base Defence: %d", pos, 3, 0, ui, item->a.defence);
             defer_string("Base Weight: %d", pos, 1, 0, ui, item->a.weight);
-            }
         }
-        else if(is_item_consumable(item->type))
-        {
-            if(is_set(item->flags, ItemFlag_IsIdentified))
+    }
+    else if(is_set(item->flags, ItemFlag_CanConsume))
+    {
+        if(is_set(item->flags, ItemFlag_IsIdentified))
         {
             defer_string("%s", pos, 3, 0, ui, item->description.s);
-            }
-            else if(item->type == ItemType_Potion)
-                {
-                defer_string("Consuming potions will bestow you with different effects.", pos, 3, 0, ui);
-                defer_string("Some of these effects will be helpful, while others harmful.", pos, 1, 0, ui);
-                }
-                else if(item->type == ItemType_Scroll)
-                {
-                defer_string("Reading scrolls will bring out different magical effects.", pos, 3, 0, ui);
-            }
-            }
+        }
+        else if(item->type == ItemType_Potion)
+        {
+            defer_string("Consuming potions will bestow you with different effects.", pos, 3, 0, ui);
+            defer_string("Some of these effects will be helpful, while others harmful.", pos, 1, 0, ui);
+        }
+        else if(item->type == ItemType_Scroll)
+        {
+            defer_string("Reading scrolls will bring out different magical effects.", pos, 3, 0, ui);
+        }
+    }
     
     // Render item stats
     if(is_set(item->flags, ItemFlag_IsIdentified))
@@ -2166,7 +2166,7 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
         }
     }
     
-    if(is_item_equipment(item->type))
+    if(is_set(item->flags, ItemFlag_CanEquip))
     {
         pos_newline(pos, ui->font->size, 2);
         
@@ -2183,7 +2183,7 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
         pos_newline(pos, ui->font->size, 2);
         defer_window_option("(a)djust", pos, ui);
         
-        if(is_item_equipment(item->type))
+        if(is_set(item->flags, ItemFlag_CanEquip))
         {
             if(is_set(item->flags, ItemFlag_IsEquipped))
             {
@@ -2286,18 +2286,18 @@ render_player_status_window(Game *game, Entity *player, Assets *assets, UI *ui)
     render_window(game, rect, 2);
     v2u pos = get_window_content_start_pos(rect, ui->window_offset);
     
- v4u clip_rect = get_border_adjusted_rect(rect, 2);
- set_render_clip_rect(game->renderer, &clip_rect);
+    v4u clip_rect = get_border_adjusted_rect(rect, 2);
+    set_render_clip_rect(game->renderer, &clip_rect);
     
     render_header_string_and_separator("Status", game, &pos, ui, 0, false);
- render_string_and_move(game->renderer, "%s", &pos, 0, 1, ui->font, player->name.s);
- render_string_and_move(game->renderer, "Session Time: %s:%s:%s", &pos, 0, 1, ui->font,
-                        get_game_session_time_string(game->timer.hours).s,
-                        get_game_session_time_string(game->timer.minutes).s,
-                        get_game_session_time_string(game->timer.seconds).s);
- 
- render_entity_health_regen_string(game->renderer, player, &pos, ui, false);
- 
+    render_string_and_move(game->renderer, "%s", &pos, 0, 1, ui->font, player->name.s);
+    render_string_and_move(game->renderer, "Session Time: %s:%s:%s", &pos, 0, 1, ui->font,
+                           get_game_session_time_string(game->timer.hours).s,
+                           get_game_session_time_string(game->timer.minutes).s,
+                           get_game_session_time_string(game->timer.seconds).s);
+    
+    render_entity_health_regen_string(game->renderer, player, &pos, ui, false);
+    
     v2u equipment_pos = {pos.x + 224, pos.y};
     render_entity_resistances(game, player->resists, &pos, ui, false);
     
@@ -2313,16 +2313,16 @@ render_player_status_window(Game *game, Entity *player, Assets *assets, UI *ui)
             Item *item = player->p.equipment[item_slot];
             if(item)
             {
-    render_string_and_move(game->renderer, "%s: %s%s%s%s", &equipment_pos, 0, 1, ui->font,
-                                           item_slot_string,
-                                           padding.s,
+                render_string_and_move(game->renderer, "%s: %s%s%s%s", &equipment_pos, 0, 1, ui->font,
+                                       item_slot_string,
+                                       padding.s,
                                        get_item_status_color(&item->flags, item->rarity),
                                        get_full_item_name(item).s,
                                        get_item_mark_string(item->flags, item->mark.array).s);
             }
             else
             {
-    render_string_and_move(game->renderer, "%s: %sNone", &equipment_pos, 0, 1, ui->font,
+                render_string_and_move(game->renderer, "%s: %sNone", &equipment_pos, 0, 1, ui->font,
                                        item_slot_string,
                                        padding.s);
             }
@@ -2332,7 +2332,7 @@ render_player_status_window(Game *game, Entity *player, Assets *assets, UI *ui)
     render_entity_status_effects(game, player->statuses, &pos, ui, 2, false);
     
     SDL_RenderSetClipRect(game->renderer, 0);
-    }
+}
 
 internal void
 render_multiple_pickup_window(Game *game,
@@ -2366,7 +2366,7 @@ render_multiple_pickup_window(Game *game,
             {
                 Item *item = &item_state->array[index];
                 
-                    if(can_render_non_inventory_item(item, item_type, player_pos))
+                if(can_render_not_inventory_item(item, item_type, player_pos))
                 {
                     if(render_item_type)
                     {
@@ -2374,11 +2374,11 @@ render_multiple_pickup_window(Game *game,
                         ++view->count;
                     }
                     
-     if(is_valid_item_selected(item))
-     {
-      ++items_selected_count;
-     }
-     
+                    if(is_valid_item_selected(item))
+                    {
+                        ++items_selected_count;
+                    }
+                    
                     ++view->count;
                 }
             }
@@ -2388,25 +2388,25 @@ render_multiple_pickup_window(Game *game,
     // Render multiple pickup
     v4u pickup_rect = init_rect_window(game, &view->move, 512, ui->window_scroll_start_y);
     
-        String32 items_selected_text = {0};
-        if(items_selected_count > 1)
-        {
-            sprintf(items_selected_text.s, "(%u items)", items_selected_count);
-        }
-        else if(items_selected_count)
-        {
-            sprintf(items_selected_text.s, "(%u item)", items_selected_count);
+    String32 items_selected_text = {0};
+    if(items_selected_count > 1)
+    {
+        sprintf(items_selected_text.s, "(%u items)", items_selected_count);
+    }
+    else if(items_selected_count)
+    {
+        sprintf(items_selected_text.s, "(%u item)", items_selected_count);
     }
     
     v2u pos = get_window_content_start_pos(pickup_rect, ui->window_offset);
- render_string_and_move(game->renderer, "Pickup what? %u/%u slots %s", &pos, 0, 1, ui->font, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, items_selected_text.s);
+    render_string_and_move(game->renderer, "Pickup what? %u/%u slots %s", &pos, 0, 1, ui->font, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT, items_selected_text.s);
     
     { // Set view end
         view->end = 0;
         v2u test_pos = pos;
         set_view_end_from_items(item_state, view, &test_pos, player_pos, ui->window_scroll_start_y);
     }
-        
+    
     set_enable_window_view_clip_rect(game->renderer, view, pickup_rect, pos);
     render_window_items(game, item_state, ui, view, pickup_rect, player_pos, &pos, mouse_pos, inventory->interact_type, assets->tileset.tex);
     disable_window_view_clip_rect_and_render_scrollbar(game, view, pickup_rect, ui);
@@ -2420,76 +2420,76 @@ render_multiple_pickup_window(Game *game,
 internal void
 render_interact_window(Game *game,
                        ItemState *item_state,
-                   Inventory *inventory,
-                   Assets *assets,
-                   UI *ui,
-                   v2u mouse_pos)
-    {
-        assert(game);
+                       Inventory *inventory,
+                       Assets *assets,
+                       UI *ui,
+                       v2u mouse_pos)
+{
+    assert(game);
     assert(item_state);
     assert(inventory);
     assert(inventory->interact_type);
-        assert(assets);
-        assert(ui);
-        
+    assert(assets);
+    assert(ui);
+    
     View *view = &inventory->interact_window.view;
-        assert(view->start);
+    assert(view->start);
+    
+    { // Set view count
+        view->count = 0;
         
-        { // Set view count
-            view->count = 0;
+        for(ItemType item_type = ItemType_None + 1; item_type < ItemType_Count; ++item_type)
+        {
+            b32 render_item_type = true;
             
-            for(ItemType item_type = ItemType_None + 1; item_type < ItemType_Count; ++item_type)
+            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
-                b32 render_item_type = true;
-                
-                for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-                {
                 Item *item = &item_state->array[index];
-                    
+                
                 if(can_render_inventory_item_and_fits_interact_type(item, item_type, inventory->interact_type))
+                {
+                    if(render_item_type)
                     {
-                        if(render_item_type)
-                        {
-                            render_item_type = false;
-                            ++view->count;
-                        }
-                        
+                        render_item_type = false;
                         ++view->count;
                     }
+                    
+                    ++view->count;
                 }
             }
         }
+    }
     
-        // Render list of interactable items
+    // Render list of interactable items
     v4u interact_rect = init_rect_window(game, &view->move, 512, ui->window_scroll_start_y);
-        v2u pos = get_window_content_start_pos(interact_rect, ui->window_offset);
+    v2u pos = get_window_content_start_pos(interact_rect, ui->window_offset);
     switch(inventory->interact_type)
-        {
-  case ItemInteractType_Identify: render_string_and_move(game->renderer, "Identify which item?", &pos, 0, 1, ui->font); break;
-  case ItemInteractType_EnchantWeapon: render_string_and_move(game->renderer, "Enchant which weapon?", &pos, 0, 1, ui->font); break;
-  case ItemInteractType_EnchantArmor: render_string_and_move(game->renderer, "Enchant which armor?", &pos, 0, 1, ui->font); break;
-  case ItemInteractType_Uncurse: render_string_and_move(game->renderer, "Uncurse which item?", &pos, 0, 1, ui->font); break;
-            
-            invalid_default_case;
-        }
+    {
+        case ItemInteractType_Identify: render_string_and_move(game->renderer, "Identify which item?", &pos, 0, 1, ui->font); break;
+        case ItemInteractType_EnchantWeapon: render_string_and_move(game->renderer, "Enchant which weapon?", &pos, 0, 1, ui->font); break;
+        case ItemInteractType_EnchantArmor: render_string_and_move(game->renderer, "Enchant which armor?", &pos, 0, 1, ui->font); break;
+        case ItemInteractType_Uncurse: render_string_and_move(game->renderer, "Uncurse which item?", &pos, 0, 1, ui->font); break;
+        
+        invalid_default_case;
+    }
     
-         // Set view end
-        set_view_end_from_inventory_items(inventory, view, pos, ui->window_scroll_start_y, true);
+    // Set view end
+    set_view_end_from_inventory_items(inventory, view, pos, ui->window_scroll_start_y, true);
     
     set_enable_window_view_clip_rect(game->renderer, view, interact_rect, pos);
     render_window_items(game, item_state, ui, view, interact_rect, make_v2u(0, 0), &pos, mouse_pos, inventory->interact_type, assets->tileset.tex);
     disable_window_view_clip_rect_and_render_scrollbar(game, view, interact_rect, ui);
-        
+    
 #if 0
-        ui_print_view("Interact View", *view);
+    ui_print_view("Interact View", *view);
 #endif
-        
+    
 }
 
 internal void
 render_inventory_window(Game *game,
                         ItemState *item_state,
-                       Inventory *inventory,
+                        Inventory *inventory,
                         Assets *assets,
                         UI *ui,
                         v2u mouse_pos)
@@ -2501,37 +2501,37 @@ render_inventory_window(Game *game,
     assert(ui);
     
     View *view = &inventory->window.view;
-        assert(view->start);
-        
-        { // Set view count
-            view->count = 0;
-        add_items_to_view_count(item_state, make_v2u(0, 0), &view->count);
-        }
+    assert(view->start);
     
- // If inventory view has gone over the bottom, set it at end.
- if(inventory->validate_view &&
-    is_view_scrollable(*view) &&
-           inventory->window.view.count < (inventory->window.view.start + inventory->window.view.end - 1))
- {
-  set_view_at_end(view);
-  inventory->validate_view = false;
+    { // Set view count
+        view->count = 0;
+        add_items_to_view_count(item_state, make_v2u(0, 0), &view->count);
+    }
+    
+    // If inventory view has gone over the bottom, set it at end.
+    if(inventory->validate_view &&
+       is_view_scrollable(*view) &&
+       inventory->window.view.count < (inventory->window.view.start + inventory->window.view.end - 1))
+    {
+        set_view_at_end(view);
+        inventory->validate_view = false;
     }
     
     v4u inventory_rect = init_rect_window(game, &view->move, 512, ui->window_scroll_start_y);
-        v2u pos = get_window_content_start_pos(inventory_rect, ui->window_offset);
- render_string_and_move(game->renderer, "Inventory: %u/%u slots", &pos, 0, 1, ui->font, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
+    v2u pos = get_window_content_start_pos(inventory_rect, ui->window_offset);
+    render_string_and_move(game->renderer, "Inventory: %u/%u slots", &pos, 0, 1, ui->font, get_inventory_item_count(inventory), MAX_INVENTORY_SLOT_COUNT);
     
-         // Set view end
-        set_view_end_from_inventory_items(inventory, view, pos, ui->window_scroll_start_y, false);
+    // Set view end
+    set_view_end_from_inventory_items(inventory, view, pos, ui->window_scroll_start_y, false);
     
     set_enable_window_view_clip_rect(game->renderer, view, inventory_rect, pos);
     render_window_items(game, item_state, ui, view, inventory_rect, make_v2u(0, 0), &pos, mouse_pos, inventory->interact_type, assets->tileset.tex);
     disable_window_view_clip_rect_and_render_scrollbar(game, view, inventory_rect, ui);
-        
+    
 #if 0
-        ui_print_view("Inventory View", *view);
+    ui_print_view("Inventory View", *view);
 #endif
-        
+    
 }
 
 internal void
@@ -2542,7 +2542,7 @@ render_examine_window(Game *game, Assets *assets, UI *ui, v2u player_pos)
     assert(ui);
     assert(!is_v2u_zero(player_pos));
     
- ExamineMode *examine = &game->examine;
+    ExamineMode *examine = &game->examine;
     
     if(examine->type)
     {
@@ -2552,14 +2552,14 @@ render_examine_window(Game *game, Assets *assets, UI *ui, v2u player_pos)
             case ExamineType_Entity: render_entity_examine_window(game, examine->entity, assets, ui); break;
             case ExamineType_Spell: render_spell_examine_window(game, assets, ui, examine->spell, examine->entity->pos, player_pos); break;
             case ExamineType_Trap: render_trap_examine_window(game, examine->trap, assets, ui); break;
-   case ExamineType_Tile: render_tile_examine_window(game, examine->tile_id, assets, ui); break;
+            case ExamineType_Tile: render_tile_examine_window(game, examine->tile_id, assets, ui); break;
             
             invalid_default_case;
         }
     }
     else
     {
-        render_outline_rect(game->renderer, get_game_dest(game->camera, examine->pos), Color_Yellow);
+        render_outline_rect(game->renderer, get_game_dest(game->camera.rect, examine->pos), Color_Yellow);
     }
 }
 
@@ -2581,7 +2581,7 @@ render_multiple_examine_window(Game *game,
     assert(assets);
     assert(ui);
     
- ExamineMode *examine = &game->examine;
+    ExamineMode *examine = &game->examine;
     View *view = &item_state->examine_window.view;
     assert(view->start);
     
@@ -2594,8 +2594,8 @@ render_multiple_examine_window(Game *game,
         {
             if(examine_type == ExamineType_Entity)
             {
-    // Add entity to view count
-    item_state->examine_window_entity = get_dungeon_pos_entity(dungeon->tiles, examine->pos);
+                // Add entity to view count
+                item_state->examine_window_entity = get_dungeon_pos_entity(dungeon->tiles, examine->pos);
                 if(item_state->examine_window_entity) view->count += 2;
             }
             else if(examine_type == ExamineType_Item)
@@ -2605,49 +2605,49 @@ render_multiple_examine_window(Game *game,
             else if(examine_type == ExamineType_Trap)
             {
                 // Add dungeon trap to view count
-    item_state->examine_window_trap = get_dungeon_pos_trap(&dungeon->traps, examine->pos);
+                item_state->examine_window_trap = get_dungeon_pos_trap(&dungeon->traps, examine->pos);
                 if(item_state->examine_window_trap) view->count += 2;
-                }
             }
+        }
     }
     
     // Render multiple examine
     v4u examine_rect = init_rect_window(game, &view->move, 512, ui->window_scroll_start_y);
     
     v2u window_pos = get_window_content_start_pos(examine_rect, ui->window_offset);
- render_string_and_move(game->renderer, "Examine what?", &window_pos, 0, 1, ui->font);
+    render_string_and_move(game->renderer, "Examine what?", &window_pos, 0, 1, ui->font);
     
     Entity *entity = item_state->examine_window_entity;
     DungeonTrap *trap = item_state->examine_window_trap;
     
     { // Set view end
-    view->end = 0;
+        view->end = 0;
         v2u test_pos = window_pos;
-    
-    for(ExamineType examine_type = ExamineType_Entity;
+        
+        for(ExamineType examine_type = ExamineType_Entity;
             examine_type <= ExamineType_Trap;
-        ++examine_type)
+            ++examine_type)
         {
-        if(entity &&
-                   examine_type == ExamineType_Entity &&
-      update_window_test_pos(view, &test_pos, ui->window_scroll_start_y, 2))
-   {
-            break;
+            if(entity &&
+               examine_type == ExamineType_Entity &&
+               update_window_test_pos(view, &test_pos, ui->window_scroll_start_y, 2))
+            {
+                break;
             }
             else if(examine_type == ExamineType_Item &&
-                        set_view_end_from_items(item_state, view, &test_pos, examine->pos, ui->window_scroll_start_y))
-   {
-            break;
+                    set_view_end_from_items(item_state, view, &test_pos, examine->pos, ui->window_scroll_start_y))
+            {
+                break;
             }
-        else if(trap &&
-                examine_type == ExamineType_Trap &&
-           update_window_test_pos(view, &test_pos, ui->window_scroll_start_y, 2))
-   {
-            break;
-        }
+            else if(trap &&
+                    examine_type == ExamineType_Trap &&
+                    update_window_test_pos(view, &test_pos, ui->window_scroll_start_y, 2))
+            {
+                break;
+            }
         }
     }
- 
+    
     set_enable_window_view_clip_rect(game->renderer, view, examine_rect, window_pos);
     
     // Render examine contents
@@ -2669,7 +2669,7 @@ render_multiple_examine_window(Game *game,
             v2u entity_name_pos = get_window_entry_name_pos(entity_tile_pos, ui);
             String8 entity_select_letter = get_letter_string(entity->select_letter);
             
-   render_string(game->renderer, "%s%s", &entity_name_pos, ui->font, entity_select_letter.s, entity->name.s);
+            render_string(game->renderer, "%s%s", &entity_name_pos, ui->font, entity_select_letter.s, entity->name.s);
             next_defer_window_entry(&window_pos, view->entry_size);
         }
         else if(examine_type == ExamineType_Item)
@@ -2690,7 +2690,7 @@ render_multiple_examine_window(Game *game,
             v2u trap_name_pos = get_window_entry_name_pos(trap_tile_pos, ui);
             String8 trap_select_letter = get_letter_string(trap->select_letter);
             
-   render_string(game->renderer, "%s%s", &trap_name_pos, ui->font, trap_select_letter.s, trap->name.s);
+            render_string(game->renderer, "%s%s", &trap_name_pos, ui->font, trap_select_letter.s, trap->name.s);
             next_defer_window_entry(&window_pos, view->entry_size);
         }
     }
@@ -2701,93 +2701,93 @@ render_multiple_examine_window(Game *game,
     ui_print_view("Multiple Examine View", *view);
 #endif
     
-    }
+}
 
 internal void
 update_and_render_mark_input(SDL_Renderer *renderer, Font *font, Mark *mark, v2u pos, u32 centering_width)
 {
- assert(renderer);
- assert(font);
- assert(mark);
- assert(mark->cursor_blink_duration);
- 
- u32 height_pad = 4;
- 
- { // Render input rect
-  mark->input_rect.w = font->size * 14;
-  mark->input_rect.h = font->size + height_pad;
-  
-  if(centering_width)
-  {
-   pos.x += get_centering_offset(centering_width, mark->input_rect.w);
-  }
-  
-  mark->input_rect.x = pos.x;
-  mark->input_rect.y = pos.y;
-  
-  render_fill_rect(renderer, mark->input_rect, Color_WindowShadow, false);
-  render_outline_rect(renderer, mark->input_rect, Color_WindowBorder);
-  }
- 
- { // Update cursor
-  if(!mark->cursor_blink_start)
-  {
-   mark->cursor_blink_start = SDL_GetTicks();
-  }
-  
-  if(get_sdl_ticks_difference(mark->cursor_blink_start) >= mark->cursor_blink_duration)
-  {
-   mark->cursor_blink_start = 0;
-   mark->render_cursor = !mark->render_cursor;
-  }
- }
- 
- u32 cursor_x = 0;
- 
- { // Render input
-  v2u text_pos =
-  {
-   mark->input_rect.x + 4,
-   mark->input_rect.y + get_centering_offset(mark->input_rect.h, font->size) + 1
-  };
-  
-  cursor_x = text_pos.x;
-  v2u character_pos = text_pos;
-  for(u32 index = mark->view.start; index < get_view_range(mark->view); ++index)
-  {
-   u32 mark_index = index - 1;
-   
-   render_string(renderer, "%c", &character_pos, font, mark->array[mark_index]);
-   character_pos.x += get_glyph_width(mark->array[mark_index], font);
-   
-   if(mark->render_cursor && (index == mark->cursor))
-   {
-    cursor_x = character_pos.x;
-   }
-  }
- }
- 
- { // Render cursor
-  if(mark->is_active && mark->render_cursor)
-  {
-   v4u cursor_rect =
-   {
-    cursor_x,
-    mark->input_rect.y + (height_pad / 2),
-    1,
-    mark->input_rect.h - height_pad
-   };
-   
-   render_fill_rect(renderer, cursor_rect, Color_White, false);
-  }
- }
+    assert(renderer);
+    assert(font);
+    assert(mark);
+    assert(mark->cursor_blink_duration);
+    
+    u32 height_pad = 4;
+    
+    { // Render input rect
+        mark->input_rect.w = font->size * 14;
+        mark->input_rect.h = font->size + height_pad;
+        
+        if(centering_width)
+        {
+            pos.x += get_centering_offset(centering_width, mark->input_rect.w);
+        }
+        
+        mark->input_rect.x = pos.x;
+        mark->input_rect.y = pos.y;
+        
+        render_fill_rect(renderer, mark->input_rect, Color_WindowShadow, false);
+        render_outline_rect(renderer, mark->input_rect, Color_WindowBorder);
+    }
+    
+    { // Update cursor
+        if(!mark->cursor_blink_start)
+        {
+            mark->cursor_blink_start = SDL_GetTicks();
+        }
+        
+        if(get_sdl_ticks_difference(mark->cursor_blink_start) >= mark->cursor_blink_duration)
+        {
+            mark->cursor_blink_start = 0;
+            mark->render_cursor = !mark->render_cursor;
+        }
+    }
+    
+    u32 cursor_x = 0;
+    
+    { // Render input
+        v2u text_pos =
+        {
+            mark->input_rect.x + 4,
+            mark->input_rect.y + get_centering_offset(mark->input_rect.h, font->size) + 1
+        };
+        
+        cursor_x = text_pos.x;
+        v2u character_pos = text_pos;
+        for(u32 index = mark->view.start; index < get_view_range(mark->view); ++index)
+        {
+            u32 mark_index = index - 1;
+            
+            render_string(renderer, "%c", &character_pos, font, mark->array[mark_index]);
+            character_pos.x += get_glyph_width(mark->array[mark_index], font);
+            
+            if(mark->render_cursor && (index == mark->cursor))
+            {
+                cursor_x = character_pos.x;
+            }
+        }
+    }
+    
+    { // Render cursor
+        if(mark->is_active && mark->render_cursor)
+        {
+            v4u cursor_rect =
+            {
+                cursor_x,
+                mark->input_rect.y + (height_pad / 2),
+                1,
+                mark->input_rect.h - height_pad
+            };
+            
+            render_fill_rect(renderer, cursor_rect, Color_White, false);
+        }
+    }
 }
 
 internal void
 render_item_mark_window(Game *game, Item *item, Assets *assets, Mark *mark, Font *font, u32 window_scroll_start_y)
 {
     v4u window_rect = {0, 0, 250, 100};
- render_centered_rect(game, &window_rect, window_scroll_start_y);
+    render_centered_rect(game, &window_rect, window_scroll_start_y);
     
     { // Render header
         char *header = "Mark with what?";
@@ -2799,28 +2799,28 @@ render_item_mark_window(Game *game, Item *item, Assets *assets, Mark *mark, Font
         u32 header_width = get_text_width(header, font, false);
         v2u header_pos =
         {
-   window_rect.x + get_centering_offset(window_rect.w, header_width),
-   window_rect.y + 25
+            window_rect.x + get_centering_offset(window_rect.w, header_width),
+            window_rect.y + 25
         };
         
-  render_string(game->renderer, header, &header_pos, font);
+        render_string(game->renderer, header, &header_pos, font);
     }
- 
- v2u mark_input_pos =
- {
-  window_rect.x,
-  window_rect.y + get_font_newline(font->size) * 3
- };
- update_and_render_mark_input(game->renderer, font, mark, mark_input_pos, window_rect.w);
- 
- #if 0
- printf("mark->cursor: %u\n", mark->cursor);
- printf("mark->view.count: %u\n", mark->view.count);
- printf("mark->view.start: %u\n", mark->view.start);
- printf("mark->view.end: %u\n\n", mark->view.end);
+    
+    v2u mark_input_pos =
+    {
+        window_rect.x,
+        window_rect.y + get_font_newline(font->size) * 3
+    };
+    update_and_render_mark_input(game->renderer, font, mark, mark_input_pos, window_rect.w);
+    
+#if 0
+    printf("mark->cursor: %u\n", mark->cursor);
+    printf("mark->view.count: %u\n", mark->view.count);
+    printf("mark->view.start: %u\n", mark->view.start);
+    printf("mark->view.end: %u\n\n", mark->view.end);
 #endif
- 
-    }
+    
+}
 
 internal void
 render_ui(Game *game,
@@ -2828,7 +2828,7 @@ render_ui(Game *game,
           EntityState *entity_state,
           ItemState *item_state,
           Inventory *inventory,
-           Dungeon *dungeon,
+          Dungeon *dungeon,
           Assets *assets,
           UI *ui)
 {
@@ -2836,7 +2836,7 @@ render_ui(Game *game,
     assert(!ui->mouse_highlight.c); // Never used, should never be set.
     ui->mouse_highlight.type = OwnerType_None;
     
- ExamineMode *examine = &game->examine;
+    ExamineMode *examine = &game->examine;
     Entity *player = get_player_entity();
     
     v4u stats_rect = {0, ui->window_scroll_start_y, 388, assets->stat_and_log_window_h};
@@ -2864,15 +2864,15 @@ render_ui(Game *game,
             left.y
         };
         
-  render_string_and_move(game->renderer, player->name.s, &left, 0, 1, ui->font);
-  render_string_and_move(game->renderer, "Health:    %u/%u", &left, 0, 1, ui->font, player->hp, player->max_hp);
-  render_string_and_move(game->renderer, "Strength:     %u", &left, 0, 1, ui->font, player->stats.str);
-  render_string_and_move(game->renderer, "Intelligence: %u", &left, 0, 1, ui->font, player->stats.intel);
-  render_string_and_move(game->renderer, "Dexterity:    %u", &left, 0, 1, ui->font, player->stats.dex);
-  render_string_and_move(game->renderer, "Evasion:      %u", &left, 0, 1, ui->font, player->stats.ev);
-  render_string_and_move(game->renderer, "Defence:      %u", &left, 0, 1, ui->font, player->stats.def);
-  render_string_and_move(game->renderer, "Weight:       %u", &left, 0, 1, ui->font, player->p.weight);
-    
+        render_string_and_move(game->renderer, player->name.s, &left, 0, 1, ui->font);
+        render_string_and_move(game->renderer, "Health:    %u/%u", &left, 0, 1, ui->font, player->hp, player->max_hp);
+        render_string_and_move(game->renderer, "Strength:     %u", &left, 0, 1, ui->font, player->stats.str);
+        render_string_and_move(game->renderer, "Intelligence: %u", &left, 0, 1, ui->font, player->stats.intel);
+        render_string_and_move(game->renderer, "Dexterity:    %u", &left, 0, 1, ui->font, player->stats.dex);
+        render_string_and_move(game->renderer, "Evasion:      %u", &left, 0, 1, ui->font, player->stats.ev);
+        render_string_and_move(game->renderer, "Defence:      %u", &left, 0, 1, ui->font, player->stats.def);
+        render_string_and_move(game->renderer, "Weight:       %u", &left, 0, 1, ui->font, player->p.weight);
+        
         { // Render healthbar
             right.y += get_font_newline(ui->font->size) - 1;
             
@@ -2888,9 +2888,9 @@ render_ui(Game *game,
             {
                 EntityRegen *regen = &player->regen;
                 if(regen->next_turn)
-    {
-     v4u regen_rect = healthbar_inside;
-     u32 hp_after_regen = heal_entity(player->hp, player->max_hp, get_percent_value_from(regen->percent, player->max_hp));
+                {
+                    v4u regen_rect = healthbar_inside;
+                    u32 hp_after_regen = heal_entity(player->hp, player->max_hp, get_percent_value_from(regen->percent, player->max_hp));
                     regen_rect.w = ratio(hp_after_regen, player->max_hp, healthbar_inside.w);
                     render_fill_rect(game->renderer, regen_rect, Color_DarkRed, false);
                 }
@@ -2901,9 +2901,9 @@ render_ui(Game *game,
             }
         }
         
-  render_string_and_move(game->renderer, "Time:          %.01f", &right, 1, 1, ui->font, game->time);
-  render_string_and_move(game->renderer, "Action Time:   %.01f", &right, 0, 1, ui->font, player->action_time);
-  render_string_and_move(game->renderer, "Dungeon Level: %u", &right, 0, 1, ui->font, dungeon->level);
+        render_string_and_move(game->renderer, "Time:          %.01f", &right, 1, 1, ui->font, game->time);
+        render_string_and_move(game->renderer, "Action Time:   %.01f", &right, 0, 1, ui->font, player->action_time);
+        render_string_and_move(game->renderer, "Dungeon Level: %u", &right, 0, 1, ui->font, dungeon->level);
     }
     
     // Render short log
@@ -2916,14 +2916,14 @@ render_ui(Game *game,
     };
     
     for(u32 index = ui->short_log_view.start;
-            index < get_view_range(ui->short_log_view);
-            ++index)
+        index < get_view_range(ui->short_log_view);
+        ++index)
     {
         LogMessage *message = &ui->log_messages[index];
         if(!message->is_set) break;
         
-  render_string(game->renderer, message->string.s, &short_log_pos, ui->font);
-            pos_newline(&short_log_pos, ui->font->size, 1);
+        render_string(game->renderer, message->string.s, &short_log_pos, ui->font);
+        pos_newline(&short_log_pos, ui->font->size, 1);
     }
     
     // Render full log
@@ -2939,13 +2939,13 @@ render_ui(Game *game,
             {
                 if(!ui->log_messages[index].is_set) break;
                 ++full_log_view->count;
-                }
             }
+        }
         
         v4u full_log_rect = init_rect_window(game, &full_log_view->move, 672, ui->window_scroll_start_y);
         
         v2u full_log_pos = get_window_content_start_pos(full_log_rect, ui->window_offset);
-  render_string_and_move(game->renderer, "Log", &full_log_pos, 0, 1, ui->font);
+        render_string_and_move(game->renderer, "Log", &full_log_pos, 0, 1, ui->font);
         render_wide_separator(game, full_log_pos, full_log_rect, full_log_pos.y + 4);
         pos_newline(&full_log_pos, ui->font->size, 1);
         
@@ -2956,17 +2956,17 @@ render_ui(Game *game,
             for(u32 index = 0; index < MAX_LOG_MESSAGE_COUNT; ++index)
             {
                 LogMessage *message = &ui->log_messages[index];
-    if(update_window_test_pos(full_log_view, &test_pos, ui->window_scroll_start_y, 1)) break;
+                if(update_window_test_pos(full_log_view, &test_pos, ui->window_scroll_start_y, 1)) break;
             }
         }
-  
-  if(full_log_view->set_at_end_on_open &&
-     is_view_scrollable(*full_log_view))
-  {
-   full_log_view->set_at_end_on_open = false;
-   set_view_at_end(full_log_view);
-  }
-  
+        
+        if(full_log_view->set_at_end_on_open &&
+           is_view_scrollable(*full_log_view))
+        {
+            full_log_view->set_at_end_on_open = false;
+            set_view_at_end(full_log_view);
+        }
+        
         set_enable_window_view_clip_rect(game->renderer, full_log_view, full_log_rect, full_log_pos);
         
         // Render full log contents
@@ -2975,20 +2975,20 @@ render_ui(Game *game,
             LogMessage *message = &ui->log_messages[index];
             if(!message->is_set) break;
             
-                v2u message_pos =
-                {
-                    full_log_pos.x,
-                    full_log_pos.y + full_log_view->content_rect.y
-                };
-                
-                defer_string(message->string.s, &message_pos, 0, 0, ui);
-                next_defer_window_entry(&full_log_pos, full_log_view->entry_size);
+            v2u message_pos =
+            {
+                full_log_pos.x,
+                full_log_pos.y + full_log_view->content_rect.y
+            };
+            
+            defer_string(message->string.s, &message_pos, 0, 0, ui);
+            next_defer_window_entry(&full_log_pos, full_log_view->entry_size);
         }
         
         process_defers(game, assets->tileset, ui);
         disable_window_view_clip_rect_and_render_scrollbar(game, full_log_view, full_log_rect, ui);
         
-        #if 0
+#if 0
         ui_print_view("Full Log View", *full_log_view);
 #endif
         
@@ -3000,11 +3000,11 @@ render_ui(Game *game,
     else if(is_set(examine->flags, ExamineFlag_Open))
     {
         render_examine_window(game, assets, ui, player->pos);
-        }
+    }
     else if(is_set(inventory->flags, InventoryFlag_Examine))
     {
         render_item_examine_window(game, inventory->examine_item, assets, ui, true);
-        }
+    }
     else if(is_set(inventory->flags, InventoryFlag_MultipleExamine))
     {
         render_multiple_examine_window(game, entity_state, item_state, inventory, dungeon, assets, ui, mouse_pos);
@@ -3024,5 +3024,5 @@ render_ui(Game *game,
     else if(is_set(ui->flags, UIFlag_PlayerStatusOpen))
     {
         render_player_status_window(game, player, assets, ui);
- }
+    }
 }

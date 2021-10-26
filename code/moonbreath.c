@@ -26,25 +26,25 @@
 internal u32
 tile_div(u32 value)
 {
- u32 result = 0;
- 
- if(value)
- {
-  result = value / TILE_SIZE;
- }
- 
+    u32 result = 0;
+    
+    if(value)
+    {
+        result = value / TILE_SIZE;
+    }
+    
     return(result);
 }
 
 internal u32
 tile_mul(u32 value)
 {
- u32 result = 0;
- 
- if(value)
- {
-  result = value * TILE_SIZE;
- }
+    u32 result = 0;
+    
+    if(value)
+    {
+        result = value * TILE_SIZE;
+    }
     
     return(result);
 }
@@ -52,40 +52,40 @@ tile_mul(u32 value)
 internal String32
 get_game_session_time_string(u32 time)
 {
- String32 result = {0};
- 
- if(time < 10)
- {
-  sprintf(result.s, "%c%u", '0', time);
- }
- else
- {
-  sprintf(result.s, "%u", time);
- }
- 
- return(result);
+    String32 result = {0};
+    
+    if(time < 10)
+    {
+        sprintf(result.s, "%c%u", '0', time);
+    }
+    else
+    {
+        sprintf(result.s, "%u", time);
+    }
+    
+    return(result);
 }
 
 internal void
-update_game_session_time(SessionTimer *timer)
+update_game_session_time(GameTimer *timer)
 {
- if(timer->start > timer->end + 1000)
- {
-  timer->end = timer->start;
-  ++timer->seconds;
-  
-  if(timer->seconds >= 60)
-  {
-   timer->seconds = 0;
-   ++timer->minutes;
-   
-   if(timer->minutes >= 60)
-   {
-    timer->minutes = 0;
-    ++timer->hours;
-   }
-  }
- }
+    if(timer->start > timer->end + 1000)
+    {
+        timer->end = timer->start;
+        ++timer->seconds;
+        
+        if(timer->seconds >= 60)
+        {
+            timer->seconds = 0;
+            ++timer->minutes;
+            
+            if(timer->minutes >= 60)
+            {
+                timer->minutes = 0;
+                ++timer->hours;
+            }
+        }
+    }
 }
 
 internal void
@@ -96,30 +96,30 @@ render_game_mouse_highlight(Game *game,
                             u32 ui_flags,
                             Assets *assets)
 {
-  if(windows_are_closed(examine, inventory_flags, ui_flags) &&
-     input->mouse_pos.x > 0 &&
-     input->mouse_pos.y > 0 &&
-     input->mouse_pos.x < game->window_size.w - 1 && // -1 is so the rectangle doesn't stay on the right edge of the screen if the mouse goes past it
-     input->mouse_pos.y < game->window_size.h - assets->stat_and_log_window_h)
-  {
-   v2u mouse_tile_pos =
-   {
-    tile_div(input->mouse_pos.x),
-    tile_div(input->mouse_pos.y)
-   };
-   
-   v2u camera_offset =
-   {
-    tile_div(game->camera.x),
-    tile_div(game->camera.y)
-   };
-   
-  input->mouse_tile_pos.x = mouse_tile_pos.x + camera_offset.x;
-  input->mouse_tile_pos.y = mouse_tile_pos.y + camera_offset.y;
-  
-  v4u dest = get_game_dest(game->camera, input->mouse_tile_pos);
-   render_outline_rect(game->renderer, dest, Color_Yellow);
-  }
+    if(windows_are_closed(examine, inventory_flags, ui_flags) &&
+       input->mouse_pos.x > 0 &&
+       input->mouse_pos.y > 0 &&
+       input->mouse_pos.x < game->window_size.w - 1 && // -1 is so the rectangle doesn't stay on the right edge of the screen if the mouse goes past it
+       input->mouse_pos.y < game->window_size.h - assets->stat_and_log_window_h)
+    {
+        v2u mouse_tile_pos =
+        {
+            tile_div(input->mouse_pos.x),
+            tile_div(input->mouse_pos.y)
+        };
+        
+        v2u camera_offset =
+        {
+            tile_div(game->camera.rect.x),
+            tile_div(game->camera.rect.y)
+        };
+        
+        input->mouse_tile_pos.x = mouse_tile_pos.x + camera_offset.x;
+        input->mouse_tile_pos.y = mouse_tile_pos.y + camera_offset.y;
+        
+        v4u dest = get_game_dest(game->camera.rect, input->mouse_tile_pos);
+        render_outline_rect(game->renderer, dest, Color_Yellow);
+    }
 }
 
 internal void
@@ -142,15 +142,15 @@ update_examine_mode(ExamineMode *examine,
             
             // Begin entity spell examine
             char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet);
-                if(pressed)
+            if(pressed)
             {
                 Owner *owner = get_owner_from_letter(ui->temp_owners, pressed);
                 if(owner->type)
-                           {
-                        examine->type = ExamineType_Spell;
+                {
+                    examine->type = ExamineType_Spell;
                     examine->spell = owner->spell;
-                           }
-                    }
+                }
+            }
         }
         else if(!examine->type)
         {
@@ -174,7 +174,7 @@ update_examine_mode(ExamineMode *examine,
                         if(examine->key_pressed_start[index])
                         {
                             u32 hold_time = get_sdl_ticks_difference(examine->key_pressed_start[index]);
-       if(hold_time >= examine->hold_time_for_move)
+                            if(hold_time >= examine->hold_time_for_move)
                             {
                                 examine->key_pressed[index] = true;
                             }
@@ -210,7 +210,7 @@ update_examine_mode(ExamineMode *examine,
                 }
                 
                 //printf("\nExamine Mode: Searching for a passage going %s.\n", passage_search_type == DungeonPassageType_Up ? "Up" : "Down");
-
+                
                 // Attempt to find the passage
                 for(u32 passage_index = 0; passage_index < MAX_DUNGEON_PASSAGE_COUNT; ++passage_index)
                 {
@@ -221,7 +221,7 @@ update_examine_mode(ExamineMode *examine,
                         if(has_tile_been_seen(dungeon->tiles, passage->pos))
                         {
                             if((passage_index > examine->selected_passage) ||
-                                   is_dungeon_passage_last(&dungeon->passages, passage_search_type, examine->selected_passage))
+                               is_dungeon_passage_last(&dungeon->passages, passage_search_type, examine->selected_passage))
                             {
                                 //printf("Examine Mode: Selected %s passage[%u].\n", passage_search_type == DungeonPassageType_Up ? "Up" : "Down", passage_index);
                                 
@@ -233,42 +233,42 @@ update_examine_mode(ExamineMode *examine,
                     }
                 }
             }
-   else if(was_pressed(&input->GameKey_AutoExplore) &&
-           can_player_auto_explore(&examine->flags, entity_state, dungeon, ui))
+            else if(was_pressed(&input->GameKey_AutoExplore) &&
+                    can_player_auto_explore(&examine->flags, entity_state, dungeon, ui))
             {
-     b32 can_pathfind = false;
-     
-                    // Pathfind to passage
-                    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                b32 can_pathfind = false;
+                
+                // Pathfind to passage
+                for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+                {
+                    DungeonPassage *passage = &passages->array[index];
+                    if(passage->type && is_v2u_equal(passage->pos, examine->pos))
                     {
-                        DungeonPassage *passage = &passages->array[index];
-                        if(passage->type && is_v2u_equal(passage->pos, examine->pos))
-      {
-      can_pathfind = true;
-       break;
-                        }
-     }
-     
-                    // Start manual player pathfind
-    if(!can_pathfind &&
-       is_dungeon_pos_traversable(dungeon->tiles, examine->pos) &&
-                           has_tile_been_seen(dungeon->tiles, examine->pos))
-    {
-     // This only wants that the position is traversable and that the tile has been
-     // seen. Even if there's something on the tile like a dungeon trap or an entity.
-     can_pathfind = true;
-    }
-    
-    if(can_pathfind)
-    {
-     unset(examine->flags, ExamineFlag_Open);
-     init_entity_pathfind(player, dungeon, &player->pathfind_map, examine->pos);
-    }
+                        can_pathfind = true;
+                        break;
+                    }
+                }
+                
+                // Start manual player pathfind
+                if(!can_pathfind &&
+                   is_dungeon_pos_traversable(dungeon->tiles, examine->pos) &&
+                   has_tile_been_seen(dungeon->tiles, examine->pos))
+                {
+                    // This only wants that the position is traversable and that the tile has been
+                    // seen. Even if there's something on the tile like a dungeon trap or an entity.
+                    can_pathfind = true;
+                }
+                
+                if(can_pathfind)
+                {
+                    unset(examine->flags, ExamineFlag_Open);
+                    init_entity_pathfind(player, dungeon, &player->pathfind_map, examine->pos);
+                }
             }
             else if(was_pressed(&input->GameKey_Yes))
             {
                 if(get_dungeon_pos_examine_source_count(dungeon, entity_state, item_state, examine->pos) > 1 &&
-                       has_tile_been_seen(dungeon->tiles, examine->pos))
+                   has_tile_been_seen(dungeon->tiles, examine->pos))
                 {
                     // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
@@ -276,46 +276,46 @@ update_examine_mode(ExamineMode *examine,
                     set_view_and_move_at_start(&item_state->examine_window.view);
                     return;
                 }
-    
-    for(u32 enemy_index = 0; enemy_index < MAX_ENTITY_COUNT; ++enemy_index)
-    {
-     Entity *enemy = &entity_state->entities[enemy_index];
-     
-     if(is_enemy_entity_valid_in_level(enemy, dungeon->level) &&
-        has_tile_been_seen(dungeon->tiles, examine->pos) &&
-        is_v2u_equal(enemy->pos, examine->pos))
-        {
-      examine->type = ExamineType_Entity;
-      examine->entity = enemy;
-      return;
-     }
-    }
-    
+                
+                for(u32 enemy_index = 0; enemy_index < MAX_ENTITY_COUNT; ++enemy_index)
+                {
+                    Entity *enemy = &entity_state->entities[enemy_index];
+                    
+                    if(is_enemy_entity_valid_in_level(enemy, dungeon->level) &&
+                       has_tile_been_seen(dungeon->tiles, examine->pos) &&
+                       is_v2u_equal(enemy->pos, examine->pos))
+                    {
+                        examine->type = ExamineType_Entity;
+                        examine->entity = enemy;
+                        return;
+                    }
+                }
+                
                 if(has_tile_been_seen(dungeon->tiles, examine->pos))
                 {
                     Item *item = get_dungeon_pos_item(item_state, dungeon->level, examine->pos, 0);
                     if(item)
                     {
                         examine->item = item;
-                    examine->type = ExamineType_Item;
-                    return;
+                        examine->type = ExamineType_Item;
+                        return;
                     }
                     
-     DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, examine->pos);
+                    DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, examine->pos);
                     if(trap)
                     {
-                            examine->type = ExamineType_Trap;
-                    examine->trap = trap;
-                    return;
-                        }
+                        examine->type = ExamineType_Trap;
+                        examine->trap = trap;
+                        return;
+                    }
                     
                     examine->type = ExamineType_Tile;
-     examine->tile_id = get_dungeon_pos_tile_id(dungeon->tiles, examine->pos);
-                }
+                    examine->tile_id = get_dungeon_pos_tile_id(dungeon->tiles, examine->pos);
                 }
             }
         }
     }
+}
 
 internal String128
 get_os_path(char *path)
@@ -407,18 +407,18 @@ set_render_color(SDL_Renderer *renderer, Color color)
     assert(color);
     
     v4u value = get_color_value(color);
-        SDL_SetRenderDrawColor(renderer, value.r, value.g, value.b, value.a);
+    SDL_SetRenderDrawColor(renderer, value.r, value.g, value.b, value.a);
 }
 
 internal b32
 is_diagonal(Direction direction)
 {
-        assert(direction);
+    assert(direction);
     
     b32 result = (direction == Direction_UpLeft ||
-        direction == Direction_UpRight ||
-        direction == Direction_DownLeft ||
-                      direction == Direction_DownRight);
+                  direction == Direction_UpRight ||
+                  direction == Direction_DownLeft ||
+                  direction == Direction_DownRight);
     
     return(result);
 }
@@ -495,7 +495,7 @@ is_direction_vertical(Direction direction)
 {
     b32 result = (direction == Direction_Up || direction == Direction_Down);
     return(result);
-    }
+}
 
 internal Direction
 get_random_direction(Random *random)
@@ -549,15 +549,15 @@ get_game_dest(v4s camera, v2u pos)
 internal void
 render_texture(SDL_Renderer *renderer, SDL_Texture *texture, v4u *src, v4u *dest, b32 flipped, b32 half_color)
 {
- assert(renderer);
- assert(texture);
- assert(dest);
- 
- if(half_color) SDL_SetTextureColorMod(texture, 127, 127, 127);
- 
- SDL_RenderCopyEx(renderer, texture, (SDL_Rect *)src, (SDL_Rect *)dest, 0, 0, flipped);
- 
- if(half_color) SDL_SetTextureColorMod(texture, 255, 255, 255);
+    assert(renderer);
+    assert(texture);
+    assert(dest);
+    
+    if(half_color) SDL_SetTextureColorMod(texture, 127, 127, 127);
+    
+    SDL_RenderCopyEx(renderer, texture, (SDL_Rect *)src, (SDL_Rect *)dest, 0, 0, flipped);
+    
+    if(half_color) SDL_SetTextureColorMod(texture, 255, 255, 255);
 }
 
 internal v4u
@@ -565,40 +565,40 @@ render_game_dest_tile(Game *game, SDL_Texture *texture, v4u src, v2u pos, b32 fl
 {
     assert(game);
     assert(texture);
- assert(!is_v4u_zero(src));
- 
- v4u dest = get_game_dest(game->camera, pos);
- render_texture(game->renderer, texture, &src, &dest, flipped, false);
- 
+    assert(!is_v4u_zero(src));
+    
+    v4u dest = get_game_dest(game->camera.rect, pos);
+    render_texture(game->renderer, texture, &src, &dest, flipped, false);
+    
     return(dest);
 }
 
 internal void
 render_dungeon(Game *game, Dungeon *dungeon, Assets *assets)
 {
- SDL_Renderer *renderer = game->renderer;
- v4s camera = game->camera;
- 
+    SDL_Renderer *renderer = game->renderer;
+    GameCamera camera = game->camera;
+    
     // Clear tilemap
     SDL_SetRenderTarget(renderer, assets->tilemap.tex);
     SDL_RenderClear(renderer);
     
     v4u render_area =
     {
-        tile_div(camera.x),
-        tile_div(camera.y),
-        tile_div(camera.x + camera.w),
-        tile_div(camera.y + camera.h)
+        tile_div(camera.rect.x),
+        tile_div(camera.rect.y),
+        tile_div(camera.rect.x + camera.rect.w),
+        tile_div(camera.rect.y + camera.rect.h)
     };
     
     // If the dungeon w/h is less than the camera w/h then
     // we can clamp the render area to the dungeon w/h.
-    if(tile_mul(dungeon->size.w) < camera.w)
+    if(tile_mul(dungeon->size.w) < camera.rect.w)
     {
         render_area.w = dungeon->size.w - 1;
     }
     
-    if(tile_mul(dungeon->size.h) < camera.h)
+    if(tile_mul(dungeon->size.h) < camera.rect.h)
     {
         render_area.h = dungeon->size.h - 1;
     }
@@ -611,65 +611,65 @@ render_dungeon(Game *game, Dungeon *dungeon, Assets *assets)
         {
             v2u tile_pos = {x, y};
             
-   //printf("%u, %u: %u\n", x, y, get_dungeon_pos_tile_id(dungeon->tiles, tile_pos));
-   assert(get_dungeon_pos_tile_id(dungeon->tiles, tile_pos));
+            //printf("%u, %u: %u\n", x, y, get_dungeon_pos_tile_id(dungeon->tiles, tile_pos));
+            assert(get_dungeon_pos_tile_id(dungeon->tiles, tile_pos));
             
 #if MOONBREATH_SLOW
-   // All tiles are seen in the editor.
-   if(game->editor.is_open)
-   {
-    set_tile_is_seen_and_has_been_seen(dungeon->tiles, tile_pos, true);
-   }
-   #endif
-   
-   b32 render_tile = false;
-   b32 half_color = false;
-   v2u tileset_pos = {0};
-   DungeonTile *tile = get_dungeon_pos_tile(dungeon->tiles, tile_pos);
-   
-   if(is_tile_seen(dungeon->tiles, tile_pos))
-   { 
-    render_tile = true;
-    
-    tile->seen_id = tile->id;
-    tileset_pos = get_dungeon_tileset_pos_from_tile_id(tile->id);
-    }
-   else if(has_tile_been_seen(dungeon->tiles, tile_pos))
-   {
-    render_tile = true;
-    half_color = true;
-    
-    tileset_pos = get_dungeon_tileset_pos_from_tile_id(tile->seen_id);
-    }
-   
-   if(render_tile)
-   {
-    v4u tile_src = get_dungeon_tile_rect(tileset_pos);
-    v4u tile_dest = get_dungeon_tile_rect(tile_pos);
-    
-    DungeonRemainsInfo remains = get_dungeon_pos_remains_info(dungeon->tiles, tile_pos);
-    DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, tile_pos);
-    
-    render_texture(renderer, assets->tileset.tex, &tile_src, &tile_dest, false, half_color);
-    if(remains.tile_id)
-    {
-     assert(!is_v4u_zero(remains.src));
-     render_texture(renderer, assets->tileset.tex, &remains.src, &tile_dest, false, half_color);
-    }
-    else if(trap)
-    {
-     render_texture(renderer, assets->tileset.tex, &trap->tile_src, &tile_dest, false, half_color);
-    }
-    }
+            // All tiles are seen in the editor.
+            if(game->editor.is_open)
+            {
+                set_tile_is_seen_and_has_been_seen(dungeon->tiles, tile_pos, true);
+            }
+#endif
+            
+            b32 render_tile = false;
+            b32 half_color = false;
+            v2u tileset_pos = {0};
+            DungeonTile *tile = get_dungeon_pos_tile(dungeon->tiles, tile_pos);
+            
+            if(is_tile_seen(dungeon->tiles, tile_pos))
+            { 
+                render_tile = true;
+                
+                tile->seen_id = tile->id;
+                tileset_pos = get_dungeon_tileset_pos_from_tile_id(tile->id);
+            }
+            else if(has_tile_been_seen(dungeon->tiles, tile_pos))
+            {
+                render_tile = true;
+                half_color = true;
+                
+                tileset_pos = get_dungeon_tileset_pos_from_tile_id(tile->seen_id);
+            }
+            
+            if(render_tile)
+            {
+                v4u tile_src = get_dungeon_tile_rect(tileset_pos);
+                v4u tile_dest = get_dungeon_tile_rect(tile_pos);
+                
+                DungeonRemainsInfo remains = get_dungeon_pos_remains_info(dungeon->tiles, tile_pos);
+                DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, tile_pos);
+                
+                render_texture(renderer, assets->tileset.tex, &tile_src, &tile_dest, false, half_color);
+                if(remains.tile_id)
+                {
+                    assert(!is_v4u_zero(remains.src));
+                    render_texture(renderer, assets->tileset.tex, &remains.src, &tile_dest, false, half_color);
+                }
+                else if(trap)
+                {
+                    render_texture(renderer, assets->tileset.tex, &trap->tile_src, &tile_dest, false, half_color);
+                }
+            }
         }
     }
     
     SDL_SetRenderTarget(renderer, 0);
     
     // Render tilemap to screen
-    v4u tilemap_src = {camera.x, camera.y, camera.w, camera.h};
- v4u tilemap_dest = {0, 0, camera.w, camera.h};
- render_texture(renderer, assets->tilemap.tex, &tilemap_src, &tilemap_dest, false, false);
+    v4u tilemap_src = {camera.rect.x, camera.rect.y, camera.rect.w, camera.rect.h};
+    v4u tilemap_dest = {0, 0, camera.rect.w, camera.rect.h};
+    render_texture(renderer, assets->tilemap.tex, &tilemap_src, &tilemap_dest, false, false);
 }
 
 internal u32
@@ -703,84 +703,84 @@ get_index(s32 value)
 internal b32
 is_window_size(v2u window_size, u32 width, u32 height)
 {
- b32 result = (window_size.w == width &&
-               window_size.h == height);
- 
- return(result);
+    b32 result = (window_size.w == width &&
+                  window_size.h == height);
+    
+    return(result);
 }
 
 internal void
 update_camera(Game *game, v2u player_pos, v2u dungeon_size)
 {
- ExamineMode *examine = &game->examine;
- v2u camera_pos = {0};
- 
+    ExamineMode *examine = &game->examine;
+    v2u camera_pos = {0};
+    
 #if MOONBREATH_SLOW
- EditorMode *editor = &game->editor;
- if(editor->is_open)
- {
-  camera_pos = editor->pos;
- }
- 
- else
+    EditorMode *editor = &game->editor;
+    if(editor->is_open)
+    {
+        camera_pos = editor->pos;
+    }
+    
+    else
 #endif
- 
- if(is_set(examine->flags, ExamineFlag_Open) &&
-           is_set(examine->flags, ExamineFlag_CameraOnExaminePos))
+    
+    if(is_set(examine->flags, ExamineFlag_Open) &&
+       is_set(examine->flags, ExamineFlag_CameraOnExaminePos))
     {
         camera_pos = examine->pos;
- }
+    }
     else
- {
+    {
         camera_pos = player_pos;
     }
- 
- // TODO(rami): I would like to test having the game window size being decided by having in the config
- // how many tiles you want the game to be in width and height.
- // Also most of this code below could be nuked and figured out again.
- 
-    game->camera.x = tile_mul(camera_pos.x) - (game->camera.w / 2);
- 
- if(is_window_size(game->window_size, 1920, 1080))
+    
+    // TODO(Rami): Game resolution should be amount of tiles horizontally and vertically
+    // ultimately stored in the config.
+    
+    GameCamera *camera = &game->camera;
+    camera->rect.x = tile_mul(camera_pos.x) - (camera->rect.w / 2);
+    
+    if(is_window_size(game->window_size, 1920, 1080))
     {
-        game->camera.y = tile_mul(camera_pos.y) - (game->camera.h / 2) + 4;
+        camera->rect.y = tile_mul(camera_pos.y) - (camera->rect.h / 2) + 4;
     }
     else if(is_window_size(game->window_size, 1280, 720))
     {
-        game->camera.y = tile_mul(camera_pos.y) - (game->camera.h / 2) + 16;
+        camera->rect.y = tile_mul(camera_pos.y) - (camera->rect.h / 2) + 16;
     }
     
-    if(game->camera.x < 0) game->camera.x = 0;
-    if(game->camera.y < 0) game->camera.y = 0;
+    if(camera->rect.x < 0) camera->rect.x = 0;
+    if(camera->rect.y < 0) camera->rect.y = 0;
     
- // Make dungeons smaller than camera work correctly
-    if(tile_mul(dungeon_size.w) >= game->camera.w)
+    // Make dungeons smaller than camera work correctly
+    if(tile_mul(dungeon_size.w) >= camera->rect.w)
     {
-        s32 camera_max_x = (s32)(tile_mul(dungeon_size.w) - game->camera.w);
-        s32 camera_max_y = (s32)(tile_mul(dungeon_size.h) - game->camera.h);
+        s32 camera_max_x = (s32)(tile_mul(dungeon_size.w) - camera->rect.w);
+        s32 camera_max_y = (s32)(tile_mul(dungeon_size.h) - camera->rect.h);
         
         // Clamp the camera if we get close enough to the map right/bottom edge
-        if(game->camera.x >= camera_max_x)
+        if(camera->rect.x >= camera_max_x)
         {
-            game->camera.x = camera_max_x;
+            camera->rect.x = camera_max_x;
         }
         
-        if(game->camera.y >= camera_max_y)
+        if(camera->rect.y >= camera_max_y)
         {
-            game->camera.y = camera_max_y;
+            camera->rect.y = camera_max_y;
         }
     }
     
 #if 0
     print_v4s("game->camera", game->camera);
     
-    printf("camera.x2: %d\n", game->camera.x + game->camera.w);
-    printf("camera.y2: %d\n\n", game->camera.y + game->camera.h);
+    printf("camera.x2: %d\n", camera->x + camera->w);
+    printf("camera.y2: %d\n\n", camera->y + camera->h);
     
-    printf("camera_tile_offset_x: %u\n", tile_div(game->camera.x));
-    printf("camera_tile_offset_y: %u\n\n", tile_div(game->camera.y));
+    printf("camera_tile_offset_x: %u\n", tile_div(camera->x));
+    printf("camera_tile_offset_y: %u\n\n", tile_div(camera->y));
 #endif
- 
+    
 }
 
 internal void
@@ -889,7 +889,7 @@ internal void
 update_events(Game *game, Input *input)
 {
     // Update mouse
- u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
+    u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
     update_input(&input->Button_Left, mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT));
     update_input(&input->Button_Middle, mouse_state & SDL_BUTTON(SDL_BUTTON_MIDDLE));
     update_input(&input->Button_Right, mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT));
@@ -978,7 +978,7 @@ update_events(Game *game, Input *input)
                         update_input(&input->game_keys[index], is_down);
                         break;
                     }
-                    }
+                }
                 
                 // Update general key input
                 switch(keycode)
@@ -1116,7 +1116,7 @@ render_fill_rect(SDL_Renderer *renderer, v4u rect, Color color, b32 blend)
 internal void
 set_render_clip_rect(SDL_Renderer *renderer, v4u *clip_rect)
 {
- SDL_RenderSetClipRect(renderer, (SDL_Rect *)clip_rect);
+    SDL_RenderSetClipRect(renderer, (SDL_Rect *)clip_rect);
 }
 
 internal char
@@ -1132,10 +1132,10 @@ get_char(char c, b32 is_upper)
 internal String8
 get_printable_key(Input *input, Key key)
 {
- assert(input);
- 
+    assert(input);
+    
     String8 result = {0};
- 
+    
     switch(key)
     {
         case Key_A: result.s[0] = get_char('a', input->Key_Shift.is_down); break;
@@ -1353,19 +1353,19 @@ get_pressed_keyboard_char(Input *input, KeyboardCharType type)
 {
     assert(input);
     assert(type);
- 
+    
     Key key_end = Key_None;
     switch(type)
- {
-  case KeyboardCharType_Printable:
-  {
-   key_end = Key_PrintableEnd - 1;
-  } break;
-  
-  case KeyboardCharType_Alphabet:
-  {
-   key_end = Key_Z;
-  } break;
+    {
+        case KeyboardCharType_Printable:
+        {
+            key_end = Key_PrintableEnd - 1;
+        } break;
+        
+        case KeyboardCharType_Alphabet:
+        {
+            key_end = Key_Z;
+        } break;
         
         invalid_default_case;
     }
@@ -1373,7 +1373,7 @@ get_pressed_keyboard_char(Input *input, KeyboardCharType type)
     for(Key key = Key_A; key <= key_end; ++key)
     {
         if(was_pressed(&input->keyboard[key]))
-  {
+        {
             String8 printable_key = get_printable_key(input, key);
             return(printable_key.s[0]);
         }
@@ -1410,19 +1410,19 @@ update_and_render_game(Game *game,
         render_fill_rect(game->renderer, rect, Color_Cyan, false);
         
         v2u pos = {100, 340};
-  if(is_pos_inside_rect(rect, input->mouse_pos))
+        if(is_pos_inside_rect(rect, input->mouse_pos))
         {
-   render_string(game->renderer, "%sNew Game", &pos, ui->font, start_color(Color_LightYellow));
+            render_string(game->renderer, "%sNew Game", &pos, ui->font, start_color(Color_LightYellow));
             if(was_pressed(&input->Button_Left)) game->mode = GameMode_Playing;
         }
         else
         {
-   render_string(game->renderer, "New Game", &pos, ui->font);
+            render_string(game->renderer, "New Game", &pos, ui->font);
         }
     }
     else if(game->mode == GameMode_Playing)
     {
-  game->timer.start = SDL_GetTicks();
+        game->timer.start = SDL_GetTicks();
         
         if(!game->is_set)
         {
@@ -1452,7 +1452,7 @@ update_and_render_game(Game *game,
             {
                 ItemInfo *info = &item_state->potion_info[index];
                 
-                while(is_v4u_zero(info->tile_src))
+                while(is_v2u_zero(info->tile_pos))
                 {
                     assert_loop_count();
                     
@@ -1480,43 +1480,43 @@ update_and_render_game(Game *game,
                         {
                             case 0:
                             {
-        info->tile_src = get_dungeon_tile_rect(make_v2u(10, 2));
+                                info->tile_pos = make_v2u(10, 2);
                                 strcat(info->depiction.s, "Red ");
                             } break;
                             
                             case 1:
                             {
-        info->tile_src = get_dungeon_tile_rect(make_v2u(10, 3));
+                                info->tile_pos = make_v2u(10, 3);
                                 strcat(info->depiction.s, "Blue ");
                             } break;
                             
                             case 2:
                             {
-        info->tile_src = get_dungeon_tile_rect(make_v2u(10, 4));
+                                info->tile_pos = make_v2u(10, 4);
                                 strcat(info->depiction.s, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-        info->tile_src = get_dungeon_tile_rect(make_v2u(10, 5));
+                                info->tile_pos = make_v2u(10, 5);
                                 strcat(info->depiction.s, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-        info->tile_src = get_dungeon_tile_rect(make_v2u(10, 6));
+                                info->tile_pos = make_v2u(10, 6);
                                 strcat(info->depiction.s, "Brown ");
                             } break;
                             
                             case 5:
                             {
-        info->tile_src = get_dungeon_tile_rect(make_v2u(10, 7));
+                                info->tile_pos = make_v2u(10, 7);
                                 strcat(info->depiction.s, "Purple ");
                             } break;
                             
                             case 6:
                             {
-        info->tile_src = get_dungeon_tile_rect(make_v2u(10, 8));
+                                info->tile_pos = make_v2u(10, 8);
                                 strcat(info->depiction.s, "Green ");
                             } break;
                             
@@ -1533,7 +1533,7 @@ update_and_render_game(Game *game,
             {
                 ItemInfo *info = &item_state->scroll_info[index];
                 
-                while(is_v4u_zero(info->tile_src))
+                while(is_v2u_zero(info->tile_pos))
                 {
                     assert_loop_count();
                     
@@ -1546,37 +1546,37 @@ update_and_render_game(Game *game,
                         {
                             case 0:
                             {
-                                info->tile_src = get_dungeon_tile_rect(make_v2u(11, 2));
+                                info->tile_pos = make_v2u(11, 2);
                                 strcpy(info->depiction.s, "Red ");
                             } break;
                             
                             case 1:
                             {
-                                info->tile_src = get_dungeon_tile_rect(make_v2u(11, 3));
+                                info->tile_pos = make_v2u(11, 3);
                                 strcpy(info->depiction.s, "Blue ");
                             } break;
                             
                             case 2:
                             {
-                                info->tile_src = get_dungeon_tile_rect(make_v2u(11, 4));
+                                info->tile_pos = make_v2u(11, 4);
                                 strcpy(info->depiction.s, "Cyan ");
                             } break;
                             
                             case 3:
                             {
-                                info->tile_src = get_dungeon_tile_rect(make_v2u(11, 5));
+                                info->tile_pos = make_v2u(11, 5);
                                 strcpy(info->depiction.s, "Yellow ");
                             } break;
                             
                             case 4:
                             {
-                                info->tile_src = get_dungeon_tile_rect(make_v2u(11, 6));
+                                info->tile_pos = make_v2u(11, 6);
                                 strcpy(info->depiction.s, "Brown ");
                             } break;
                             
                             case 5:
                             {
-                                info->tile_src = get_dungeon_tile_rect(make_v2u(11, 7));
+                                info->tile_pos = make_v2u(11, 7);
                                 strcpy(info->depiction.s, "Purple ");
                             } break;
                             
@@ -1589,8 +1589,10 @@ update_and_render_game(Game *game,
             }
             
             item_state->potion_info[Potion_Healing].value_range = make_v2u(30, 50);
+            
+            item_state->ration_info.is_known = true; // Auto set identified on creation.
             item_state->ration_info.value_range = make_v2u(10, 20);
-            item_state->ration_info.tile_src = get_dungeon_tile_rect(make_v2u(12, 2));
+            item_state->ration_info.tile_pos = make_v2u(12, 2);
             
 #if 0
             // Print randomized potion tiles
@@ -1598,9 +1600,9 @@ update_and_render_game(Game *game,
             
             for(u32 index = 0; index < Potion_Count; ++index)
             {
-                ItemInfo *info = &items->potion_info[index];
+                ItemInfo *info = &item_state->potion_info[index];
                 
-                printf("[%u]: %u, %u\n", index, info->tile_src.x, info->tile_src.y);
+                printf("[%u]: %u, %u\n", index, info->tile_pos.x, info->tile_pos.y);
             }
             
             // Print randomized scroll tiles
@@ -1608,8 +1610,74 @@ update_and_render_game(Game *game,
             
             for(u32 index = 0; index < Scroll_Count; ++index)
             {
-                ItemInfo *info = &items->scroll_info[index];
-                printf("[%u]: %u, %u\n", index, info->tile_src.x, info->tile_src.y);
+                ItemInfo *info = &item_state->scroll_info[index];
+                printf("[%u]: %u, %u\n", index, info->tile_pos.x, info->tile_pos.y);
+            }
+#endif
+            
+#if MOONBREATH_SLOW
+            // Init editor
+            EditorMode *editor = &game->editor;
+            if(!editor->is_set)
+            {
+                editor->is_set = true;
+                
+                u32 editor_x = 2;
+                u32 editor_y = 2;
+                editor->font = &assets->fonts[FontName_DosVga];
+                
+                EditorGroup *tile_group = add_editor_group(editor, "Tiles", editor_x, editor_y, 10, false);
+                {
+                    add_editor_source_tile(tile_group, EditorSourceType_Wall, DungeonTileID_StoneWall1);
+                    add_editor_source_tile(tile_group, EditorSourceType_Water, DungeonTileID_Water1);
+                    add_editor_source_tile(tile_group, EditorSourceType_DungeonTile, DungeonTileID_StoneDoorClosed);
+                }
+                
+                EditorGroup *trap_group = add_editor_group(editor, "Traps", editor_x, editor_y + 3, 10, false);
+                {
+                    for(DungeonTrapType type = DungeonTrapType_None + 1; type < DungeonTrapType_Count; ++type)
+                    {
+                        add_editor_source_trap(trap_group, type);
+                    }
+                }
+                
+                EditorGroup *entity_group = add_editor_group(editor, "Entities", editor_x, editor_y + 6, 10, true);
+                {
+                    for(EntityID id = EntityID_EnemyStart + 1; id < EntityID_EnemyEnd; ++id)
+                    {
+                        add_editor_source_entity(entity_group, id);
+                    }
+                }
+                
+                EditorGroup *item_group = add_editor_group(editor, "Items", editor_x, editor_y + 16, 0, true);
+                {
+                    for(ItemID id = ItemID_WeaponStart + 1; id < ItemID_WeaponEnd; ++id)
+                    {
+                        for(ItemRarity rarity = ItemRarity_None + 1; rarity < ItemRarity_Count; ++rarity)
+                        {
+                            add_editor_source_item(item_group, item_state, id, rarity);
+                        }
+                    }
+                    add_editor_newline(item_group, 2);
+                    
+                    for(ItemID id = ItemID_ArmorStart + 1; id < ItemID_ArmorEnd; ++id)
+                    {
+                        add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
+                    }
+                    add_editor_newline(item_group, 2);
+                    
+                    for(ItemID id = ItemID_PotionStart + 1; id < ItemID_PotionEnd; ++id)
+                    {
+                        add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
+                    }
+                    add_editor_newline(item_group, 2);
+                    
+                    for(ItemID id = ItemID_ScrollStart + 1; id < ItemID_ScrollEnd; ++id)
+                    {
+                        add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
+                    }
+                    add_editor_newline(item_group, 2);
+                }
             }
 #endif
             
@@ -1618,19 +1686,19 @@ update_and_render_game(Game *game,
             log_add("%sFind and destroy the underworld portal,", ui, start_color(Color_LightYellow));
             log_add("%swhich is located somewhere in the depths.", ui, start_color(Color_LightYellow));
             
-   create_dungeon(game, entity_state, item_state, inventory, dungeon_state, ui, 1, make_v2u(0, 0));
+            create_dungeon(game, entity_state, item_state, inventory, dungeon_state, ui, 1, make_v2u(0, 0));
             
             game->is_set = true;
         }
         
-  ExamineMode *examine = &game->examine;
+        ExamineMode *examine = &game->examine;
         Dungeon *dungeon = get_dungeon_from_level(dungeon_state, dungeon_state->current_level);
-  
+        
 #if 0
-  printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
-  printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
+        printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
+        printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
 #endif
-  
+        
 #if 0
         printf("\nDungeon Level %u Items:\n", dungeon->level);
         
@@ -1643,9 +1711,9 @@ update_and_render_game(Game *game,
                 printf("%s at %u, %u\n", item->name.s, item->pos.x, item->pos.y);
             }
         }
-        #endif
+#endif
         
-        #if 0
+#if 0
         for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
         {
             Dungeon *dungeon = &dungeons->levels[index];
@@ -1661,8 +1729,8 @@ update_and_render_game(Game *game,
                 }
             }
         }
-        #endif
-  
+#endif
+        
 #if 0
         for(u32 index = 0; index < MAX_OWNER_COUNT; ++index)
         {
@@ -1677,7 +1745,7 @@ update_and_render_game(Game *game,
         }
 #endif
         
-        #if 0
+#if 0
         for(u32 index = 0; index < MAX_DEBUG_TREE_COUNT; ++index)
         {
             DebugTree *tree = &game->debug.trees[index];
@@ -1687,44 +1755,44 @@ update_and_render_game(Game *game,
             }
         }
 #endif
-  
+        
 #if 0
-  for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
-  {
-   DungeonTrap *trap = &dungeon->traps.array[index];
-   if(trap->type)
-   {
-    printf("Index: %u\n", index);
-    printf("Name: %s\n\n", trap->name.s);
-   }
-  }
-  
-  printf("\n");
-  #endif
-  
-#if 0
-  for(u32 index = 0; index < MAX_ENTITY_GHOST_COUNT; ++index)
-  {
-   EntityGhost *ghost = &entity_state->ghosts[index];
-   if(ghost->set)
-   {
-    printf("Index: %u\n", index);
-    printf("Pos: %u, %u\n", ghost->pos.x, ghost->pos.y);
-   }
-  }
-  
-  printf("\n");
+        for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
+        {
+            DungeonTrap *trap = &dungeon->traps.array[index];
+            if(trap->type)
+            {
+                printf("Index: %u\n", index);
+                printf("Name: %s\n\n", trap->name.s);
+            }
+        }
+        
+        printf("\n");
 #endif
-  
+        
+#if 0
+        for(u32 index = 0; index < MAX_ENTITY_GHOST_COUNT; ++index)
+        {
+            EntityGhost *ghost = &entity_state->ghosts[index];
+            if(ghost->set)
+            {
+                printf("Index: %u\n", index);
+                printf("Pos: %u, %u\n", ghost->pos.x, ghost->pos.y);
+            }
+        }
+        
+        printf("\n");
+#endif
+        
 #if MOONBREATH_SLOW
         // Make sure inventory items are valid.
         for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
         {
             Item *item = inventory->slots[index];
-   if(item)
-   {
-    assert(is_valid_inventory_item(item));
-   }
+            if(item)
+            {
+                assert(is_valid_inventory_item(item));
+            }
         }
         
         // Make sure dungeon passages are valid.
@@ -1738,36 +1806,36 @@ update_and_render_game(Game *game,
                 
                 if(passage->type == DungeonPassageType_Up &&
                    passage->dungeon_level > 1 &&
-                       is_v2u_zero(passage->dest_pos))
+                   is_v2u_zero(passage->dest_pos))
                 {
-                        print_v2u(passage->pos);
-                        print_v2u(passage->dest_pos);
-                        printf("passage->dungeon_level: %u\n\n", passage->dungeon_level);
-                        
-                        assert(0);
+                    print_v2u(passage->pos);
+                    print_v2u(passage->dest_pos);
+                    printf("passage->dungeon_level: %u\n\n", passage->dungeon_level);
+                    
+                    assert(0);
                 }
             }
         }
-        #endif
-  
-  update_game_session_time(&game->timer);
+#endif
+        
+        update_game_session_time(&game->timer);
         update_examine_mode(examine, input, player, entity_state, item_state, &inventory->flags, dungeon, ui);
         update_entities(game, input, entity_state, item_state, inventory, dungeon_state, assets, ui);
-  update_camera(game, player->pos, dungeon->size);
-  
-  render_dungeon(game, dungeon, assets);
+        update_camera(game, player->pos, dungeon->size);
+        
+        render_dungeon(game, dungeon, assets);
         render_items(game, player, item_state, dungeon, assets);
         render_entities(game, entity_state, inventory, dungeon, assets);
-  render_ui(game, input->mouse_pos, entity_state, item_state, inventory, dungeon, assets, ui);
-  
-  #if MOONBREATH_SLOW
-  render_editor_mode(game->renderer, game->camera, input, &game->editor, assets->tileset);
-  update_and_render_debug_state(game, input, entity_state, item_state, dungeon, ui);
+        render_ui(game, input->mouse_pos, entity_state, item_state, inventory, dungeon, assets, ui);
+        
+#if MOONBREATH_SLOW
+        render_editor_mode(game->renderer, game->camera, input, &game->editor, assets->tileset);
+        update_and_render_debug_state(game, input, entity_state, item_state, dungeon, ui);
 #endif
-  
-  render_game_mouse_highlight(game, input, examine, inventory->flags, ui->flags, assets);
-  }
+        
+        render_game_mouse_highlight(game, input, examine, inventory->flags, ui->flags, assets);
     }
+}
 
 internal f32
 get_ms_from_elapsed(u64 elapsed, u64 performance_frequency)
@@ -1794,40 +1862,40 @@ int main(int argc, char *args[])
     if(memory.size && memory.storage)
     {
         Game *game = memory.storage;
-  game->examine.hold_time_for_move = 400;
+        game->examine.hold_time_for_move = 400;
         
-  init_memory_arena(&game->memory,
-                    memory.storage + sizeof(Game),
-                    megabytes(128));
-  
-  EntityState *entity_state = push_memory_struct(&game->memory, EntityState);
+        init_memory_arena(&game->memory,
+                          memory.storage + sizeof(Game),
+                          megabytes(128));
+        
+        EntityState *entity_state = push_memory_struct(&game->memory, EntityState);
         Entity *player = get_player_entity();
-  
+        
         DungeonState *dungeon_state = push_memory_struct(&game->memory, DungeonState);
         for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
         {
-   dungeon_state->levels[index].tiles.array = push_memory(&game->memory, MAX_DUNGEON_AREA * sizeof(DungeonTile));
+            dungeon_state->levels[index].tiles.array = push_memory(&game->memory, MAX_DUNGEON_AREA * sizeof(DungeonTile));
         }
-  
+        
         Assets *assets = push_memory_struct(&game->memory, Assets);
         UI *ui = push_memory_struct(&game->memory, UI);
         init_all_owner_letters(ui->temp_owners);
-  
+        
         ui->window_offset = 12;
         ui->short_log_view.end = 9;
         ui->default_view_step_multiplier = 0.14f;
-  
+        
         ItemState *item_state = push_memory_struct(&game->memory, ItemState);
         item_state->temp_mark.cursor_blink_duration = 800;
         item_state->temp_mark.view.end = 24;
         init_view_scrolling_data(&item_state->pickup_window.view, 32, ui->default_view_step_multiplier);
         init_view_scrolling_data(&item_state->examine_window.view, 32, ui->default_view_step_multiplier);
-  
-  Inventory *inventory = push_memory_struct(&game->memory, Inventory);
+        
+        Inventory *inventory = push_memory_struct(&game->memory, Inventory);
         init_all_owner_letters(inventory->item_owners);
         init_view_scrolling_data(&inventory->window.view, 32, ui->default_view_step_multiplier);
         init_view_scrolling_data(&inventory->interact_window.view, 32, ui->default_view_step_multiplier);
-  
+        
 #if 0
         // Config Example
         
@@ -1856,7 +1924,7 @@ int main(int argc, char *args[])
         }
 #endif
         
-  // TODO(rami): Config: Check success
+        // TODO(rami): Config: Check success
         Config config = get_config(&game->memory, get_os_path("data/config.txt").s);
         
         ConfigValue show_item_ground_outline = get_config_bool(&config, "show_item_ground_outline");
@@ -1868,15 +1936,16 @@ int main(int argc, char *args[])
         ConfigValue window_size = get_config_uint(&config, "window_size");
         assert(window_size.uint == 1 || window_size.uint == 2);
         
-            if(window_size.uint == 1)
-            {
-                game->window_size = make_v2u(1920, 1080);
-            }
-            else if(window_size.uint == 2)
-            {
-                game->window_size = make_v2u(1280, 720);
+        if(window_size.uint == 1)
+        {
+            game->window_size = make_v2u(1920, 1080);
         }
-        //game->window_size = make_v2u(1920, 1080);
+        else if(window_size.uint == 2)
+        {
+            game->window_size = make_v2u(1280, 720);
+        }
+        
+        game->window_size = make_v2u(1920, 1080);
         
 #if 0
         for(u32 index = 0; index < GameKey_Count; ++index)
@@ -1921,8 +1990,8 @@ int main(int argc, char *args[])
                 printf("Error: Value could not be loaded for game.keybinds[%u].\n", index);
                 assert(0);
             }
-  }
-  
+        }
+        
 #else
         game->keybinds[GameKey_Up] = Key_W;
         game->keybinds[GameKey_Down] = Key_S;
@@ -1959,7 +2028,7 @@ int main(int argc, char *args[])
                                             SDL_WINDOWPOS_UNDEFINED,
                                             game->window_size.w,
                                             game->window_size.h,
-                                                window_flags);
+                                            window_flags);
             
             if(game->window)
             {
@@ -1987,7 +2056,7 @@ int main(int argc, char *args[])
                                 
                                 game->mode = GameMode_Playing;
                                 //game->mode = GameMode_MainMenu;
-                                game->camera = make_v4s(0, 0, game->window_size.w, ui->window_scroll_start_y);
+                                game->camera.rect = make_v4s(0, 0, game->window_size.w, ui->window_scroll_start_y);
                                 
                                 u32 target_fps = 60;
                                 f32 target_seconds_per_frame = 1.0f / (f32)target_fps;
@@ -2024,8 +2093,8 @@ int main(int argc, char *args[])
                                 f32 fps = 0.0f;
                                 f32 full_ms_per_frame = 0.0f;
                                 f32 work_ms_per_frame = 0.0f;
-        
-        // Init debug
+                                
+                                // Init debug
                                 DebugState *debug = &game->debug;
                                 
                                 debug->font = &assets->fonts[FontName_DosVga];
@@ -2033,9 +2102,9 @@ int main(int argc, char *args[])
                                 debug->text_offset.y = get_font_newline(debug->font->size);
                                 
                                 debug->memory_size = megabytes(1);
-        init_memory_arena(&debug->memory_arena,
-                                               memory.storage + memory.size - debug->memory_size,
-                          debug->memory_size);
+                                init_memory_arena(&debug->memory_arena,
+                                                  memory.storage + memory.size - debug->memory_size,
+                                                  debug->memory_size);
                                 
                                 DebugTree *var_tree = add_debug_tree(debug, 50, 25);
                                 DebugTree *color_tree = add_debug_tree(debug, 300, 25);
@@ -2047,14 +2116,14 @@ int main(int argc, char *args[])
                                     add_debug_variable(var_tree, "Frame DT", new_input->frame_dt, DebugVarType_F32);
                                     add_debug_newline(debug, var_tree);
                                     
-         add_debug_variable(var_tree, "Mouse", new_input->mouse_pos, DebugVarType_V2U);
-         add_debug_variable(var_tree, "Mouse Tile", new_input->mouse_tile_pos, DebugVarType_V2U);
+                                    add_debug_variable(var_tree, "Mouse", new_input->mouse_pos, DebugVarType_V2U);
+                                    add_debug_variable(var_tree, "Mouse Tile", new_input->mouse_tile_pos, DebugVarType_V2U);
                                     add_debug_variable(var_tree, "Player Tile", player->pos, DebugVarType_V2U);
                                     add_debug_newline(debug, var_tree);
                                     
-         add_debug_variable(var_tree, "Traverse All", debug_toggles[DebugToggleType_TraverseAll], DebugVarType_B32);
-         add_debug_variable(var_tree, "Skip Has Been Up", debug_toggles[DebugToggleType_SkipHasBeenUp], DebugVarType_B32);
-         add_debug_variable(var_tree, "Entity Hit Test", debug_toggles[DebugToggleType_EntityHitTest], DebugVarType_B32);
+                                    add_debug_variable(var_tree, "Traverse All", debug_toggles[DebugToggleType_TraverseAll], DebugVarType_B32);
+                                    add_debug_variable(var_tree, "Skip Has Been Up", debug_toggles[DebugToggleType_SkipHasBeenUp], DebugVarType_B32);
+                                    add_debug_variable(var_tree, "Entity Hit Test", debug_toggles[DebugToggleType_EntityHitTest], DebugVarType_B32);
                                 }
                                 end_debug_group(var_tree);
                                 
@@ -2077,38 +2146,8 @@ int main(int argc, char *args[])
                                     add_debug_string(color_tree, get_color_string(Color_Purple), Color_Purple);
                                     add_debug_string(color_tree, get_color_string(Color_Orange), Color_Orange);
                                 }
-        end_debug_group(color_tree);
-        
-        // Init editor
-        EditorMode *editor = &game->editor;
-        editor->font = &assets->fonts[FontName_DosVga];
-        
-        u32 editor_x = 2;
-        u32 editor_y = 2;
-        
-        EditorGroup *tile_group = add_editor_group(editor, "Tiles", editor_x, editor_y, 8, false);
-        {
-         add_editor_source_tile(tile_group, EditorSourceType_Wall, DungeonTileID_StoneWall1);
-         add_editor_source_tile(tile_group, EditorSourceType_Water, DungeonTileID_Water1);
-         add_editor_source_tile(tile_group, EditorSourceType_DungeonTile, DungeonTileID_StoneDoorClosed);
-         }
-        
-        EditorGroup *trap_group = add_editor_group(editor, "Traps", editor_x, editor_y + 3, 8, false);
-        {
-         for(DungeonTrapType type = DungeonTrapType_None + 1; type < DungeonTrapType_Count; ++type)
-         {
-          add_editor_source_trap(trap_group, type);
-         }
-        }
-        
-        EditorGroup *entity_group = add_editor_group(editor, "Entities", editor_x, editor_y + 6, 8, true);
-        {
-         for(EntityID id = EntityID_EnemyStart + 1; id < EntityID_EnemyEnd; ++id)
-         {
-          add_editor_source_entity(entity_group, id);
-         }
-        }
-        #endif
+                                end_debug_group(color_tree);
+#endif
                                 
                                 while(game->mode)
                                 {
@@ -2151,7 +2190,7 @@ int main(int argc, char *args[])
                                     if(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
                                     {
                                         u32 time_to_delay =
-                                            ((target_seconds_per_frame - get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency)) * 1000);
+                                        ((target_seconds_per_frame - get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency)) * 1000);
                                         SDL_Delay(time_to_delay);
                                         
                                         while(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
@@ -2220,7 +2259,7 @@ int main(int argc, char *args[])
         TTF_Quit();
         IMG_Quit();
         SDL_Quit();
-        }
+    }
     else
     {
         // TODO(rami): Logging

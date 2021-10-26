@@ -2,56 +2,56 @@
 internal void
 debug_place_dungeon_room(Random *random, DungeonTiles tiles, v4u room)
 {
- for(u32 y = room.y; y < room.y + room.h; ++y)
- {
-  for(u32 x = room.x; x < room.x + room.w; ++x)
-  {
-   v2u pos = {x, y};
-   set_dungeon_pos_floor(random, tiles, pos);
-  }
- }
+    for(u32 y = room.y; y < room.y + room.h; ++y)
+    {
+        for(u32 x = room.x; x < room.x + room.w; ++x)
+        {
+            v2u pos = {x, y};
+            set_dungeon_pos_floor(random, tiles, pos);
+        }
+    }
 }
 #endif
 
 internal b32
 process_new_seen_dungeon_traps(DungeonTrap *array, DungeonTiles tiles, UI *ui, b32 log_names)
 {
- b32 result = false;
- 
- for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
- {
-  DungeonTrap *trap = &array[index];
-  
-  if(trap->type &&
-     is_tile_seen(tiles, trap->pos) &&
-     !is_set(trap->flags, DungeonTrapFlag_HasBeenSeen))
-  {
-   if(log_names)
-   {
-    log_add_comes_into_your_view_string(trap->name.s, ui);
-   }
-   
-   set(trap->flags, DungeonTrapFlag_HasBeenSeen);
-   result = true;
-  }
- }
- 
- return(result);
+    b32 result = false;
+    
+    for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
+    {
+        DungeonTrap *trap = &array[index];
+        
+        if(trap->type &&
+           is_tile_seen(tiles, trap->pos) &&
+           !is_set(trap->flags, DungeonTrapFlag_HasBeenSeen))
+        {
+            if(log_names)
+            {
+                log_add_comes_into_your_view_string(trap->name.s, ui);
+            }
+            
+            set(trap->flags, DungeonTrapFlag_HasBeenSeen);
+            result = true;
+        }
+    }
+    
+    return(result);
 }
 
 internal DungeonRemainsInfo
 get_dungeon_pos_remains_info(DungeonTiles tiles, v2u tile_pos)
 {
- DungeonRemainsInfo result = {0};
- 
-  result.tile_id = get_dungeon_pos_remains_tile_id(tiles, tile_pos);
- if(result.tile_id)
- {
-  v2u tileset_pos = get_dungeon_tileset_pos_from_tile_id(result.tile_id);
-  result.src = get_dungeon_tile_rect(tileset_pos);
- }
- 
- return(result);
+    DungeonRemainsInfo result = {0};
+    
+    result.tile_id = get_dungeon_pos_remains_tile_id(tiles, tile_pos);
+    if(result.tile_id)
+    {
+        v2u tileset_pos = get_dungeon_tileset_pos_from_tile_id(result.tile_id);
+        result.src = get_dungeon_tile_rect(tileset_pos);
+    }
+    
+    return(result);
 }
 
 internal void
@@ -61,87 +61,87 @@ place_dungeon_corridor(Random *random,
                        v2u end,
                        DungeonCorridorType type)
 {
- assert(random);
- assert(!is_v2u_zero(start));
- assert(!is_v2u_zero(end));
- assert(type);
- 
- s32 x_direction = 0;
- if(start.x <= end.x)
- {
-  x_direction = 1;
- }
- else
- {
-  x_direction = -1;
- }
- 
- s32 y_direction = 0;
- if(start.y <= end.y)
- {
-  y_direction = 1;
- }
- else
- {
-  y_direction = -1;
- }
- 
- switch(type)
- {
-  case DungeonCorridorType_Turn:
-  {
-   while(start.x != end.x)
-   {
-    assert_loop_count();
+    assert(random);
+    assert(!is_v2u_zero(start));
+    assert(!is_v2u_zero(end));
+    assert(type);
     
-    set_dungeon_pos_floor(random, tiles, start);
-    start.x += x_direction;
-   }
-   
-   while(start.y != end.y)
-   {
-    assert_loop_count();
-    
-    set_dungeon_pos_floor(random, tiles, start);
-    start.y += y_direction;
-   }
-  } break;
-  
-  case DungeonCorridorType_Zigzag:
-  {
-   while(!is_v2u_equal(start, end))
-   {
-    assert_loop_count();
-    
-    if(start.x != end.x)
+    s32 x_direction = 0;
+    if(start.x <= end.x)
     {
-     set_dungeon_pos_floor(random, tiles, start);
-     start.x += x_direction;
+        x_direction = 1;
+    }
+    else
+    {
+        x_direction = -1;
     }
     
-    if(start.y != end.y)
+    s32 y_direction = 0;
+    if(start.y <= end.y)
     {
-     set_dungeon_pos_floor(random, tiles, start);
-     start.y += y_direction;
+        y_direction = 1;
     }
-   }
-  } break;
-  
-  case DungeonCorridorType_Diagonal:
-  {
-   while(!is_v2u_equal(start, end))
-   {
-    assert_loop_count();
+    else
+    {
+        y_direction = -1;
+    }
     
-    set_dungeon_pos_floor(random, tiles, start);
-    if(start.x != end.x) start.x += x_direction;
-    if(start.y != end.y) start.y += y_direction;
-   }
-   
-  } break;
-  
-  invalid_default_case;
- }
+    switch(type)
+    {
+        case DungeonCorridorType_Turn:
+        {
+            while(start.x != end.x)
+            {
+                assert_loop_count();
+                
+                set_dungeon_pos_floor(random, tiles, start);
+                start.x += x_direction;
+            }
+            
+            while(start.y != end.y)
+            {
+                assert_loop_count();
+                
+                set_dungeon_pos_floor(random, tiles, start);
+                start.y += y_direction;
+            }
+        } break;
+        
+        case DungeonCorridorType_Zigzag:
+        {
+            while(!is_v2u_equal(start, end))
+            {
+                assert_loop_count();
+                
+                if(start.x != end.x)
+                {
+                    set_dungeon_pos_floor(random, tiles, start);
+                    start.x += x_direction;
+                }
+                
+                if(start.y != end.y)
+                {
+                    set_dungeon_pos_floor(random, tiles, start);
+                    start.y += y_direction;
+                }
+            }
+        } break;
+        
+        case DungeonCorridorType_Diagonal:
+        {
+            while(!is_v2u_equal(start, end))
+            {
+                assert_loop_count();
+                
+                set_dungeon_pos_floor(random, tiles, start);
+                if(start.x != end.x) start.x += x_direction;
+                if(start.y != end.y) start.y += y_direction;
+            }
+            
+        } break;
+        
+        invalid_default_case;
+    }
 }
 
 internal b32
@@ -151,9 +151,9 @@ is_pos_on_rect_edge(v4u rect, v2u pos)
     assert(!is_v2u_zero(pos));
     
     b32 result = (pos.x == rect.x ||
-                      pos.x == rect.x + rect.w - 1 ||
-                      pos.y == rect.y ||
-                      pos.y == rect.y + rect.h - 1);
+                  pos.x == rect.x + rect.w - 1 ||
+                  pos.y == rect.y ||
+                  pos.y == rect.y + rect.h - 1);
     
     return(result);
 }
@@ -171,10 +171,10 @@ get_new_dungeon_passage_pos(Random *random, Dungeon *dungeon, ItemState *item_st
         
         result = get_random_dungeon_feature_pos(random, dungeon, item_state, false);
         if(is_dungeon_pos_traversable(dungeon->tiles, get_direction_pos(result, Direction_Up)) &&
-               is_dungeon_pos_traversable(dungeon->tiles, get_direction_pos(result, Direction_Down)) &&
-               is_dungeon_pos_traversable(dungeon->tiles, get_direction_pos(result, Direction_Left)) &&
-               is_dungeon_pos_traversable(dungeon->tiles, get_direction_pos(result, Direction_Right)) &&
-               !get_dungeon_area_tile_type_count(dungeon->tiles, result, passage_min_spacing, DungeonTileType_Passage))
+           is_dungeon_pos_traversable(dungeon->tiles, get_direction_pos(result, Direction_Down)) &&
+           is_dungeon_pos_traversable(dungeon->tiles, get_direction_pos(result, Direction_Left)) &&
+           is_dungeon_pos_traversable(dungeon->tiles, get_direction_pos(result, Direction_Right)) &&
+           !get_dungeon_area_tile_type_count(dungeon->tiles, result, passage_min_spacing, DungeonTileType_Passage))
         {
             break;
         }
@@ -197,11 +197,11 @@ render_tile_on_dest(SDL_Renderer *renderer, SDL_Texture *texture, v4u tile_dest,
 {
     assert(renderer);
     assert(texture);
- assert(!is_v4u_zero(tile_dest));
+    assert(!is_v4u_zero(tile_dest));
     assert(id);
     
- v4u tile_src = get_dungeon_tileset_rect(id);
- render_texture(renderer, texture, &tile_src, &tile_dest, false, false);
+    v4u tile_src = get_dungeon_tileset_rect(id);
+    render_texture(renderer, texture, &tile_src, &tile_dest, false, false);
 }
 
 internal u32
@@ -213,16 +213,16 @@ get_dungeon_pos_examine_source_count(Dungeon *dungeon, EntityState *entity_state
     assert(!is_v2u_zero(pos));
     
     u32 result = 0;
- 
- result += get_dungeon_pos_item_count(item_state, dungeon->level, pos);
- if(get_dungeon_pos_trap(&dungeon->traps, pos)) ++result;
- 
- Entity *entity = get_dungeon_pos_entity(dungeon->tiles, pos);
- if(entity && entity->type != EntityType_Player)
- {
-  ++result;
- }
- 
+    
+    result += get_dungeon_pos_item_count(item_state, dungeon->level, pos);
+    if(get_dungeon_pos_trap(&dungeon->traps, pos)) ++result;
+    
+    Entity *entity = get_dungeon_pos_entity(dungeon->tiles, pos);
+    if(entity && entity->type != EntityType_Player)
+    {
+        ++result;
+    }
+    
     return(result);
 }
 
@@ -319,9 +319,9 @@ get_random_dungeon_feature_pos(Random *random, Dungeon *dungeon, ItemState *item
         
         result = get_random_dungeon_pos(random, dungeon->size);
         if(is_dungeon_pos_traversable(dungeon->tiles, result) &&
-     !get_dungeon_pos_entity(dungeon->tiles, result) &&
-               !get_dungeon_pos_item_count(item_state, dungeon->level, result) &&
-               !get_dungeon_pos_trap(&dungeon->traps, result) &&
+           !get_dungeon_pos_entity(dungeon->tiles, result) &&
+           !get_dungeon_pos_item_count(item_state, dungeon->level, result) &&
+           !get_dungeon_pos_trap(&dungeon->traps, result) &&
            !is_dungeon_pos_passage(dungeon->tiles, result))
         {
             if(!accept_water && is_dungeon_pos_water(dungeon->tiles, result)) continue;
@@ -477,9 +477,9 @@ get_dungeon_automaton_gen_tiles(TemporaryMemory *memory, DungeonSpec *spec)
 
 internal DungeonTiles
 get_dungeon_automaton_tiles(MemoryArena *memory,
-                           Random *random,
-                           DungeonSpec *spec,
-                           v4u automaton_room_rect)
+                            Random *random,
+                            DungeonSpec *spec,
+                            v4u automaton_room_rect)
 {
     TemporaryMemory temporary_memory = start_temporary_memory(memory);
     DungeonTiles src_tiles = get_dungeon_automaton_gen_tiles(&temporary_memory, spec);
@@ -518,7 +518,7 @@ get_dungeon_automaton_tiles(MemoryArena *memory,
     
     end_temporary_memory(temporary_memory);
     return(*src);
-    }
+}
 
 internal b32
 is_dungeon_pos_passage(DungeonTiles tiles, v2u pos)
@@ -580,7 +580,7 @@ add_dungeon_passage(DungeonPassages *passages, DungeonPassage new_passage)
     for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
     {
         DungeonPassage *passage = &passages->array[index];
-
+        
         if(!passage->type)
         {
             *passage = new_passage;
@@ -594,54 +594,54 @@ add_dungeon_passage(DungeonPassages *passages, DungeonPassage new_passage)
 internal DungeonTrap *
 get_dungeon_pos_trap(DungeonTraps *traps, v2u pos)
 {
- DungeonTrap *result = 0;
- 
- for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
+    DungeonTrap *result = 0;
+    
+    for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
     {
-  DungeonTrap *trap = &traps->array[index];
-  if(trap->type && is_v2u_equal(trap->pos, pos))
-  {
-   result = trap;
-   break;
+        DungeonTrap *trap = &traps->array[index];
+        if(trap->type && is_v2u_equal(trap->pos, pos))
+        {
+            result = trap;
+            break;
         }
     }
- 
- return(result);
+    
+    return(result);
 }
 
 internal void
 remove_dungeon_trap(DungeonTrap *trap)
 {
- zero_struct(*trap);
+    zero_struct(*trap);
 }
 
 internal v4u
 get_dungeon_trap_tile_src(DungeonTrapType type)
 {
- v4u result = {0};
- 
- switch(type)
- {
-  case DungeonTrapType_Spike: result = get_dungeon_tileset_rect(DungeonTileID_SpikeTrap); break;
-  case DungeonTrapType_Sword: result = get_dungeon_tileset_rect(DungeonTileID_SwordTrap); break;
-  case DungeonTrapType_Arrow: result = get_dungeon_tileset_rect(DungeonTileID_ArrowTrap); break;
-  case DungeonTrapType_Magic: result = get_dungeon_tileset_rect(DungeonTileID_MagicTrap); break;
-  case DungeonTrapType_Bind: result = get_dungeon_tileset_rect(DungeonTileID_BindTrap); break;
-  case DungeonTrapType_Summon: result = get_dungeon_tileset_rect(DungeonTileID_SummonTrap); break;
-  case DungeonTrapType_Teleport: result = get_dungeon_tileset_rect(DungeonTileID_TeleportTrap); break;
-  case DungeonTrapType_Shaft: result = get_dungeon_tileset_rect(DungeonTileID_ShaftTrap); break;
-  
-  invalid_default_case;
- }
- 
- return(result);
+    v4u result = {0};
+    
+    switch(type)
+    {
+        case DungeonTrapType_Spike: result = get_dungeon_tileset_rect(DungeonTileID_SpikeTrap); break;
+        case DungeonTrapType_Sword: result = get_dungeon_tileset_rect(DungeonTileID_SwordTrap); break;
+        case DungeonTrapType_Arrow: result = get_dungeon_tileset_rect(DungeonTileID_ArrowTrap); break;
+        case DungeonTrapType_Magic: result = get_dungeon_tileset_rect(DungeonTileID_MagicTrap); break;
+        case DungeonTrapType_Bind: result = get_dungeon_tileset_rect(DungeonTileID_BindTrap); break;
+        case DungeonTrapType_Summon: result = get_dungeon_tileset_rect(DungeonTileID_SummonTrap); break;
+        case DungeonTrapType_Teleport: result = get_dungeon_tileset_rect(DungeonTileID_TeleportTrap); break;
+        case DungeonTrapType_Shaft: result = get_dungeon_tileset_rect(DungeonTileID_ShaftTrap); break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
 }
 
 internal void
 add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v2u pos)
 {
- assert(spec);
- assert(traps);
+    assert(spec);
+    assert(traps);
     assert(type);
     assert(!is_v2u_zero(pos));
     
@@ -653,8 +653,8 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
         {
             trap->type = type;
             trap->pos = pos;
-   trap->tile_src = get_dungeon_trap_tile_src(type);
-   
+            trap->tile_src = get_dungeon_trap_tile_src(type);
+            
             switch(type)
             {
                 case DungeonTrapType_Spike:
@@ -688,7 +688,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                 case DungeonTrapType_Bind:
                 {
                     strcpy(trap->name.s, "Bind Trap");
-     trap->value_range = spec->bind_trap_value_range;
+                    trap->value_range = spec->bind_trap_value_range;
                     sprintf(trap->description.s, "A glyph that stops you from moving for %u-%u turns when stepped on.", spec->bind_trap_value_range.min, spec->bind_trap_value_range.max);
                 } break;
                 
@@ -707,7 +707,7 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
                 case DungeonTrapType_Shaft:
                 {
                     strcpy(trap->name.s, "Shaft");
-     trap->value_range = spec->shaft_trap_value_range;
+                    trap->value_range = spec->shaft_trap_value_range;
                     sprintf(trap->description.s, "Stepping into shafts will cause you to fall %u-%u dungeon levels.", spec->shaft_trap_value_range.min, spec->shaft_trap_value_range.max);
                 } break;
                 
@@ -724,9 +724,9 @@ add_dungeon_trap(DungeonSpec *spec, DungeonTraps *traps, DungeonTrapType type, v
 internal v4u
 get_dungeon_tile_rect_from_entity_id(EntityID id)
 {
- v2u pos = get_entity_tile_pos(id);
- v4u result = get_dungeon_tile_rect(pos);
- return(result);
+    v2u pos = get_entity_tile_pos(id);
+    v4u result = get_dungeon_tile_rect(pos);
+    return(result);
 }
 
 internal v4u
@@ -776,7 +776,7 @@ add_dungeon_room_feature(DungeonRoom *room, u32 max_feature_count, DungeonRoomFe
         }
         else
         {
-             result = false;
+            result = false;
         }
     }
     
@@ -786,14 +786,14 @@ add_dungeon_room_feature(DungeonRoom *room, u32 max_feature_count, DungeonRoomFe
 internal DungeonTile *
 get_dungeon_pos_tile(DungeonTiles tiles, v2u pos)
 {
- DungeonTile *result = &tiles.array[(pos.y * tiles.width) + pos.x];
-  return(result);
+    DungeonTile *result = &tiles.array[(pos.y * tiles.width) + pos.x];
+    return(result);
 }
 
 internal DungeonTileID
 get_dungeon_pos_tile_id(DungeonTiles tiles, v2u pos)
 {
- DungeonTileID result = tiles.array[(pos.y * tiles.width) + pos.x].id;
+    DungeonTileID result = tiles.array[(pos.y * tiles.width) + pos.x].id;
     return(result);
 }
 
@@ -816,7 +816,7 @@ entity_level_fits_dungeon_level(u32 entity_level, u32 dungeon_level)
     }
     
     b32 result = (entity_level >= min_dungeon_level &&
-                      entity_level <= max_dungeon_level);
+                  entity_level <= max_dungeon_level);
     
     return(result);
 }
@@ -953,7 +953,7 @@ get_dungeon_tileset_pos_from_tile_id(DungeonTileID id)
         case DungeonTileID_RedBloodWallDownRight3: result = make_v2u(red_blood_pos.x + 29, red_blood_pos.y); break;
         
         //
-
+        
         case DungeonTileID_GreenBloodGroundSmall1: result = make_v2u(green_blood_pos.x, green_blood_pos.y); break;
         case DungeonTileID_GreenBloodGroundSmall2: result = make_v2u(green_blood_pos.x + 1, green_blood_pos.y); break;
         
@@ -1012,8 +1012,8 @@ get_dungeon_tileset_pos_from_tile_id(DungeonTileID id)
 internal v2u
 get_dungeon_tileset_pos_from_tile_pos(DungeonTiles tiles, v2u tile_pos)
 {
- DungeonTileID id = get_dungeon_pos_tile_id(tiles, tile_pos);
- v2u result = get_dungeon_tileset_pos_from_tile_id(id);
+    DungeonTileID id = get_dungeon_pos_tile_id(tiles, tile_pos);
+    v2u result = get_dungeon_tileset_pos_from_tile_id(id);
     
     return(result);
 }
@@ -1021,7 +1021,7 @@ get_dungeon_tileset_pos_from_tile_pos(DungeonTiles tiles, v2u tile_pos)
 internal v4u
 get_dungeon_tileset_rect(DungeonTileID id)
 {
- v2u pos = get_dungeon_tileset_pos_from_tile_id(id);
+    v2u pos = get_dungeon_tileset_pos_from_tile_id(id);
     v4u result = get_dungeon_tile_rect(pos);
     
     return(result);
@@ -1059,7 +1059,7 @@ get_random_with_chances(Random *random,
             {
                 result = get_random_potion(random);
                 
-                u32 index = get_potion_chance_index(result);
+                u32 index = result - ItemID_PotionStart - 1;
                 counter += chances[index];
             } break;
             
@@ -1067,7 +1067,7 @@ get_random_with_chances(Random *random,
             {
                 result = get_random_scroll(random);
                 
-                u32 index = get_scroll_chance_index(result);
+                u32 index = result - ItemID_ScrollStart - 1;
                 counter += chances[index];
             } break;
             
@@ -1084,7 +1084,7 @@ get_dungeon_tile_name(DungeonTileID tile_id)
 {
     char *result = "";
     
- switch(tile_id)
+    switch(tile_id)
     {
         case DungeonTileID_StoneWall1:
         case DungeonTileID_StoneWall2:
@@ -1130,7 +1130,7 @@ get_dungeon_tile_description(DungeonTileID tile_id)
 {
     char *result = 0;
     
- switch(tile_id)
+    switch(tile_id)
     {
         case DungeonTileID_StoneWall1: break;
         case DungeonTileID_StoneWall2: break;
@@ -1174,34 +1174,34 @@ get_dungeon_tile_description(DungeonTileID tile_id)
 internal Entity *
 get_dungeon_pos_entity(DungeonTiles tiles, v2u pos)
 {
- Entity *result = tiles.array[(pos.y * tiles.width) + pos.x].entity;
+    Entity *result = tiles.array[(pos.y * tiles.width) + pos.x].entity;
     return(result);
 }
 
 internal b32
 is_dungeon_pos_traversable_or_closed_door(DungeonTiles tiles, v2u pos)
 {
- b32 result = (is_dungeon_pos_traversable(tiles, pos) ||
-               is_dungeon_pos_closed_door(tiles, pos));
- 
- return(result);
+    b32 result = (is_dungeon_pos_traversable(tiles, pos) ||
+                  is_dungeon_pos_closed_door(tiles, pos));
+    
+    return(result);
 }
 
 internal b32
 is_dungeon_pos_traversable_and_occupied(DungeonTiles tiles, v2u pos)
 {
- b32 result = (is_dungeon_pos_traversable(tiles, pos) &&
-               get_dungeon_pos_entity(tiles, pos));
- 
+    b32 result = (is_dungeon_pos_traversable(tiles, pos) &&
+                  get_dungeon_pos_entity(tiles, pos));
+    
     return(result);
 }
 
 internal b32
 is_dungeon_pos_traversable_and_unoccupied(DungeonTiles tiles, v2u pos)
 {
- b32 result = (is_dungeon_pos_traversable(tiles, pos) &&
-               !get_dungeon_pos_entity(tiles, pos));
- 
+    b32 result = (is_dungeon_pos_traversable(tiles, pos) &&
+                  !get_dungeon_pos_entity(tiles, pos));
+    
     return(result);
 }
 
@@ -1211,7 +1211,7 @@ is_dungeon_pos_torch(DungeonTiles tiles, v2u pos)
     b32 result = (is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWallTorch1) ||
                   is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWallTorch2) ||
                   is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWallTorch3) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWallTorch4));
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWallTorch4));
     
     return(result);
 }
@@ -1224,15 +1224,15 @@ is_dungeon_pos_wall(DungeonTiles tiles, v2u pos)
                   is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall3) ||
                   is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall4) ||
                   is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall5) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall5) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall6) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall7) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall8) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall9) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall10) ||
-                      is_dungeon_pos_torch(tiles, pos));
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall5) ||
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall6) ||
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall7) ||
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall8) ||
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall9) ||
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneWall10) ||
+                  is_dungeon_pos_torch(tiles, pos));
     
-                  return(result);
+    return(result);
 }
 
 internal b32
@@ -1278,7 +1278,7 @@ internal b32
 is_dungeon_pos_traversable_and_has_been_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_dungeon_pos_traversable(tiles, pos) &&
-                      has_tile_been_seen(tiles, pos));
+                  has_tile_been_seen(tiles, pos));
     
     return(result);
 }
@@ -1287,8 +1287,8 @@ internal b32
 is_dungeon_pos_water(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water1) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water2) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water3));
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water2) ||
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_Water3));
     
     return(result);
 }
@@ -1298,8 +1298,8 @@ is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_dungeon_pos_floor(tiles, pos) ||
                   is_dungeon_pos_passage(tiles, pos) ||
-                      is_dungeon_pos_open_door(tiles, pos) ||
-                      is_dungeon_pos_water(tiles, pos));
+                  is_dungeon_pos_open_door(tiles, pos) ||
+                  is_dungeon_pos_water(tiles, pos));
     
     return(result);
 }
@@ -1307,7 +1307,7 @@ is_dungeon_pos_traversable(DungeonTiles tiles, v2u pos)
 internal b32
 is_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile_id)
 {
- b32 result = (get_dungeon_pos_tile_id(tiles, pos) == tile_id);
+    b32 result = (get_dungeon_pos_tile_id(tiles, pos) == tile_id);
     return(result);
 }
 
@@ -1317,42 +1317,42 @@ is_dungeon_pos_floor(DungeonTiles tiles, v2u pos)
     b32 result = (is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneFloor1) ||
                   is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneFloor2) ||
                   is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneFloor3) ||
-                      is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneFloor4));
-                  
+                  is_dungeon_pos_tile(tiles, pos, DungeonTileID_StoneFloor4));
+    
     return(result);
 }
 
 internal b32
 has_tile_not_been_seen_and_can_entity_move_there(Entity *player, Dungeon *dungeon, v2u pos)
 {
- assert(is_player_entity_valid(player));
- assert(dungeon);
- 
- b32 result = (!has_tile_been_seen(dungeon->tiles, pos) &&
-               can_entity_move_to_pos(player, dungeon, pos, false));
- 
- return(result);
+    assert(is_player_entity_valid(player));
+    assert(dungeon);
+    
+    b32 result = (!has_tile_been_seen(dungeon->tiles, pos) &&
+                  can_entity_move_to_pos(player, dungeon, pos, false));
+    
+    return(result);
 }
 
 internal b32
 can_player_auto_explore_dungeon(Entity *player, Dungeon *dungeon)
 {
- assert(is_player_entity_valid(player));
- assert(dungeon);
- 
+    assert(is_player_entity_valid(player));
+    assert(dungeon);
+    
     for(u32 y = 0; y < dungeon->size.h; ++y)
     {
         for(u32 x = 0; x < dungeon->size.w; ++x)
-  {
-   v2u pos = {x, y};
-   if(has_tile_not_been_seen_and_can_entity_move_there(player, dungeon, pos))
-   {
-    return(true);
-   }
+        {
+            v2u pos = {x, y};
+            if(has_tile_not_been_seen_and_can_entity_move_there(player, dungeon, pos))
+            {
+                return(true);
+            }
         }
     }
- 
- return(false);
+    
+    return(false);
 }
 
 internal v4u
@@ -1375,11 +1375,11 @@ get_dungeon_dimension_rect(v2u dungeon_size, v2u pos, u32 dimension)
     if(get_rect_width(result) > dungeon_size.w - 1) result.w = (dungeon_size.w - 1) - result.x;
     if(get_rect_height(result) > dungeon_size.h - 1) result.h = (dungeon_size.h - 1) - result.y;
     
-    #if 0
+#if 0
     printf("pos: %u, %u\n", pos.x, pos.y);
     printf("dimension: %u\n", dimension);
     printf("result: %u, %u, %u, %u\n\n", result.x, result.y, result.w, result.h);
-    #endif
+#endif
     
     return(result);
 }
@@ -1428,15 +1428,15 @@ get_random_dungeon_rect_pos(Random *random, v4u rect)
 internal DungeonTileID
 get_dungeon_pos_remains_tile_id(DungeonTiles tiles, v2u pos)
 {
- DungeonTileID remains = tiles.array[(pos.y * tiles.width) + pos.x].remains_id;
+    DungeonTileID remains = tiles.array[(pos.y * tiles.width) + pos.x].remains_id;
     return(remains);
 }
 
 internal void
 set_dungeon_pos_remains_tile_id(DungeonTiles tiles, v2u pos, DungeonTileID tile_id)
 {
- assert(tile_id);
- tiles.array[(pos.y * tiles.width) + pos.x].remains_id = tile_id;
+    assert(tile_id);
+    tiles.array[(pos.y * tiles.width) + pos.x].remains_id = tile_id;
 }
 
 internal b32
@@ -1444,7 +1444,7 @@ is_dungeon_pos_valid_for_base_entity_remains(Dungeon *dungeon, v2u pos)
 {
     b32 result = (!is_dungeon_pos_passage(dungeon->tiles, pos) &&
                   !get_dungeon_pos_trap(&dungeon->traps, pos) &&
-                      !is_dungeon_pos_door(dungeon->tiles, pos));
+                  !is_dungeon_pos_door(dungeon->tiles, pos));
     
     return(result);
 }
@@ -1459,14 +1459,14 @@ can_place_entity_remains_on_dungeon_pos(Dungeon *dungeon, v2u pos, EntityRemains
     b32 result = false;
     
     if(type == EntityRemainsPlaceType_Wound &&
-           is_dungeon_pos_valid_for_base_entity_remains(dungeon, pos) &&
-    !get_dungeon_pos_entity(dungeon->tiles, pos) &&
-           !get_dungeon_pos_remains_tile_id(dungeon->tiles, pos))
+       is_dungeon_pos_valid_for_base_entity_remains(dungeon, pos) &&
+       !get_dungeon_pos_entity(dungeon->tiles, pos) &&
+       !get_dungeon_pos_remains_tile_id(dungeon->tiles, pos))
     {
         result = true;
     }
     else if(type == EntityRemainsPlaceType_Kill &&
-                is_dungeon_pos_valid_for_base_entity_remains(dungeon, pos))
+            is_dungeon_pos_valid_for_base_entity_remains(dungeon, pos))
     {
         result = true;
     }
@@ -1477,13 +1477,13 @@ can_place_entity_remains_on_dungeon_pos(Dungeon *dungeon, v2u pos, EntityRemains
 internal void
 set_dungeon_pos_tile(DungeonTiles tiles, v2u pos, DungeonTileID tile_id)
 {
- tiles.array[(pos.y * tiles.width) + pos.x].id = tile_id;
+    tiles.array[(pos.y * tiles.width) + pos.x].id = tile_id;
 }
 
 internal void
 set_dungeon_pos_entity(DungeonTiles tiles, v2u pos, Entity *entity)
 {
- tiles.array[(pos.y * tiles.width) + pos.x].entity = entity;
+    tiles.array[(pos.y * tiles.width) + pos.x].entity = entity;
 }
 
 internal void
@@ -1501,34 +1501,34 @@ set_dungeon_pos_closed_door(DungeonTiles tiles, v2u pos)
 internal void
 set_dungeon_pos_wall(Random *random, DungeonSpec *spec, DungeonTiles tiles, v2u pos)
 {
- DungeonTileID tile_id = get_random_with_chances(random,
-                                                     spec->wall_tile_chances,
-                                                     DungeonWallTileType_None + 1,
-                                                     DungeonWallTileType_Count - 1,
-                                                     RandomChanceType_Default);
+    DungeonTileID tile_id = get_random_with_chances(random,
+                                                    spec->wall_tile_chances,
+                                                    DungeonWallTileType_None + 1,
+                                                    DungeonWallTileType_Count - 1,
+                                                    RandomChanceType_Default);
     
- set_dungeon_pos_tile(tiles, pos, tile_id);
+    set_dungeon_pos_tile(tiles, pos, tile_id);
 }
 
 internal void
 set_dungeon_pos_floor(Random *random, DungeonTiles tiles, v2u pos)
 {
- DungeonTileID tile_id = get_random(random, DungeonTileID_StoneFloor1, DungeonTileID_StoneFloor4);
- set_dungeon_pos_tile(tiles, pos, tile_id);
+    DungeonTileID tile_id = get_random(random, DungeonTileID_StoneFloor1, DungeonTileID_StoneFloor4);
+    set_dungeon_pos_tile(tiles, pos, tile_id);
 }
 
 internal void
 set_dungeon_pos_torch(Random *random, DungeonTiles tiles, v2u pos)
 {
- DungeonTileID tile_id = get_random(random, DungeonTileID_StoneWallTorch1, DungeonTileID_StoneWallTorch4);
- set_dungeon_pos_tile(tiles, pos, tile_id);
+    DungeonTileID tile_id = get_random(random, DungeonTileID_StoneWallTorch1, DungeonTileID_StoneWallTorch4);
+    set_dungeon_pos_tile(tiles, pos, tile_id);
 }
 
 internal void
 set_dungeon_pos_water(Random *random, DungeonTiles tiles, v2u pos)
 {
- DungeonTileID tile_id = get_random(random, DungeonTileID_Water1, DungeonTileID_Water3);
- set_dungeon_pos_tile(tiles, pos, tile_id);
+    DungeonTileID tile_id = get_random(random, DungeonTileID_Water1, DungeonTileID_Water3);
+    set_dungeon_pos_tile(tiles, pos, tile_id);
 }
 
 internal b32
@@ -1547,8 +1547,8 @@ is_pos_inside_dungeon_rect(v2u pos, v4u rect)
 {
     b32 result = (pos.x >= rect.x &&
                   pos.y >= rect.y &&
-                      pos.x < (rect.x + rect.w) &&
-                      pos.y < (rect.y + rect.h));
+                  pos.x < (rect.x + rect.w) &&
+                  pos.y < (rect.y + rect.h));
     
     return(result);
 }
@@ -1558,8 +1558,8 @@ is_rect_inside_dungeon(v2u dungeon_size, v4u rect)
 {
     b32 result = (rect.x >= 1 &&
                   rect.y >= 1 &&
-                      (rect.x + rect.w) < (dungeon_size.w - 1) &&
-                      (rect.y + rect.h) < (dungeon_size.h - 1));
+                  (rect.x + rect.w) < (dungeon_size.w - 1) &&
+                  (rect.y + rect.h) < (dungeon_size.h - 1));
     
     return(result);
 }
@@ -1588,10 +1588,10 @@ internal b32
 is_rect_inside_dungeon_and_wall(Dungeon *dungeon, v4u rect)
 {
     b32 result = (is_rect_inside_dungeon(dungeon->size, rect) &&
-                      is_dungeon_rect_wall(dungeon->tiles, rect));
+                  is_dungeon_rect_wall(dungeon->tiles, rect));
     
     return(result);
-    }
+}
 
 internal u32
 get_dungeon_area_tile_type_count(DungeonTiles tiles, v2u pos, u32 area, DungeonTileType type)
@@ -1613,20 +1613,20 @@ get_dungeon_area_tile_type_count(DungeonTiles tiles, v2u pos, u32 area, DungeonT
         {
             v2u local_pos = {x, y};
             
-                switch(type)
+            switch(type)
             {
                 case DungeonTileType_Passage: if(is_dungeon_pos_passage(tiles, local_pos)) ++result; break;
-    case DungeonTileType_Floor: if(is_dungeon_pos_floor(tiles, local_pos)) ++result; break;
-    case DungeonTileType_Wall: if(is_dungeon_pos_wall(tiles, local_pos)) ++result; break;
+                case DungeonTileType_Floor: if(is_dungeon_pos_floor(tiles, local_pos)) ++result; break;
+                case DungeonTileType_Wall: if(is_dungeon_pos_wall(tiles, local_pos)) ++result; break;
                 case DungeonTileType_Torch: if(is_dungeon_pos_torch(tiles, local_pos)) ++result; break;
-                    case DungeonTileType_Door: if(is_dungeon_pos_door(tiles, local_pos)) ++result; break;
-                    
-                    invalid_default_case;
+                case DungeonTileType_Door: if(is_dungeon_pos_door(tiles, local_pos)) ++result; break;
+                
+                invalid_default_case;
             }
         }
-        }
-
-        return(result);
+    }
+    
+    return(result);
 }
 
 internal b32
@@ -1659,7 +1659,7 @@ reset_not_flooded_dungeon_tiles(Random *random, Dungeon *dungeon, b32 *fill_tile
             {
                 v2u pos = {x, y};
                 set_dungeon_pos_wall(random, &dungeon->spec, dungeon->tiles, pos);
-                }
+            }
         }
     }
 }
@@ -1668,7 +1668,7 @@ internal u32
 flood_dungeon(DungeonTiles tiles, b32 *flood_array, u32 flood_count, v2u pos)
 {
     if(!flood_array[(pos.y * tiles.width) + pos.x] &&
-           is_dungeon_pos_traversable(tiles, pos))
+       is_dungeon_pos_traversable(tiles, pos))
     {
         flood_array[(pos.y * tiles.width) + pos.x] = true;
         ++flood_count;
@@ -1691,8 +1691,8 @@ internal DungeonRoom *
 get_random_dungeon_room(Random *random, DungeonRooms *rooms)
 {
     DungeonRoom *result = 0;
- 
- u32 index = get_random_index(random, rooms->count);
+    
+    u32 index = get_random_index(random, rooms->count);
     result = &rooms->array[index];
     
     return(result);
@@ -1748,7 +1748,7 @@ dungeon_automaton_room_step(Random *random,
         {
             v2u src_pos = {rect.x + x, rect.y + y};
             v2u dest_pos = {x, y};
-   
+            
             u32 floor_count = get_dungeon_area_tile_type_count(src_tiles, src_pos, 1, DungeonTileType_Floor);
             
             if(is_dungeon_pos_floor(src_tiles, src_pos))
@@ -1790,11 +1790,11 @@ place_dungeon_automaton_room(DungeonTiles src_tiles,
             v2u src_pos = {x, y};
             v2u dest_pos = {src_room.x + x, src_room.y + y};
             
-   DungeonTileID src_tile = get_dungeon_pos_tile_id(src_tiles, src_pos);
-   
+            DungeonTileID src_tile = get_dungeon_pos_tile_id(src_tiles, src_pos);
+            
             if(is_water && !is_dungeon_pos_water(src_tiles, src_pos)) continue;
             set_dungeon_pos_tile(dest_tiles, dest_pos, src_tile);
-            }
+        }
     }
 }
 
@@ -1817,10 +1817,10 @@ create_and_place_dungeon_room(MemoryArena *memory, Random *random, Dungeon *dung
     
     DungeonRoom result = {0};
     DungeonRoomType room_type = get_random_with_chances(random,
-                                                            spec->room_type_chances,
-                                                            DungeonRoomType_Rect,
-                                                            DungeonRoomType_Automaton,
-                                                            RandomChanceType_Default);
+                                                        spec->room_type_chances,
+                                                        DungeonRoomType_Rect,
+                                                        DungeonRoomType_Automaton,
+                                                        RandomChanceType_Default);
     
     // Set room dimensions
     switch(room_type)
@@ -1844,7 +1844,7 @@ create_and_place_dungeon_room(MemoryArena *memory, Random *random, Dungeon *dung
             
             result.rect.w = size;
             result.rect.h = size;
-            } break;
+        } break;
         
         case DungeonRoomType_Automaton:
         {
@@ -1939,10 +1939,10 @@ create_and_place_dungeon_room(MemoryArena *memory, Random *random, Dungeon *dung
                 if(is_rect_inside_dungeon_and_wall(dungeon, get_padded_rect(circle_rect, 1)))
                 {
                     
-                    #if 0
+#if 0
                     printf("\nresult.rect: %u, %u, %u, %u\n", result.rect.x, result.rect.y, result.rect.w, result.rect.h);
                     printf("circle_rect: %u, %u, %u, %u\n", circle_rect.x, circle_rect.y, circle_rect.w, circle_rect.h);
-                    #endif
+#endif
                     
                     // result.rect.w and result.rect.h both hold the radius of the circle and
                     // should therefore be equal
@@ -1979,7 +1979,7 @@ create_and_place_dungeon_room(MemoryArena *memory, Random *random, Dungeon *dung
                     result.success = true;
                     result.rect = circle_rect;
                 }
-                }
+            }
             else if(room_type == DungeonRoomType_Automaton)
             {
                 
@@ -1993,7 +1993,7 @@ create_and_place_dungeon_room(MemoryArena *memory, Random *random, Dungeon *dung
                 return(result);
 #endif
                 
-                    if(is_dungeon_automaton_room_valid(spec, automaton_tiles, result.rect))
+                if(is_dungeon_automaton_room_valid(spec, automaton_tiles, result.rect))
                 {
                     place_dungeon_automaton_room(automaton_tiles, dungeon->tiles, result.rect, false);
                     result.rect = get_dungeon_rect_min(dungeon->tiles, result.rect);
@@ -2001,14 +2001,14 @@ create_and_place_dungeon_room(MemoryArena *memory, Random *random, Dungeon *dung
                     result.success = true;
                 }
             }
-            }
+        }
         
         if(result.success)
         {
             result.type = room_type;
             break;
         }
-        }
+    }
     
     return(result);
 }
@@ -2051,14 +2051,14 @@ create_dungeon(Game *game,
     assert(dungeon->tiles.array);
     
     dungeon_state->current_level = dungeon_level;
- 
- Entity *player = get_player_entity();
- if(!is_player_entity_valid(player))
- {
- // Player will be moved later to a proper position by this function.
-  add_entity(entity_state, EntityID_Player, 0, 0, dungeon);
- }
- 
+    
+    Entity *player = get_player_entity();
+    if(!is_player_entity_valid(player))
+    {
+        // Player will be moved later to a proper position by this function.
+        add_entity(entity_state, EntityID_Player, 0, 0, dungeon);
+    }
+    
     Random *random = &game->random;
     DungeonRooms *rooms = &dungeon->rooms;
     DungeonTraps *traps = &dungeon->traps;
@@ -2130,7 +2130,7 @@ create_dungeon(Game *game,
     spec->automaton_water_size = make_v2u(6, 14);
     
     // Trap
- spec->trap_count = get_random(random, 4, 8);
+    spec->trap_count = get_random(random, 4, 8);
     spec->trap_minimum_distance = 6;
     
     spec->spike_trap_damage.min = 4;
@@ -2149,8 +2149,8 @@ create_dungeon(Game *game,
     spec->magic_trap_damage.max = 24;
     spec->magic_trap_damage.type = EntityDamageType_Physical;
     
- spec->bind_trap_value_range = make_v2u(3, 6);
- spec->shaft_trap_value_range = make_v2u(1, 2);
+    spec->bind_trap_value_range = make_v2u(3, 6);
+    spec->shaft_trap_value_range = make_v2u(1, 2);
     
     // Passage
     spec->down_passage_count = get_random(random, 1, 3);
@@ -2204,7 +2204,7 @@ create_dungeon(Game *game,
     // Set dungeon down passage count
     passages->down_count = spec->down_passage_count;
     
-    #if 0
+#if 0
     printf("\nEnemy Count: %u\n", dungeon->enemy_count);
     printf("Item Count: %u\n", dungeon->item_count);
     
@@ -2218,44 +2218,44 @@ create_dungeon(Game *game,
     
     assert(dungeon->size.w <= MAX_DUNGEON_SIZE);
     assert(dungeon->size.h <= MAX_DUNGEON_SIZE);
- 
+    
     // Set dungeon tile defaults
-        for(u32 y = 0; y < dungeon->size.h; ++y)
-        {
+    for(u32 y = 0; y < dungeon->size.h; ++y)
+    {
         for(u32 x = 0; x < dungeon->size.w; ++x)
         {
             v2u pos = {x, y};
             
             set_dungeon_pos_wall(random, spec, dungeon->tiles, pos);
-   set_dungeon_pos_entity(dungeon->tiles, pos, 0);
+            set_dungeon_pos_entity(dungeon->tiles, pos, 0);
             set_tile_is_seen_and_has_been_seen(dungeon->tiles, pos, false);
-            }
- }
- 
-    #if 1
+        }
+    }
+    
+#if 1
     // Test room
     dungeon->can_pathfind = true;
     
     for(u32 y = 1; y < dungeon->size.h - 1; ++y)
     {
         for(u32 x = 1; x < dungeon->size.w - 1; ++x)
-  {
-   set_dungeon_pos_floor(random, dungeon->tiles, make_v2u(x, y));
+        {
+            set_dungeon_pos_floor(random, dungeon->tiles, make_v2u(x, y));
         }
     }
     
- entity_move(random, player, dungeon, ui, make_v2u(10, 1));
+    entity_move(random, player, dungeon, ui, make_v2u(10, 1));
     //player->hp = player->max_hp - 1;
     //player->hp = 1;
- 
+    
 #if 0
     // Test blood
     
     u32 blood_x = 25;
     u32 blood_y = 4;
     for(DungeonTileID blood_id = DungeonTileID_RedBloodGroundSmall1;
-            blood_id <= DungeonTileID_RedBloodWallDownRight3;
-            ++blood_id)
+        blood_id <= DungeonTileID_RedBloodWallDownRight3;
+        ++blood_id)
     {
         v2u blood_pos = {blood_x, blood_y};
         set_dungeon_pos_remains(dungeon->tiles, blood_pos, blood_id);
@@ -2266,7 +2266,7 @@ create_dungeon(Game *game,
     blood_x = 25;
     blood_y = 5;
     for(DungeonTileID blood_id = DungeonTileID_GreenBloodGroundSmall1;
-            blood_id <= DungeonTileID_GreenBloodWallDownRight3;
+        blood_id <= DungeonTileID_GreenBloodWallDownRight3;
         ++blood_id)
     {
         v2u blood_pos = {blood_x, blood_y};
@@ -2284,21 +2284,21 @@ create_dungeon(Game *game,
     blood_y = 8;
     set_dungeon_pos_remains(dungeon->tiles, make_v2u(blood_x, blood_y), DungeonTileID_GreenBloodWater1);
     set_dungeon_pos_remains(dungeon->tiles, make_v2u(blood_x + 1, blood_y), DungeonTileID_GreenBloodWater2);
-        #endif
+#endif
     
 #if 0
     // Test traps
     v2u trap_pos = {25, 2};
     
     for(DungeonTrapType trap_type = DungeonTrapType_None + 1;
-            trap_type < DungeonTrapType_Count;
-            ++trap_type)
+        trap_type < DungeonTrapType_Count;
+        ++trap_type)
     {
-  add_dungeon_trap(&dungeon->spec, &dungeon->traps, trap_type, trap_pos);
-  
+        add_dungeon_trap(&dungeon->spec, &dungeon->traps, trap_type, trap_pos);
+        
         ++trap_pos.x;
     }
-    #endif
+#endif
     
 #if 0
     // Test all entities
@@ -2313,7 +2313,7 @@ create_dungeon(Game *game,
     }
 #endif
     
-    #if 0
+#if 0
     // Test all entity remains
     entity_x = entity_x_start;
     
@@ -2335,13 +2335,13 @@ create_dungeon(Game *game,
         }
     }
 #endif
- 
+    
 #if 1
     // Test items
     v2u weapon = {8, 1};
     {
         for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
-  {
+        {
             add_weapon_item(random, item_state, dungeon_level, weapon_id, ItemRarity_Common, weapon.x + 1, weapon.y, true);
             add_weapon_item(random, item_state, dungeon_level, weapon_id, ItemRarity_Magical, weapon.x + 2, weapon.y, false);
             add_weapon_item(random, item_state, dungeon_level, weapon_id, ItemRarity_Mythical, weapon.x + 3, weapon.y, false);
@@ -2350,7 +2350,7 @@ create_dungeon(Game *game,
         }
     }
     
-        v2u armor = {weapon.x + 4, 1};
+    v2u armor = {weapon.x + 4, 1};
     {
         add_armor_item(random, item_state, dungeon_level, ItemID_LeatherHelmet, armor.x + 1, armor.y, false);
         add_armor_item(random, item_state, dungeon_level, ItemID_LeatherChestplate, armor.x + 2, armor.y, false);
@@ -2361,7 +2361,7 @@ create_dungeon(Game *game,
         add_armor_item(random, item_state, dungeon_level, ItemID_SteelChestplate, armor.x + 2, armor.y + 1, false);
         add_armor_item(random, item_state, dungeon_level, ItemID_SteelGreaves, armor.x + 3, armor.y + 1, false);
         add_armor_item(random, item_state, dungeon_level, ItemID_SteelBoots, armor.x + 4, armor.y + 1, false);
-        }
+    }
     
     v2u potion = {armor.x + 5, 1};
     {
@@ -2396,7 +2396,7 @@ create_dungeon(Game *game,
     // Leave dungeon blank
     return(dungeon);
     
-    #endif
+#endif
     
     // Place rooms
     u32 total_room_size = 0;
@@ -2420,7 +2420,7 @@ create_dungeon(Game *game,
     printf("spec->area: %u\n", spec->area);
     printf("total_room_size: %u\n", total_room_size);
     printf("total_room_size / dungeon_size: %.02f\n", (f32)total_room_size / (f32)spec->area);
-    #endif
+#endif
     
 #if 0
     printf("\nRoom Count: %u\n", rooms->count);
@@ -2469,31 +2469,31 @@ create_dungeon(Game *game,
             }
         }
         
-  // Place corridor between start and end room
+        // Place corridor between start and end room
         if(end_room)
         {
             v2u corridor_start = get_random_dungeon_traversable_rect_pos(random, dungeon, start_room->rect);
             v2u corridor_end = get_random_dungeon_traversable_rect_pos(random, dungeon, end_room->rect);
             
-                        DungeonCorridorType corridor_type = get_random_with_chances(random,
-                                                                                 spec->corridor_type_chances,
-                                                                               DungeonCorridorType_None + 1,
-                                                                               DungeonCorridorType_Count - 1,
-                                                                   RandomChanceType_Default);
+            DungeonCorridorType corridor_type = get_random_with_chances(random,
+                                                                        spec->corridor_type_chances,
+                                                                        DungeonCorridorType_None + 1,
+                                                                        DungeonCorridorType_Count - 1,
+                                                                        RandomChanceType_Default);
             
-            #if 0
-   printf("Corridor start: %u, %u\n", corridor_start.x, corridor_start.y);
-   printf("Corridor end: %u, %u\n", corridor_end.x, corridor_end.y);
+#if 0
+            printf("Corridor start: %u, %u\n", corridor_start.x, corridor_start.y);
+            printf("Corridor end: %u, %u\n", corridor_end.x, corridor_end.y);
             printf("Corridor type: %u\n\n", corridor_type);
-            #endif
-   
-   is_connected[start_index] = true;
-   place_dungeon_corridor(random, dungeon->tiles, corridor_start, corridor_end, corridor_type);
-                    }
-                }
-    #endif
+#endif
+            
+            is_connected[start_index] = true;
+            place_dungeon_corridor(random, dungeon->tiles, corridor_start, corridor_end, corridor_type);
+        }
+    }
+#endif
     
-    #if 1
+#if 1
     // Place water
     if(spec->has_water)
     {
@@ -2540,9 +2540,9 @@ create_dungeon(Game *game,
             }
         }
     }
-    #endif
+#endif
     
-    #if 1
+#if 1
     // Reset Unreachable Tiles
     TemporaryMemory temporary_memory = start_temporary_memory(&game->memory);
     
@@ -2583,14 +2583,14 @@ create_dungeon(Game *game,
             v2u pos = get_random_dungeon_pos(random, dungeon->size);
             
             if(is_dungeon_pos_wall(dungeon->tiles, pos) &&
-                   !is_dungeon_pos_torch(dungeon->tiles, pos) &&
-                   get_dungeon_area_tile_type_count(dungeon->tiles, pos, 1, DungeonTileType_Floor))
+               !is_dungeon_pos_torch(dungeon->tiles, pos) &&
+               get_dungeon_area_tile_type_count(dungeon->tiles, pos, 1, DungeonTileType_Floor))
             {
                 
                 u32 torch_count = get_dungeon_area_tile_type_count(dungeon->tiles,
-                                                                       pos,
-                                                                       spec->torch_min_spacing,
-                                                                       DungeonTileType_Torch);
+                                                                   pos,
+                                                                   spec->torch_min_spacing,
+                                                                   DungeonTileType_Torch);
                 
                 if(!torch_count)
                 {
@@ -2614,43 +2614,43 @@ create_dungeon(Game *game,
         {
             v2u pos = get_random_dungeon_traversable_pos(random, dungeon);
             u32 area_door_count = get_dungeon_area_tile_type_count(dungeon->tiles,
-                                                                      pos,
-                                                                    spec->door_min_spacing,
-                                                                          DungeonTileType_Door);
+                                                                   pos,
+                                                                   spec->door_min_spacing,
+                                                                   DungeonTileType_Door);
             
             if(!area_door_count)
+            {
+                v2u up = get_direction_pos(pos, Direction_Up);
+                v2u down = get_direction_pos(pos, Direction_Down);
+                v2u left = get_direction_pos(pos, Direction_Left);
+                v2u right = get_direction_pos(pos, Direction_Right);
+                
+                b32 can_place = false;
+                
+                if(is_dungeon_pos_wall(dungeon->tiles, up) &&
+                   is_dungeon_pos_wall(dungeon->tiles, down) &&
+                   !is_dungeon_pos_wall(dungeon->tiles, left) &&
+                   !is_dungeon_pos_wall(dungeon->tiles, right))
                 {
-                    v2u up = get_direction_pos(pos, Direction_Up);
-                    v2u down = get_direction_pos(pos, Direction_Down);
-                    v2u left = get_direction_pos(pos, Direction_Left);
-                    v2u right = get_direction_pos(pos, Direction_Right);
-                    
-                    b32 can_place = false;
-                    
-                    if(is_dungeon_pos_wall(dungeon->tiles, up) &&
-                           is_dungeon_pos_wall(dungeon->tiles, down) &&
-                           !is_dungeon_pos_wall(dungeon->tiles, left) &&
-                           !is_dungeon_pos_wall(dungeon->tiles, right))
-                    {
-                            can_place = true;
-                    }
-                    else if(is_dungeon_pos_wall(dungeon->tiles, left) &&
-                                is_dungeon_pos_wall(dungeon->tiles, right) &&
-                                !is_dungeon_pos_wall(dungeon->tiles, up) &&
-                                !is_dungeon_pos_wall(dungeon->tiles, down))
-                    {
-                            can_place = true;
-                    }
-                    
-                    if(can_place)
+                    can_place = true;
+                }
+                else if(is_dungeon_pos_wall(dungeon->tiles, left) &&
+                        is_dungeon_pos_wall(dungeon->tiles, right) &&
+                        !is_dungeon_pos_wall(dungeon->tiles, up) &&
+                        !is_dungeon_pos_wall(dungeon->tiles, down))
                 {
-                        ++spec->doors_generated_count;
-                        set_dungeon_pos_closed_door(dungeon->tiles, pos);
-                        
-                        break;
-                    }
+                    can_place = true;
+                }
+                
+                if(can_place)
+                {
+                    ++spec->doors_generated_count;
+                    set_dungeon_pos_closed_door(dungeon->tiles, pos);
+                    
+                    break;
                 }
             }
+        }
     }
 #endif
     
@@ -2666,14 +2666,14 @@ create_dungeon(Game *game,
         up_passage.pos = get_new_dungeon_passage_pos(random, dungeon, item_state, spec->passage_min_spacing);
         up_passage.dungeon_level = dungeon_level;
         
-                if(dungeon->level == 1)
-                {
-                    set_dungeon_pos_tile(dungeon->tiles, up_passage.pos, DungeonTileID_ExitDungeon);
-                }
-                else
-                {
-                    set_dungeon_pos_tile(dungeon->tiles, up_passage.pos, DungeonTileID_StoneStaircaseUp);
-                }
+        if(dungeon->level == 1)
+        {
+            set_dungeon_pos_tile(dungeon->tiles, up_passage.pos, DungeonTileID_ExitDungeon);
+        }
+        else
+        {
+            set_dungeon_pos_tile(dungeon->tiles, up_passage.pos, DungeonTileID_StoneStaircaseUp);
+        }
         
         // Connect current up passage to a passage in the above dungeon that goes down.
         if(dungeon_above)
@@ -2708,10 +2708,10 @@ create_dungeon(Game *game,
         }
         
         add_dungeon_passage(&dungeon->passages, up_passage);
-        }
+    }
 #endif
     
-    #if 1
+#if 1
     // Place down passages
     for(u32 count = 0; count < spec->down_passage_count; ++count)
     {
@@ -2720,10 +2720,10 @@ create_dungeon(Game *game,
         down_passage.pos = get_new_dungeon_passage_pos(random, dungeon, item_state, spec->passage_min_spacing);
         down_passage.dungeon_level = dungeon_level;
         
-                set_dungeon_pos_tile(dungeon->tiles, down_passage.pos, DungeonTileID_StoneStaircaseDown);
-                add_dungeon_passage(&dungeon->passages, down_passage);
+        set_dungeon_pos_tile(dungeon->tiles, down_passage.pos, DungeonTileID_StoneStaircaseDown);
+        add_dungeon_passage(&dungeon->passages, down_passage);
     }
-    #endif
+#endif
     
 #if 1
     // Place player
@@ -2736,49 +2736,49 @@ create_dungeon(Game *game,
            is_v2u_equal(passage->dest_pos, player_came_from_pos))
         {
             player_passage_pos = passage->pos;
-                break;
+            break;
         }
     }
     
     assert(!is_v2u_zero(player_passage_pos));
- entity_move(random, player, dungeon, ui, player_passage_pos);
+    entity_move(random, player, dungeon, ui, player_passage_pos);
     if(dungeon->level == 1)
     {
         add_player_starting_item(game, player, item_state, inventory, ui, ItemID_Sword);
         add_player_starting_item(game, player, item_state, inventory, ui, ItemID_MightPotion);
     }
-    #endif
+#endif
     
 #if 1
     // Place traps
- for(u32 count = 0; count < spec->trap_count; ++count)
+    for(u32 count = 0; count < spec->trap_count; ++count)
     {
         for(;;)
         {
             assert_loop_count();
             
-   b32 can_place = false;
+            b32 can_place = false;
             v2u trap_pos = get_random_dungeon_feature_pos(random, dungeon, item_state, false);
-   
-   if(!get_dungeon_area_tile_type_count(dungeon->tiles, trap_pos, 1, DungeonTileType_Wall))
-   {
-    can_place = true;
-   }
-   
-            if(can_place)
-   {
-    // Make sure the trap isn't too close to other traps.
-                v4u trap_rect = get_dungeon_dimension_rect(dungeon->size, trap_pos, spec->trap_minimum_distance);
-                for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
+            
+            if(!get_dungeon_area_tile_type_count(dungeon->tiles, trap_pos, 1, DungeonTileType_Wall))
             {
-                DungeonTrap *trap = &traps->array[index];
-                if(trap->type && is_dungeon_pos_inside_rect(trap->pos, trap_rect))
-                {
-                    can_place = false;
-                    break;
-                }
+                can_place = true;
             }
             
+            if(can_place)
+            {
+                // Make sure the trap isn't too close to other traps.
+                v4u trap_rect = get_dungeon_dimension_rect(dungeon->size, trap_pos, spec->trap_minimum_distance);
+                for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
+                {
+                    DungeonTrap *trap = &traps->array[index];
+                    if(trap->type && is_dungeon_pos_inside_rect(trap->pos, trap_rect))
+                    {
+                        can_place = false;
+                        break;
+                    }
+                }
+                
                 if(can_place)
                 {
                     DungeonTrapType trap_type = get_random(random, DungeonTrapType_None + 1, DungeonTrapType_Count - 1);
@@ -2788,7 +2788,7 @@ create_dungeon(Game *game,
                 }
             }
         }
-        }
+    }
 #endif
     
 #if 1
@@ -2818,23 +2818,17 @@ create_dungeon(Game *game,
     
     for(u32 count = 0; count < spec->item_count; ++count)
     {
-            b32 should_add_item = true;
-            v2u pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
-                DungeonRoom *room = get_dungeon_room_from_pos(&dungeon->rooms, pos);
-                if(room)
-                {
-   should_add_item = add_dungeon_room_feature(room, spec->room_max_items, DungeonRoomFeatureType_Item);
-                    }
-                
-                if(add_item)
-                {
+        b32 should_add_item = true;
+        v2u pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
+        DungeonRoom *room = get_dungeon_room_from_pos(&dungeon->rooms, pos);
+        if(room)
+        {
+            should_add_item = add_dungeon_room_feature(room, spec->room_max_items, DungeonRoomFeatureType_Item);
+        }
+        
+        if(should_add_item)
+        {
             ItemType item_type = get_random_with_chances(random, spec->item_type_chances, 0, 0, RandomChanceType_ItemType);
-                    
-                    b32 is_item_cursed = false;
-                    if(is_item_equipment(item_type) && hit_random_chance(random, spec->item_curse_chance))
-                    {
-                        is_item_cursed = true;
-                        }
             
 #if 0
             // Test item type
@@ -2843,9 +2837,10 @@ create_dungeon(Game *game,
             is_item_cursed = false;
 #endif
             
-                    switch(item_type)
-                    {
-                        case ItemType_Weapon:
+            Item *added_item = 0;
+            switch(item_type)
+            {
+                case ItemType_Weapon:
                 {
                     // Set item rarity
                     ItemRarity item_rarity = ItemRarity_None;
@@ -2854,7 +2849,7 @@ create_dungeon(Game *game,
                     {
                         item_rarity = ItemRarity_Magical;
                         ++item_rarity_counts[ItemRarity_Magical];
-                        }
+                    }
                     else if(is_type_info_valid(random, item_rarity_info[ItemRarity_Mythical]))
                     {
                         item_rarity = ItemRarity_Mythical;
@@ -2866,11 +2861,11 @@ create_dungeon(Game *game,
                         ++item_rarity_counts[ItemRarity_Common];
                     }
                     
-     ItemID weapon_id = get_random_weapon(random);
-                    add_weapon_item(random, item_state, dungeon_level, weapon_id, item_rarity, pos.x, pos.y, is_item_cursed);
-                        } break;
-                        
-                        case ItemType_Armor:
+                    ItemID weapon_id = get_random_weapon(random);
+                    added_item = add_weapon_item(random, item_state, dungeon_level, weapon_id, item_rarity, pos.x, pos.y, false);
+                } break;
+                
+                case ItemType_Armor:
                 {
                     // Set armor type
                     ItemID armor_id = get_random_leather_armor(random);
@@ -2880,44 +2875,52 @@ create_dungeon(Game *game,
                         armor_id = get_random_steel_armor(random);
                     }
                     
-                            assert(is_value_in_range(armor_id, ItemID_ArmorStart, ItemID_ArmorEnd));
-                    add_armor_item(random, item_state, dungeon_level, armor_id, pos.x, pos.y, is_item_cursed);
-                        } break;
-                        
-                        case ItemType_Potion:
-                        {
-                            ItemID potion_id = get_random_with_chances(random, spec->potion_chances, 0, 0, RandomChanceType_Potion);
-                            assert(is_value_in_range(potion_id, ItemID_PotionStart, ItemID_PotionEnd));
-                            
-     add_consumable_item(random, item_state, dungeon_level, potion_id, pos.x, pos.y, 1);
-                        } break;
-                        
-                        case ItemType_Scroll:
-                        {
-                            ItemID scroll_id = get_random_with_chances(random, spec->scroll_chances, 0, 0, RandomChanceType_Scroll);
-                            assert(is_value_in_range(scroll_id, ItemID_ScrollStart, ItemID_ScrollEnd));
-                            
-                    add_consumable_item(random, item_state, dungeon_level, scroll_id, pos.x, pos.y, 1);
-                        } break;
-                        
-                        case ItemType_Ration:
-                        {
-                    add_consumable_item(random, item_state, dungeon_level, ItemID_Ration, pos.x, pos.y, 1);
-                        } break;
-                        
-                        invalid_default_case;
-                    }
-                }
+                    assert(is_value_in_range(armor_id, ItemID_ArmorStart, ItemID_ArmorEnd));
+                    added_item = add_armor_item(random, item_state, dungeon_level, armor_id, pos.x, pos.y, false);
+                } break;
+                
+                case ItemType_Potion:
+                {
+                    ItemID potion_id = get_random_with_chances(random, spec->potion_chances, 0, 0, RandomChanceType_Potion);
+                    assert(is_value_in_range(potion_id, ItemID_PotionStart, ItemID_PotionEnd));
+                    
+                    added_item = add_consumable_item(random, item_state, dungeon_level, potion_id, pos.x, pos.y, 1);
+                } break;
+                
+                case ItemType_Scroll:
+                {
+                    ItemID scroll_id = get_random_with_chances(random, spec->scroll_chances, 0, 0, RandomChanceType_Scroll);
+                    assert(is_value_in_range(scroll_id, ItemID_ScrollStart, ItemID_ScrollEnd));
+                    
+                    added_item = add_consumable_item(random, item_state, dungeon_level, scroll_id, pos.x, pos.y, 1);
+                } break;
+                
+                case ItemType_Ration:
+                {
+                    added_item = add_consumable_item(random, item_state, dungeon_level, ItemID_Ration, pos.x, pos.y, 1);
+                } break;
+                
+                invalid_default_case;
+            }
+            
+            // Set cursed
+            assert(added_item);
+            if(is_set(added_item->flags, ItemFlag_CanEquip) &&
+               hit_random_chance(random, spec->item_curse_chance))
+            {
+                set(added_item->flags, ItemFlag_IsCursed);
+            }
+        }
     }
-    #endif
+#endif
     
 #if 1
     // Place enemies
- for(u32 count = 0; count < spec->enemy_count; ++count)
+    for(u32 count = 0; count < spec->enemy_count; ++count)
     {
         v2u enemy_pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
-  EntityID enemy_id = get_random_enemy_id_for_dungeon_level(random, dungeon->level);
-  
+        EntityID enemy_id = get_random_enemy_id_for_dungeon_level(random, dungeon->level);
+        
         // We don't want enemies inside the player view range.
         v4u player_view_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, player->stats.fov);
         if(!is_dungeon_pos_inside_rect(enemy_pos, player_view_rect))
@@ -2934,7 +2937,7 @@ create_dungeon(Game *game,
             
             if(add_enemy)
             {
-    add_entity(entity_state, enemy_id, enemy_pos.x, enemy_pos.y, dungeon);
+                add_entity(entity_state, enemy_id, enemy_pos.x, enemy_pos.y, dungeon);
             }
         }
     }
@@ -3004,8 +3007,8 @@ create_dungeon(Game *game,
         if(passage->type)
         {
             printf("Passage[%u]: %s (Pos: %u, %u) (Dest: %u %u)\n",
-                       index, passage->type == DungeonPassageType_Up ? "Up" : "Down",
-                       passage->pos.x, passage->pos.y, passage->dest_pos.x, passage->dest_pos.y);
+                   index, passage->type == DungeonPassageType_Up ? "Up" : "Down",
+                   passage->pos.x, passage->pos.y, passage->dest_pos.x, passage->dest_pos.y);
             
         }
     }
@@ -3018,7 +3021,7 @@ create_dungeon(Game *game,
         printf("Trap[%u]: %s (Pos: %u, %u)\n",
                index, trap->name.s, trap->pos.x, trap->pos.y);
     }
-    #endif
+#endif
     
     return(dungeon);
 }

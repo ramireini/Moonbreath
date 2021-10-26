@@ -42,11 +42,11 @@ typedef enum
     ItemID_EnchantWeaponScroll,
     ItemID_EnchantArmorScroll,
     ItemID_MagicMappingScroll,
-    ItemID_TeleportationScroll,
+    ItemID_TeleportScroll,
     ItemID_UncurseScroll,
     ItemID_ScrollEnd,
     
-    ItemID_Ration
+    ItemID_Ration,
 } ItemID;
 
 typedef enum
@@ -57,7 +57,9 @@ typedef enum
     ItemFlag_IsMarked = (1 << 4),
     ItemFlag_IsSelected = (1 << 5),
     ItemFlag_InInventory = (1 << 6),
-    ItemFlag_HasBeenSeen = (1 << 7)
+    ItemFlag_HasBeenSeen = (1 << 7),
+    ItemFlag_CanEquip = (1 << 8),
+    ItemFlag_CanConsume = (1 << 9),
 } ItemFlag;
 
 typedef enum
@@ -128,7 +130,7 @@ typedef enum
     ItemRarity_Magical,
     ItemRarity_Mythical,
     
-        ItemRarity_Count
+    ItemRarity_Count
 } ItemRarity;
 
 typedef enum
@@ -157,12 +159,12 @@ typedef enum
 
 typedef enum
 {
- ItemInteractType_None,
+    ItemInteractType_None,
     
- ItemInteractType_Identify,
- ItemInteractType_EnchantWeapon,
- ItemInteractType_EnchantArmor,
- ItemInteractType_Uncurse
+    ItemInteractType_Identify,
+    ItemInteractType_EnchantWeapon,
+    ItemInteractType_EnchantArmor,
+    ItemInteractType_Uncurse
 } ItemInteractType;
 
 typedef enum
@@ -180,7 +182,7 @@ struct ItemInfo
     b32 is_known;
     
     v2u value_range;
-    v4u tile_src;
+    v2u tile_pos;
     String32 depiction;
 };
 
@@ -203,8 +205,8 @@ typedef struct
 {
     ItemInfo *info;
     EntityStatus status;
- 
- ItemInteractType interact_type;
+    
+    ItemInteractType interact_type;
     u32 stack_count;
     String32 depiction;
 } ConsumableItem;
@@ -237,11 +239,11 @@ typedef enum
 
 typedef struct
 {
- ItemStatType type;
- 
+    ItemStatType type;
+    
     s32 value;
     EntityDamageType resist_type;
-     String64 description;
+    String64 description;
 } ItemStat;
 
 struct Item
@@ -254,7 +256,7 @@ struct Item
     
     char inventory_letter;
     char select_letter;
-     Mark mark;
+    Mark mark;
     
     v2u pos;
     u32 dungeon_level;
@@ -285,12 +287,12 @@ typedef struct
     DeferWindow pickup_window;
     DeferWindow examine_window;
     Entity *examine_window_entity;
-     DungeonTrap *examine_window_trap;
+    DungeonTrap *examine_window_trap;
     
     ItemInfo potion_info[Potion_Count];
     ItemInfo scroll_info[Scroll_Count];
     ItemInfo ration_info;
-    } ItemState;
+} ItemState;
 
 typedef struct
 {
@@ -299,7 +301,7 @@ typedef struct
     b32 validate_view;
     DeferWindow window;
     
- ItemInteractType interact_type;
+    ItemInteractType interact_type;
     DeferWindow interact_window;
     
     Item *examine_item;
@@ -311,15 +313,16 @@ typedef struct
 
 #define add_weapon_item(random, item_state, dungeon_level, id, rarity, x, y, is_cursed) add_item(random, item_state, dungeon_level, id, rarity, x, y, is_cursed, 0)
 #define add_armor_item(random, item_state, dungeon_level, id, x, y, is_cursed) add_item(random, item_state, dungeon_level, id, ItemRarity_Common, x, y, is_cursed, 0)
-#define add_consumable_item(random, item_state, dungeon_level, id, x, y, stack_count) add_item(random, item_state, dungeon_level, id, ItemRarity_None, x, y, false, stack_count)
+#define add_consumable_item(random, item_state, dungeon_level, id, x, y, stack_count) add_item(random, item_state, dungeon_level, id, ItemRarity_Common, x, y, false, stack_count)
 
 internal void remove_item(Item *item, Owner *item_owners);
 internal char *get_entity_damage_type_string(EntityDamageType damage_type);
 internal char *get_item_rarity_string(ItemRarity rarity);
-internal b32 is_valid_non_inventory_item(Item *item);
+internal b32 is_valid_not_inventory_item(Item *item);
 internal s32 get_index(s32 value);
 internal s32 get_item_stat_type_value(ItemStat *stats, ItemStatType type);
-internal v2u get_item_tile_pos(ItemID id, ItemRarity rarity);
+internal v2u get_item_tileset_pos(ItemState *item_state, ItemID id, ItemRarity rarity, b32 is_equip_tile);
+internal v4u get_item_tileset_rect(ItemState *item_state, ItemID id, ItemRarity rarity, b32 is_equip_tile);
 internal ItemType get_random_item_type(Random *random);
 internal Item *get_dungeon_pos_item(ItemState *item_state, u32 dungeon_level, v2u pos, ItemID id);
 internal EntityDamageType get_random_damage_type(Random *random, EntityDamageType exclude_type);
