@@ -153,10 +153,10 @@ typedef enum
     
     DungeonTileID_GreenBloodWallDownRight1,
     DungeonTileID_GreenBloodWallDownRight2,
- DungeonTileID_GreenBloodWallDownRight3,
- 
- DungeonTileID_Count
-    } DungeonTileID;
+    DungeonTileID_GreenBloodWallDownRight3,
+    
+    DungeonTileID_Count
+} DungeonTileID;
 
 typedef enum
 {
@@ -180,9 +180,9 @@ typedef enum
 {
     DungeonTileType_None,
     
-        DungeonTileType_Passage,
- DungeonTileType_Floor,
- DungeonTileType_Wall,
+    DungeonTileType_Passage,
+    DungeonTileType_Floor,
+    DungeonTileType_Wall,
     DungeonTileType_Water,
     DungeonTileType_Torch,
     DungeonTileType_Door,
@@ -196,7 +196,7 @@ typedef enum
     DungeonRandomPosType_TraversableUnoccupied,
     DungeonRandomPosType_TraversableRect,
     DungeonRandomPosType_TraversableUnoccupiedRect,
-        DungeonRandomPosType_Feature
+    DungeonRandomPosType_Feature
 } DungeonRandomPosType;
 
 typedef enum
@@ -204,7 +204,7 @@ typedef enum
     RandomChanceType_Default,
     RandomChanceType_ItemType,
     RandomChanceType_Potion,
-        RandomChanceType_Scroll
+    RandomChanceType_Scroll
 } RandomChanceType;
 
 typedef enum
@@ -258,7 +258,7 @@ typedef enum
     DungeonTrapType_Summon,
     DungeonTrapType_Teleport,
     DungeonTrapType_Shaft,
-        
+    
     DungeonTrapType_Count
 } DungeonTrapType;
 
@@ -286,27 +286,27 @@ typedef struct
 
 struct PathfindMap
 {
- u32 width;
- u32 array[MAX_DUNGEON_AREA];
+    u32 width;
+    u32 array[MAX_DUNGEON_AREA];
 };
 
 typedef struct
 {
- v4u src;
- DungeonTileID tile_id;
+    v4u src;
+    DungeonTileID tile_id;
 } DungeonRemainsInfo;
 
 typedef struct
 {
     b32 is_seen;
     b32 has_been_seen;
- 
- Entity *entity;
- 
+    
+    Entity *entity;
+    
     DungeonTileID id;
- DungeonTileID seen_id;
- DungeonTileID remains_id;
- } DungeonTile;
+    DungeonTileID seen_id;
+    DungeonTileID remains_id;
+} DungeonTile;
 
 typedef struct
 {
@@ -325,12 +325,12 @@ struct DungeonTrap
     
     v2u pos;
     v4u tile_src;
- 
- v2u value_range;
+    
+    v2u value_range;
     EntityDamage damage;
     
- // Shafts cause you to fall a certain amount of dungeon levels.
- // When you fall down the same shaft the same data is used making you fall the same amount.
+    // Shafts cause you to fall a certain amount of dungeon levels.
+    // When you fall down the same shaft the same data is used making you fall the same amount.
     b32 is_shaft_set;
     u32 shaft_depth;
     v2u shaft_dest;
@@ -418,7 +418,7 @@ typedef struct
     EntityDamage magic_trap_damage;
     
     v2u bind_trap_value_range;
- v2u shaft_trap_value_range;
+    v2u shaft_trap_value_range;
     
     // Passage
     u32 down_passage_count;
@@ -434,7 +434,7 @@ typedef struct
     u32 item_type_chances[ItemType_Count];
     u32 potion_chances[Potion_Count];
     u32 scroll_chances[Scroll_Count];
-    } DungeonSpec;
+} DungeonSpec;
 
 struct Dungeon
 {
@@ -470,12 +470,12 @@ struct Dungeon
 // Player has heard of suspicious activity relating to the Moonbreath mountain and has decided to
 // see what's going on over there.
 
- // TODO(rami): Game guide
+// TODO(rami): Game guide
 // TODO(rami): Mist tiles, limit FOV
 // TODO(rami): Generic: Gold, treasure chests (mimic), swamps (traversable but slower than water?)
 // TODO(rami): Plant/other entities that are placed near water? Some could be generated as damaged already.
 // TODO(rami): Lava tiles, the ability to jump into the lava and die, if you really want to :)
-// TODO(rami): Art for weapon, armor and equip. get_item_equip_tile_pos()
+// TODO(Rami): ARt for weapons and armor.
 typedef struct
 {
     u32 current_level;

@@ -51,15 +51,15 @@ typedef enum
 
 typedef enum
 {
-    ItemFlag_IsIdentified = (1 << 1),
-    ItemFlag_IsEquipped = (1 << 2),
-    ItemFlag_IsCursed = (1 << 3),
-    ItemFlag_IsMarked = (1 << 4),
-    ItemFlag_IsSelected = (1 << 5),
-    ItemFlag_InInventory = (1 << 6),
+    ItemFlag_Identified = (1 << 1),
+    ItemFlag_Equipped = (1 << 2),
+    ItemFlag_Cursed = (1 << 3),
+    ItemFlag_Marked = (1 << 4),
+    ItemFlag_Selected = (1 << 5),
+    ItemFlag_Inventory = (1 << 6),
     ItemFlag_HasBeenSeen = (1 << 7),
     ItemFlag_CanEquip = (1 << 8),
-    ItemFlag_CanConsume = (1 << 9),
+    ItemFlag_Consumable = (1 << 9),
 } ItemFlag;
 
 typedef enum

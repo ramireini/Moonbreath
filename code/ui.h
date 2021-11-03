@@ -17,7 +17,7 @@ typedef enum
     OwnerType_Spell,
     OwnerType_Entity,
     OwnerType_Trap
-    } OwnerType;
+} OwnerType;
 
 typedef enum
 {
@@ -49,7 +49,7 @@ typedef struct
     {
         Item *item;
         Spell *spell;
-    Entity *entity;
+        Entity *entity;
         DungeonTrap *trap;
     };
 } Owner;
@@ -61,7 +61,7 @@ typedef struct
     u32 move_count;
     Direction direction;
     f32 step_multiplier;
-    } ViewMoveParams;
+} ViewMoveParams;
 
 typedef struct
 {
@@ -81,12 +81,12 @@ typedef struct
     f32 step;
     u32 size;
     u32 count;
-    } ViewMove;
+} ViewMove;
 
 typedef struct
 {
- b32 set_at_end_on_open;
- 
+    b32 set_at_end_on_open;
+    
     u32 entry_size;
     u32 count;
     u32 start;
@@ -101,23 +101,23 @@ typedef struct
 
 typedef struct
 {
- b32 is_active;
- v4u input_rect;
- 
- b32 render_cursor;
- u32 cursor_blink_start;
+    b32 is_active;
+    v4u input_rect;
+    
+    b32 render_cursor;
+    u32 cursor_blink_start;
     u32 cursor_blink_duration; // If less than 650 when holding a key then blinking looks wrong.
     u32 cursor;
     
     View view;
- char array[MAX_MARK_SIZE];
+    char array[MAX_MARK_SIZE];
 } Mark;
 
 typedef struct
 {
     b32 is_set;
     String256 string;
-    } LogMessage;
+} LogMessage;
 
 typedef struct
 {
@@ -132,7 +132,7 @@ typedef struct
     
     View short_log_view;
     DeferWindow full_log;
-     LogMessage log_messages[MAX_LOG_MESSAGE_COUNT];
+    LogMessage log_messages[MAX_LOG_MESSAGE_COUNT];
     
     b32 defer_window_has_custom_width;
     v2u defer_window_padding;
@@ -146,20 +146,21 @@ typedef struct
     f32 default_view_step_multiplier;
     
     Owner temp_owners[MAX_OWNER_COUNT];
-    } UI;
+} UI;
 
 // TODO(rami): Should we render a line in the full log to indicate what actions have taken place in
 // the players last action turn.
 
-// TODO(rami): Polish: Having descriptive words for enemies attacking you instead of saying "The blah
-// attacks you for 5 damage."
+// TODO(Rami): Polish: Having messages be more descriptive, saying that an enemy claws you intead of
+// saying that an enemy attacks you, saying that a skeleton crumbles on death instead of saying
+// that it dies etc.
 
-// TODO(rami): We should have the item mark maximum be on the left side of the mouse highlight, right now the
-// mark can go over it which looks stupid.
-
+internal void render_tile(SDL_Renderer *renderer, SDL_Texture *texture, v4u tile_src, v2u pos);
+internal void defer_rect(u32 x, u32 y, u32 w, u32 h, Color color, UI *ui, b32 is_fill_rect);
+internal void init_mark(Mark *mark, u32 view_end);
 internal void defer_string(char *string, v2u *pos, u32 lines_before, u32 lines_after, UI *ui, ...);
-internal void set_mark_cursor_at_start(Mark *mark);
-internal void set_mark_cursor_at_end(Mark *mark);
+internal void set_mark_at_start(Mark *mark);
+internal void set_mark_at_end(Mark *mark);
 internal void update_and_render_mark_input(SDL_Renderer *renderer,Font *font, Mark *mark, v2u pos, u32 centering_width);
 internal void deselect_mark(Mark *mark);
 internal void update_view_move(ViewMove *move);
@@ -171,7 +172,7 @@ internal void set_view_at_end(View *view);
 internal void set_view_at_start(View *view);
 internal void log_add(char *text, UI *ui, ...);
 internal void start_view_scrolling(Input *input, View *view);
-internal void set_view_and_move_at_start(View *view);
+internal void set_view_at_start_and_reset_move(View *view);
 internal void pos_newline(v2u *pos, u32 font_size, u32 count);
 internal char set_owner_src(Owner *owner, void *parent, OwnerType type);
 internal char add_new_char_to_owners(Owner *owners, void *parent, OwnerType type);

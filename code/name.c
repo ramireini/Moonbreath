@@ -62,7 +62,7 @@ get_random_lower_char(Random *random)
 internal char
 get_random_upper_char(Random *random)
 {
-    char result = make_uppercase(get_random_lower_char(random));
+    char result = get_uppercase(get_random_lower_char(random));
     return(result);
 }
 

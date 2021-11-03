@@ -27,7 +27,7 @@ printf("%s.y: %d\n\n", #name, name.y); \
 #define print_v4u(name) \
 printf("%s.x: %u\n", #name, name.x); \
 printf("%s.y: %u\n", #name, name.y); \
-       printf("%s.w: %u\n", #name, name.w); \
+printf("%s.w: %u\n", #name, name.w); \
 printf("%s.h: %u\n\n", #name, name.h); \
 
 #define print_v4s(name) \
@@ -80,97 +80,106 @@ is_v4s_zero(v4s a)
 internal b32
 is_v2u_any_set(v2u a)
 {
- b32 result = (a.x ||
-               a.y);
- 
- return(result);
+    b32 result = (a.x ||
+                  a.y);
+    
+    return(result);
 }
 
 internal b32
 is_v2u_set(v2u a)
 {
- b32 result = (a.x &&
-               a.y);
- 
- return(result);
+    b32 result = (a.x &&
+                  a.y);
+    
+    return(result);
 }
 
 internal b32
 is_v4u_set(v4u a)
 {
- b32 result = (a.x &&
-               a.y &&
-               a.w &&
-               a.h);
- 
- return(result);
+    b32 result = (a.x &&
+                  a.y &&
+                  a.w &&
+                  a.h);
+    
+    return(result);
 }
 
 internal b32
 is_v2u_zero(v2u a)
 {
- b32 result = (a.x == 0 &&
-               a.y == 0);
- 
+    b32 result = (a.x == 0 &&
+                  a.y == 0);
+    
     return(result);
 }
 
 internal b32
 is_v4u_zero(v4u a)
 {
- b32 result = (a.x == 0 &&
-               a.y == 0 &&
-               a.w == 0 &&
-               a.h == 0);
- 
+    b32 result = (a.x == 0 &&
+                  a.y == 0 &&
+                  a.w == 0 &&
+                  a.h == 0);
+    
     return(result);
 }
 
 internal u32
 get_string_length(char *string)
 {
- u32 result = 0;
- 
- while(*string++)
- {
-  ++result;
- }
+    u32 result = 0;
     
- return(result);
+    while(*string++)
+    {
+        ++result;
+    }
+    
+    return(result);
 }
 
 internal char
-sign(s32 value)
+get_sign(s32 value)
 {
     char result = (value < 0) ? '-' : '+';
     return(result);
 }
 
 internal u32
-absolute(s32 value)
+get_absolute(s32 value)
 {
     u32 result = (value < 0) ? -value : value;
     return(result);
 }
 
+internal String8
+get_signed_absolute(s32 value)
+{
+    String8 result = {0};
+    sprintf(result.s, "%c%u", get_sign(value), get_absolute(value));
+    
+    return(result);
+}
+
 internal f32
-slope(f32 x1, f32 y1, f32 x2, f32 y2)
+get_slope(f32 x1, f32 y1, f32 x2, f32 y2)
 {
     f32 result = (x1 - x2) / (y1 - y2);
     return(result);
 }
 
 internal f32
-distance(u32 x1, u32 y1, u32 x2, u32 y2)
+get_distance(u32 x1, u32 y1, u32 x2, u32 y2)
 {
     f32 result = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
     return(result);
 }
 
 internal u32
-cardinal_distance(v2u a, v2u b)
+get_cardinal_distance(v2u a, v2u b)
 {
-    u32 result = absolute(a.x - b.x) + absolute(a.y - b.y);
+    u32 result = get_absolute(a.x - b.x) + get_absolute(a.y - b.y);
     return(result);
 }
 
@@ -206,31 +215,41 @@ cardinal_and_ordinal_distance(v2u pos, v2u target)
 }
 
 internal u32
-ratio(f32 min, f32 max, f32 width)
+get_ratio(f32 min, f32 max, f32 width)
 {
+    assert(min);
+    assert(max);
+    assert(width);
+    
     u32 result = (u32)((min / max) * width);
     return(result);
 }
 
 internal u32
-area_size(v2u size)
+get_v2u_area(v2u size)
 {
+    assert(is_v2u_set(size));
+    
     u32 result = size.w * size.h;
     return(result);
 }
 
 internal u32
-rect_area(v4u rect)
+get_rect_area(v4u rect)
 {
-    v2u rect_size = {rect.w, rect.h};
-    u32 result = area_size(rect_size);
+    assert(is_v4u_set(rect));
+    
+    v2u size = {rect.w, rect.h};
+    u32 result = get_v2u_area(size);
     
     return(result);
 }
 
 internal v2u
-rect_center(v4u rect)
+get_rect_center(v4u rect)
 {
+    assert(is_v4u_set(rect));
+    
     v2u result =
     {
         rect.x + (rect.w / 2),
@@ -275,108 +294,108 @@ is_uppercase(char c)
 internal b32
 is_alpha(char c)
 {
- b32 result = (is_lowercase(c) || is_uppercase(c));
+    b32 result = (is_lowercase(c) || is_uppercase(c));
     return(result);
 }
 
 internal b32
 is_alpha_or_space(char c)
 {
- b32 result = (is_alpha(c) || c == ' ');
- return(result);
+    b32 result = (is_alpha(c) || c == ' ');
+    return(result);
 }
 
 internal char
-make_lowercase(char c)
+get_lowercase(char c)
 {
- assert(is_uppercase(c));
- 
- char result = (c + 32);
- return(result);
+    assert(is_uppercase(c));
+    
+    char result = (c + 32);
+    return(result);
 }
 
 internal char
-make_uppercase(char c)
+get_uppercase(char c)
 {
- assert(is_lowercase(c));
- 
- char result = (c - 32);
- return(result);
+    assert(is_lowercase(c));
+    
+    char result = (c - 32);
+    return(result);
 }
 
 internal b32
 are_chars_equal_no_case(char a, char b)
 {
- b32 result = false;
- 
- if(is_alpha_or_space(a) &&
-    is_alpha_or_space(b))
- {
-  if(is_uppercase(a)) a = make_lowercase(a);
-   if(is_uppercase(b)) b = make_lowercase(b);
-   
-   result = (a == b);
- }
- 
- return(result);
+    b32 result = false;
+    
+    if(is_alpha_or_space(a) &&
+       is_alpha_or_space(b))
+    {
+        if(is_uppercase(a)) a = get_lowercase(a);
+        if(is_uppercase(b)) b = get_lowercase(b);
+        
+        result = (a == b);
+    }
+    
+    return(result);
 }
 
 internal b32
 string_has_string(char *a, char *b, b32 case_sensitive)
 {
- assert(a);
- assert(b);
- 
- while(a[0])
- {
-  // Start substring search
-  if(are_chars_equal_no_case(a[0], b[0]))
-  {
-   char *sub_a = a;
-   char *sub_b = b;
-   
-   // While matching
-   while(sub_a[0] && sub_b[0] &&
-         are_chars_equal_no_case(sub_a[0], sub_b[0]))
-   {
-    ++sub_a;
-    ++sub_b;
+    assert(a);
+    assert(b);
     
-    // Has been matching and search string ended
-    if(sub_b[0] == '\0')
+    while(a[0])
     {
-     return(true);
+        // Start substring search
+        if(are_chars_equal_no_case(a[0], b[0]))
+        {
+            char *sub_a = a;
+            char *sub_b = b;
+            
+            // While matching
+            while(sub_a[0] && sub_b[0] &&
+                  are_chars_equal_no_case(sub_a[0], sub_b[0]))
+            {
+                ++sub_a;
+                ++sub_b;
+                
+                // Has been matching and search string ended
+                if(sub_b[0] == '\0')
+                {
+                    return(true);
+                }
+            }
+            
+        }
+        
+        ++a;
     }
-   }
-   
-  }
-  
-  ++a;
- }
- 
- return(false);
+    
+    return(false);
 }
 
 internal b32
 strings_match(char *a, char *b)
 {
- assert(a);
- assert(b);
- 
- b32 result = false;
- 
- while(*a && *b &&
-       *a++ == *b++)
- {
-  if(*a == '\0' &&
-     *b == '\0')
-  {
-   result = true;
-   break;
-  }
- }
- 
- return(result);
+    assert(a);
+    assert(b);
+    
+    b32 result = false;
+    
+    while(*a && *b &&
+          *a++ == *b++)
+    {
+        if(*a == '\0' &&
+           *b == '\0')
+        {
+            result = true;
+            break;
+        }
+    }
+    
+    return(result);
 }
 
 internal u32

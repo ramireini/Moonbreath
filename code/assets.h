@@ -85,24 +85,21 @@ typedef struct
 
 typedef struct
 {
-    b32 is_set;
-    
     FontType type;
     u32 bmp_advance;
- u32 size;
- u32 start_glyph;
+    u32 size;
     
     SDL_Texture *atlas;
- GlyphMetrics metrics[MAX_FONT_METRICS_COUNT];
+    GlyphMetrics metrics[MAX_FONT_METRICS_COUNT];
 } Font;
 
 typedef struct
 {
- u32 stat_and_log_window_h;
- 
+    u32 stat_and_log_window_h;
+    
     Texture tilemap;
- Texture tileset;
- 
- v4u healthbar_src[MAX_HEALTHBAR_SRC_COUNT];
+    Texture tileset;
+    
+    v4u healthbar_src[MAX_HEALTHBAR_SRC_COUNT];
     Font fonts[FontName_Count];
 } Assets;

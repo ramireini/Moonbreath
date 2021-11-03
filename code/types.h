@@ -292,6 +292,7 @@ typedef enum
     
     Key_ArrowLeft,
     Key_ArrowRight,
+    Key_CapsLock,
     
     Key_Count,
 } Key;
@@ -330,6 +331,7 @@ typedef struct
 {
     b32 repeat;
     b32 is_down;
+    b32 toggled;
     b32 has_been_up;
 } InputState;
 
@@ -457,6 +459,7 @@ typedef struct
             
             InputState Key_ArrowLeft;
             InputState Key_ArrowRight;
+            InputState Key_CapsLock;
         };
     };
 } Input;

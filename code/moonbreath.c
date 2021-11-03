@@ -273,7 +273,7 @@ update_examine_mode(ExamineMode *examine,
                     // Examine multiple
                     unset(examine->flags, ExamineFlag_Open);
                     set(*inventory_flags, InventoryFlag_MultipleExamine);
-                    set_view_and_move_at_start(&item_state->examine_window.view);
+                    set_view_at_start_and_reset_move(&item_state->examine_window.view);
                     return;
                 }
                 
@@ -738,6 +738,10 @@ update_camera(Game *game, v2u player_pos, v2u dungeon_size)
     // TODO(Rami): Game resolution should be amount of tiles horizontally and vertically
     // ultimately stored in the config.
     
+    // TODO(Rami): There's a bug where we have a black hozizontal bar at the bottom of the
+    // window except when our position gets close enough ot the bottom of the dungeon.
+    // Make sure this doesn't replicate with the new system.
+    
     GameCamera *camera = &game->camera;
     camera->rect.x = tile_mul(camera_pos.x) - (camera->rect.w / 2);
     
@@ -786,21 +790,26 @@ update_camera(Game *game, v2u player_pos, v2u dungeon_size)
 internal void
 update_input(InputState *state, b32 is_down)
 {
+    assert(state);
+    
     if(state->is_down != is_down)
     {
         state->repeat = false;
         state->is_down = is_down;
         
-        if(!state->is_down) state->has_been_up = true;
+        if(!state->is_down)
+        {
+            state->has_been_up = true;
+            state->toggled = !state->toggled; // For key states like caps lock.
+        }
     }
 }
 
 internal void
 reset_input_state(InputState *state)
 {
-    state->repeat = false;
-    state->is_down = false;
-    state->has_been_up = true;
+    assert(state);
+    zero_struct(*state);
 }
 
 internal Key
@@ -886,7 +895,7 @@ get_key_from_keycode(SDL_Keycode keycode)
 }
 
 internal void
-update_events(Game *game, Input *input)
+update_mouse_and_keyboard(Game *game, Input *input)
 {
     // Update mouse
     u32 mouse_state = SDL_GetMouseState(&input->mouse_pos.x, &input->mouse_pos.y);
@@ -1051,6 +1060,7 @@ update_events(Game *game, Input *input)
                     
                     case SDLK_LEFT: update_input(&input->Key_ArrowLeft, is_down); break;
                     case SDLK_RIGHT: update_input(&input->Key_ArrowRight, is_down); break;
+                    case SDLK_CAPSLOCK: update_input(&input->Key_CapsLock, is_down); break;
                     
 #if MOONBREATH_SLOW
                     case SDLK_F1: update_input(&input->fkeys[1], is_down); break;
@@ -1120,12 +1130,15 @@ set_render_clip_rect(SDL_Renderer *renderer, v4u *clip_rect)
 }
 
 internal char
-get_char(char c, b32 is_upper)
+get_char(char c, b32 uppercase)
 {
     assert(is_alpha(c));
-    if(is_upper) c = make_uppercase(c);
-    assert(is_alpha(c));
+    if(uppercase)
+    {
+        c = get_uppercase(c);
+    }
     
+    assert(is_alpha(c));
     return(c);
 }
 
@@ -1136,34 +1149,35 @@ get_printable_key(Input *input, Key key)
     
     String8 result = {0};
     
+    b32 uppercase = (input->Key_Shift.is_down || input->Key_CapsLock.toggled);
     switch(key)
     {
-        case Key_A: result.s[0] = get_char('a', input->Key_Shift.is_down); break;
-        case Key_B: result.s[0] = get_char('b', input->Key_Shift.is_down); break;
-        case Key_C: result.s[0] = get_char('c', input->Key_Shift.is_down); break;
-        case Key_D: result.s[0] = get_char('d', input->Key_Shift.is_down); break;
-        case Key_E: result.s[0] = get_char('e', input->Key_Shift.is_down); break;
-        case Key_F: result.s[0] = get_char('f', input->Key_Shift.is_down); break;
-        case Key_G: result.s[0] = get_char('g', input->Key_Shift.is_down); break;
-        case Key_H: result.s[0] = get_char('h', input->Key_Shift.is_down); break;
-        case Key_I: result.s[0] = get_char('i', input->Key_Shift.is_down); break;
-        case Key_J: result.s[0] = get_char('j', input->Key_Shift.is_down); break;
-        case Key_K: result.s[0] = get_char('k', input->Key_Shift.is_down); break;
-        case Key_L: result.s[0] = get_char('l', input->Key_Shift.is_down); break;
-        case Key_M: result.s[0] = get_char('m', input->Key_Shift.is_down); break;
-        case Key_N: result.s[0] = get_char('n', input->Key_Shift.is_down); break;
-        case Key_O: result.s[0] = get_char('o', input->Key_Shift.is_down); break;
-        case Key_P: result.s[0] = get_char('p', input->Key_Shift.is_down); break;
-        case Key_Q: result.s[0] = get_char('q', input->Key_Shift.is_down); break;
-        case Key_R: result.s[0] = get_char('r', input->Key_Shift.is_down); break;
-        case Key_S: result.s[0] = get_char('s', input->Key_Shift.is_down); break;
-        case Key_T: result.s[0] = get_char('t', input->Key_Shift.is_down); break;
-        case Key_U: result.s[0] = get_char('u', input->Key_Shift.is_down); break;
-        case Key_V: result.s[0] = get_char('v', input->Key_Shift.is_down); break;
-        case Key_W: result.s[0] = get_char('w', input->Key_Shift.is_down); break;
-        case Key_X: result.s[0] = get_char('x', input->Key_Shift.is_down); break;
-        case Key_Y: result.s[0] = get_char('y', input->Key_Shift.is_down); break;
-        case Key_Z: result.s[0] = get_char('z', input->Key_Shift.is_down); break;
+        case Key_A: result.s[0] = get_char('a', uppercase); break;
+        case Key_B: result.s[0] = get_char('b', uppercase); break;
+        case Key_C: result.s[0] = get_char('c', uppercase); break;
+        case Key_D: result.s[0] = get_char('d', uppercase); break;
+        case Key_E: result.s[0] = get_char('e', uppercase); break;
+        case Key_F: result.s[0] = get_char('f', uppercase); break;
+        case Key_G: result.s[0] = get_char('g', uppercase); break;
+        case Key_H: result.s[0] = get_char('h', uppercase); break;
+        case Key_I: result.s[0] = get_char('i', uppercase); break;
+        case Key_J: result.s[0] = get_char('j', uppercase); break;
+        case Key_K: result.s[0] = get_char('k', uppercase); break;
+        case Key_L: result.s[0] = get_char('l', uppercase); break;
+        case Key_M: result.s[0] = get_char('m', uppercase); break;
+        case Key_N: result.s[0] = get_char('n', uppercase); break;
+        case Key_O: result.s[0] = get_char('o', uppercase); break;
+        case Key_P: result.s[0] = get_char('p', uppercase); break;
+        case Key_Q: result.s[0] = get_char('q', uppercase); break;
+        case Key_R: result.s[0] = get_char('r', uppercase); break;
+        case Key_S: result.s[0] = get_char('s', uppercase); break;
+        case Key_T: result.s[0] = get_char('t', uppercase); break;
+        case Key_U: result.s[0] = get_char('u', uppercase); break;
+        case Key_V: result.s[0] = get_char('v', uppercase); break;
+        case Key_W: result.s[0] = get_char('w', uppercase); break;
+        case Key_X: result.s[0] = get_char('x', uppercase); break;
+        case Key_Y: result.s[0] = get_char('y', uppercase); break;
+        case Key_Z: result.s[0] = get_char('z', uppercase); break;
         
         case Key_0:
         {
@@ -1649,7 +1663,7 @@ update_and_render_game(Game *game,
                     }
                 }
                 
-                EditorGroup *item_group = add_editor_group(editor, "Items", editor_x, editor_y + 16, 0, true);
+                EditorGroup *item_group = add_editor_group(editor, "Items", editor_x, editor_y + 13, 0, true);
                 {
                     for(ItemID id = ItemID_WeaponStart + 1; id < ItemID_WeaponEnd; ++id)
                     {
@@ -1697,6 +1711,17 @@ update_and_render_game(Game *game,
 #if 0
         printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
         printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
+#endif
+        
+#if 0
+        for(u32 index = 0; index < MAX_FONT_METRICS_COUNT; ++index)
+        {
+            Font *font = &assets->fonts[FontName_DosVga];
+            char c = index + FIRST_FONT_GLYPH;
+            
+            printf("%c advance: %u\n", c, font->metrics[index].advance);
+        }
+        printf("\n\n");
 #endif
         
 #if 0
@@ -1886,8 +1911,7 @@ int main(int argc, char *args[])
         ui->default_view_step_multiplier = 0.14f;
         
         ItemState *item_state = push_memory_struct(&game->memory, ItemState);
-        item_state->temp_mark.cursor_blink_duration = 800;
-        item_state->temp_mark.view.end = 24;
+        init_mark(&item_state->temp_mark, 24);
         init_view_scrolling_data(&item_state->pickup_window.view, 32, ui->default_view_step_multiplier);
         init_view_scrolling_data(&item_state->examine_window.view, 32, ui->default_view_step_multiplier);
         
@@ -2043,15 +2067,15 @@ int main(int argc, char *args[])
                     {
                         if(!TTF_Init())
                         {
-                            if(initialize_assets(game, assets))
+                            if(init_assets(game, assets))
                             {
                                 ui->font = &assets->fonts[FontName_DosVga];
                                 ui->window_scroll_start_y = game->window_size.h - assets->stat_and_log_window_h;
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 349560064343;
-                                printf("Seed: %lu\n\n", seed);
+                                u64 seed = 9560064343;
+                                printf("Seed: %lu\n", seed);
                                 game->random = set_random_seed(seed);
                                 
                                 game->mode = GameMode_Playing;
@@ -2174,7 +2198,7 @@ int main(int argc, char *args[])
                                         new_input->fkeys[index] = old_input->fkeys[index];
                                     }
                                     
-                                    update_events(game, new_input);
+                                    update_mouse_and_keyboard(game, new_input);
                                     
                                     f32 end_dt = (f32)SDL_GetPerformanceCounter();
                                     new_input->frame_dt = ((end_dt - last_dt) / (f32)performance_frequency);

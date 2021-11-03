@@ -730,13 +730,13 @@ update_and_render_debug_state(Game *game,
                             
                             start_debug_group(debug, new_tree, "Flags", false);
                             {
-                                add_debug_flag(new_tree, "Is Identified", item->flags, ItemFlag_IsIdentified);
-                                add_debug_flag(new_tree, "Is Equipped", item->flags, ItemFlag_IsEquipped);
-                                add_debug_flag(new_tree, "Is Cursed", item->flags, ItemFlag_IsCursed);
-                                add_debug_flag(new_tree, "Is Marked", item->flags, ItemFlag_IsMarked);
-                                add_debug_flag(new_tree, "Is Selected", item->flags, ItemFlag_IsSelected);
-                                add_debug_flag(new_tree, "In Inventory", item->flags, ItemFlag_InInventory);
-                                add_debug_flag(new_tree, "Has Been Seen", item->flags, ItemFlag_HasBeenSeen);
+                                add_debug_flag(new_tree, "Identified", item->flags, ItemFlag_Identified);
+                                add_debug_flag(new_tree, "Equipped", item->flags, ItemFlag_Equipped);
+                                add_debug_flag(new_tree, "Cursed", item->flags, ItemFlag_Cursed);
+                                add_debug_flag(new_tree, "Marked", item->flags, ItemFlag_Marked);
+                                add_debug_flag(new_tree, "Selected", item->flags, ItemFlag_Selected);
+                                add_debug_flag(new_tree, "Inventory", item->flags, ItemFlag_Inventory);
+                                add_debug_flag(new_tree, "HasBeenSeen", item->flags, ItemFlag_HasBeenSeen);
                             }
                             end_debug_group(new_tree);
                             add_debug_newline(debug, new_tree);
@@ -744,7 +744,7 @@ update_and_render_debug_state(Game *game,
                             add_debug_variable(new_tree, "ID", item->id, DebugVarType_U32);
                             add_debug_enum(new_tree, "Type", item->type, get_item_type_string);
                             
-                            if(is_set(item->flags, ItemFlag_CanConsume))
+                            if(is_set(item->flags, ItemFlag_Consumable))
                             {
                                 add_debug_variable(new_tree, "Stack Count", item->c.stack_count, DebugVarType_U32);
                             }
@@ -785,7 +785,7 @@ update_and_render_debug_state(Game *game,
                                 add_debug_variable(new_tree, "Defence", item->a.defence, DebugVarType_U32);
                                 add_debug_variable(new_tree, "Weight", item->a.weight, DebugVarType_U32);
                             }
-                            else if(is_set(item->flags, ItemFlag_CanConsume))
+                            else if(is_set(item->flags, ItemFlag_Consumable))
                             {
                                 add_debug_status_effect(&game->debug, new_tree, &item->c.status);
                             }

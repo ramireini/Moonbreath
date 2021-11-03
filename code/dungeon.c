@@ -28,7 +28,7 @@ process_new_seen_dungeon_traps(DungeonTrap *array, DungeonTiles tiles, UI *ui, b
         {
             if(log_names)
             {
-                log_add_comes_into_your_view_string(trap->name.s, ui);
+                log_add_new_seen_target(trap->name.s, ui);
             }
             
             set(trap->flags, DungeonTrapFlag_HasBeenSeen);
@@ -305,7 +305,10 @@ get_random_dungeon_traversable_unoccupied_rect_pos(Random *random, Dungeon *dung
 }
 
 internal v2u
-get_random_dungeon_feature_pos(Random *random, Dungeon *dungeon, ItemState *item_state, b32 accept_water)
+get_random_dungeon_feature_pos(Random *random,
+                               Dungeon *dungeon,
+                               ItemState *item_state,
+                               b32 water_ok)
 {
     assert(random);
     assert(dungeon);
@@ -324,7 +327,7 @@ get_random_dungeon_feature_pos(Random *random, Dungeon *dungeon, ItemState *item
            !get_dungeon_pos_trap(&dungeon->traps, result) &&
            !is_dungeon_pos_passage(dungeon->tiles, result))
         {
-            if(!accept_water && is_dungeon_pos_water(dungeon->tiles, result)) continue;
+            if(!water_ok && is_dungeon_pos_water(dungeon->tiles, result)) continue;
             break;
         }
     }
@@ -409,7 +412,7 @@ is_dungeon_automaton_room_valid(DungeonSpec *spec, DungeonTiles automaton_tiles,
         }
     }
     
-    f32 floor_area = (f32)floor_count / (f32)rect_area(room_rect);
+    f32 floor_area = (f32)floor_count / (f32)get_rect_area(room_rect);
     if(floor_area >= spec->automaton_room_min_valid_area)
     {
         result = true;
@@ -2074,7 +2077,7 @@ create_dungeon(Game *game,
     
     spec->size.w = 64;
     spec->size.h = 64;
-    spec->area = area_size(spec->size);
+    spec->area = get_v2u_area(spec->size);
     
     // Flood fill
     spec->flood_fill_area_min = 0.9f;
@@ -2232,7 +2235,7 @@ create_dungeon(Game *game,
         }
     }
     
-#if 1
+#if 0
     // Test room
     dungeon->can_pathfind = true;
     
@@ -2412,7 +2415,7 @@ create_dungeon(Game *game,
             rooms->array[rooms->count++] = created_room;
             assert(rooms->count < MAX_DUNGEON_ROOM_COUNT);
             
-            total_room_size += rect_area(created_room.rect);
+            total_room_size += get_rect_area(created_room.rect);
         }
     }
     
@@ -2448,7 +2451,7 @@ create_dungeon(Game *game,
         u32 closest_distance = U32_MAX;
         
         DungeonRoom *start_room = &rooms->array[start_index];
-        v2u start_room_center = rect_center(start_room->rect);
+        v2u start_room_center = get_rect_center(start_room->rect);
         
         DungeonRoom *end_room = 0;
         
@@ -2458,9 +2461,9 @@ create_dungeon(Game *game,
             if((start_index != end_index) && !is_connected[end_index])
             {
                 DungeonRoom *loop_end_room = &rooms->array[end_index];
-                v2u end_room_center = rect_center(loop_end_room->rect);
+                v2u end_room_center = get_rect_center(loop_end_room->rect);
                 
-                u32 new_distance = cardinal_distance(start_room_center, end_room_center);
+                u32 new_distance = get_cardinal_distance(start_room_center, end_room_center);
                 if(new_distance < closest_distance)
                 {
                     closest_distance = new_distance;
@@ -2793,8 +2796,8 @@ create_dungeon(Game *game,
     
 #if 1
     // Place items
-    u32 percent_progress = ((f32)dungeon_level / (f32)MAX_DUNGEON_LEVEL) * 100;
-    u32 chance_per_level = 100 / MAX_DUNGEON_LEVEL;
+    u32 percent_progress = ((f32)dungeon_level / (f32)MAX_DUNGEON_LEVEL) * 100.0f;
+    u32 chance_per_level = 100.0f / (f32)MAX_DUNGEON_LEVEL;
     u32 level_chance = dungeon_level * chance_per_level;
     
     // TODO(rami): The prints at the end of this function and for item rarity info are pretty spammy.
@@ -2818,98 +2821,105 @@ create_dungeon(Game *game,
     
     for(u32 count = 0; count < spec->item_count; ++count)
     {
-        b32 should_add_item = true;
-        v2u pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
-        DungeonRoom *room = get_dungeon_room_from_pos(&dungeon->rooms, pos);
-        if(room)
+        b32 can_place_item = false;
+        v2u item_pos = {0};
+        
+        while(!can_place_item)
         {
-            should_add_item = add_dungeon_room_feature(room, spec->room_max_items, DungeonRoomFeatureType_Item);
+            item_pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
+            
+            if(!is_pos_in_entity_view_rect(player, dungeon->size, item_pos))
+            {
+                can_place_item = true;
+                
+                DungeonRoom *room = get_dungeon_room_from_pos(&dungeon->rooms, item_pos);
+                if(room)
+                {
+                    can_place_item = add_dungeon_room_feature(room, spec->room_max_items, DungeonRoomFeatureType_Item);
+                }
+            }
         }
         
-        if(should_add_item)
-        {
-            ItemType item_type = get_random_with_chances(random, spec->item_type_chances, 0, 0, RandomChanceType_ItemType);
-            
+        assert(can_place_item);
+        ItemType item_type = get_random_with_chances(random, spec->item_type_chances, 0, 0, RandomChanceType_ItemType);
+        
 #if 0
-            // Test item type
-            //item_type = ItemType_Weapon;
-            item_type = ItemType_Armor;
-            is_item_cursed = false;
+        item_type = ItemType_Weapon;
+        is_item_cursed = false;
 #endif
-            
-            Item *added_item = 0;
-            switch(item_type)
+        
+        Item *added_item = 0;
+        switch(item_type)
+        {
+            case ItemType_Weapon:
             {
-                case ItemType_Weapon:
-                {
-                    // Set item rarity
-                    ItemRarity item_rarity = ItemRarity_None;
-                    
-                    if(is_type_info_valid(random, item_rarity_info[ItemRarity_Magical]))
-                    {
-                        item_rarity = ItemRarity_Magical;
-                        ++item_rarity_counts[ItemRarity_Magical];
-                    }
-                    else if(is_type_info_valid(random, item_rarity_info[ItemRarity_Mythical]))
-                    {
-                        item_rarity = ItemRarity_Mythical;
-                        ++item_rarity_counts[ItemRarity_Mythical];
-                    }
-                    else
-                    {
-                        item_rarity = ItemRarity_Common;
-                        ++item_rarity_counts[ItemRarity_Common];
-                    }
-                    
-                    ItemID weapon_id = get_random_weapon(random);
-                    added_item = add_weapon_item(random, item_state, dungeon_level, weapon_id, item_rarity, pos.x, pos.y, false);
-                } break;
+                // Set item rarity
+                ItemRarity item_rarity = ItemRarity_None;
                 
-                case ItemType_Armor:
+                if(is_type_info_valid(random, item_rarity_info[ItemRarity_Magical]))
                 {
-                    // Set armor type
-                    ItemID armor_id = get_random_leather_armor(random);
-                    
-                    if(is_type_info_valid(random, armor_type_info[ArmorItemType_Steel]))
-                    {
-                        armor_id = get_random_steel_armor(random);
-                    }
-                    
-                    assert(is_value_in_range(armor_id, ItemID_ArmorStart, ItemID_ArmorEnd));
-                    added_item = add_armor_item(random, item_state, dungeon_level, armor_id, pos.x, pos.y, false);
-                } break;
-                
-                case ItemType_Potion:
+                    item_rarity = ItemRarity_Magical;
+                    ++item_rarity_counts[ItemRarity_Magical];
+                }
+                else if(is_type_info_valid(random, item_rarity_info[ItemRarity_Mythical]))
                 {
-                    ItemID potion_id = get_random_with_chances(random, spec->potion_chances, 0, 0, RandomChanceType_Potion);
-                    assert(is_value_in_range(potion_id, ItemID_PotionStart, ItemID_PotionEnd));
-                    
-                    added_item = add_consumable_item(random, item_state, dungeon_level, potion_id, pos.x, pos.y, 1);
-                } break;
-                
-                case ItemType_Scroll:
+                    item_rarity = ItemRarity_Mythical;
+                    ++item_rarity_counts[ItemRarity_Mythical];
+                }
+                else
                 {
-                    ItemID scroll_id = get_random_with_chances(random, spec->scroll_chances, 0, 0, RandomChanceType_Scroll);
-                    assert(is_value_in_range(scroll_id, ItemID_ScrollStart, ItemID_ScrollEnd));
-                    
-                    added_item = add_consumable_item(random, item_state, dungeon_level, scroll_id, pos.x, pos.y, 1);
-                } break;
+                    item_rarity = ItemRarity_Common;
+                    ++item_rarity_counts[ItemRarity_Common];
+                }
                 
-                case ItemType_Ration:
-                {
-                    added_item = add_consumable_item(random, item_state, dungeon_level, ItemID_Ration, pos.x, pos.y, 1);
-                } break;
-                
-                invalid_default_case;
-            }
+                ItemID weapon_id = get_random_weapon(random);
+                added_item = add_weapon_item(random, item_state, dungeon_level, weapon_id, item_rarity, item_pos.x, item_pos.y, false);
+            } break;
             
-            // Set cursed
-            assert(added_item);
-            if(is_set(added_item->flags, ItemFlag_CanEquip) &&
-               hit_random_chance(random, spec->item_curse_chance))
+            case ItemType_Armor:
             {
-                set(added_item->flags, ItemFlag_IsCursed);
-            }
+                // Set armor type
+                ItemID armor_id = get_random_leather_armor(random);
+                
+                if(is_type_info_valid(random, armor_type_info[ArmorItemType_Steel]))
+                {
+                    armor_id = get_random_steel_armor(random);
+                }
+                
+                assert(is_value_in_range(armor_id, ItemID_ArmorStart, ItemID_ArmorEnd));
+                added_item = add_armor_item(random, item_state, dungeon_level, armor_id, item_pos.x, item_pos.y, false);
+            } break;
+            
+            case ItemType_Potion:
+            {
+                ItemID potion_id = get_random_with_chances(random, spec->potion_chances, 0, 0, RandomChanceType_Potion);
+                assert(is_value_in_range(potion_id, ItemID_PotionStart, ItemID_PotionEnd));
+                
+                added_item = add_consumable_item(random, item_state, dungeon_level, potion_id, item_pos.x, item_pos.y, 1);
+            } break;
+            
+            case ItemType_Scroll:
+            {
+                ItemID scroll_id = get_random_with_chances(random, spec->scroll_chances, 0, 0, RandomChanceType_Scroll);
+                assert(is_value_in_range(scroll_id, ItemID_ScrollStart, ItemID_ScrollEnd));
+                
+                added_item = add_consumable_item(random, item_state, dungeon_level, scroll_id, item_pos.x, item_pos.y, 1);
+            } break;
+            
+            case ItemType_Ration:
+            {
+                added_item = add_consumable_item(random, item_state, dungeon_level, ItemID_Ration, item_pos.x, item_pos.y, 1);
+            } break;
+            
+            invalid_default_case;
+        }
+        
+        // Set cursed
+        assert(added_item);
+        if(is_set(added_item->flags, ItemFlag_CanEquip) &&
+           hit_random_chance(random, spec->item_curse_chance))
+        {
+            set(added_item->flags, ItemFlag_Cursed);
         }
     }
 #endif
@@ -2918,28 +2928,28 @@ create_dungeon(Game *game,
     // Place enemies
     for(u32 count = 0; count < spec->enemy_count; ++count)
     {
-        v2u enemy_pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
-        EntityID enemy_id = get_random_enemy_id_for_dungeon_level(random, dungeon->level);
+        b32 can_place_enemy = false;
+        v2u enemy_pos = {0};
         
-        // We don't want enemies inside the player view range.
-        v4u player_view_rect = get_dungeon_dimension_rect(dungeon->size, player->pos, player->stats.fov);
-        if(!is_dungeon_pos_inside_rect(enemy_pos, player_view_rect))
+        while(!can_place_enemy)
         {
-            b32 add_enemy = true;
+            enemy_pos = get_random_dungeon_feature_pos(random, dungeon, item_state, true);
             
-            // If the position is inside a room, see if the room can fit another enemy.
-            DungeonRoom *room = get_dungeon_room_from_pos(&dungeon->rooms, enemy_pos);
-            if(room)
+            if(!is_pos_in_entity_view_rect(player, dungeon->size, enemy_pos))
             {
-                add_enemy = add_dungeon_room_feature(room, spec->room_max_enemies,
-                                                     DungeonRoomFeatureType_Enemy);
-            }
-            
-            if(add_enemy)
-            {
-                add_entity(entity_state, enemy_id, enemy_pos.x, enemy_pos.y, dungeon);
+                can_place_enemy = true;
+                
+                DungeonRoom *room = get_dungeon_room_from_pos(&dungeon->rooms, enemy_pos);
+                if(room)
+                {
+                    can_place_enemy = add_dungeon_room_feature(room, spec->room_max_enemies, DungeonRoomFeatureType_Enemy);
+                }
             }
         }
+        
+        assert(can_place_enemy);
+        EntityID enemy_id = get_random_enemy_id_for_dungeon_level(random, dungeon->level);
+        add_entity(entity_state, enemy_id, enemy_pos.x, enemy_pos.y, dungeon);
     }
 #endif
     

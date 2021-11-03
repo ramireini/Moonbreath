@@ -8,6 +8,50 @@ add_editor_newline(EditorGroup *group, u32 count)
     group->pos.y += count;
 }
 
+internal void
+zero_editor_target(EditorTarget *target)
+{
+    assert(target);
+    zero_struct(*target);
+}
+
+internal void
+zero_editor_active_source_info(ActiveEditorSourceInfo *info)
+{
+    assert(info);
+    zero_struct(*info);
+}
+
+internal void
+remove_editor_actives(EditorMode *editor)
+{
+    assert(editor);
+    
+    deselect_editor_mark(editor->groups);
+    zero_editor_target(&editor->active_target);
+    zero_editor_active_source_info(&editor->active_source_info);
+}
+
+internal EditorSource *
+get_editor_source(EditorMode *editor)
+{
+    assert(editor);
+    
+    EditorSource *result = 0;
+    
+    ActiveEditorSourceInfo info = editor->active_source_info;
+    if(info.group_id && info.source_id)
+    {
+        u32 group_index = info.group_id - 1;
+        EditorGroup *group = &editor->groups[group_index];
+        
+        u32 source_index = info.source_id - 1;
+        result = &group->sources[source_index];
+    }
+    
+    return(result);
+}
+
 #define add_editor_source_tile(group, source_type, id) add_editor_source(group, source_type, id, 0, 0, 0)
 #define add_editor_source_trap(group, id) add_editor_source(group, EditorSourceType_Trap, id, 0, 0, 0)
 #define add_editor_source_item(group, item_state, id, rarity) add_editor_source(group, EditorSourceType_Item, id, item_state, rarity, get_item_id_string(id, true))
@@ -80,50 +124,6 @@ add_editor_source(EditorGroup *group, EditorSourceType type, u32 subtype, ItemSt
     assert(0);
 }
 
-internal void
-zero_editor_target(EditorTarget *target)
-{
-    assert(target);
-    zero_struct(*target);
-}
-
-internal void
-zero_editor_active_source_info(ActiveEditorSourceInfo *info)
-{
-    assert(info);
-    zero_struct(*info);
-}
-
-internal void
-remove_editor_actives(EditorMode *editor)
-{
-    assert(editor);
-    
-    deselect_editor_mark(editor->groups);
-    zero_editor_target(&editor->active_target);
-    zero_editor_active_source_info(&editor->active_source_info);
-}
-
-internal EditorSource *
-get_editor_source(EditorMode *editor)
-{
-    assert(editor);
-    
-    EditorSource *result = 0;
-    
-    ActiveEditorSourceInfo info = editor->active_source_info;
-    if(info.group_id && info.source_id)
-    {
-        u32 group_index = info.group_id - 1;
-        EditorGroup *group = &editor->groups[group_index];
-        
-        u32 source_index = info.source_id - 1;
-        result = &group->sources[source_index];
-    }
-    
-    return(result);
-}
-
 internal EditorGroup *
 add_editor_group(EditorMode *editor, char *name, u32 x, u32 y, u32 sources_per_row, b32 is_searchable)
 {
@@ -143,10 +143,8 @@ add_editor_group(EditorMode *editor, char *name, u32 x, u32 y, u32 sources_per_r
             if(group->is_searchable)
             {
                 Mark *mark = &group->mark;
-                mark->is_active = false;
-                mark->cursor_blink_duration = 800;
-                mark->view.end = 24;
-                set_mark_cursor_at_start(&group->mark);
+                init_mark(mark, 24);
+                set_mark_at_start(&group->mark);
             }
             
             return(group);
@@ -504,23 +502,15 @@ update_editor_mark(Input *input, EditorMode *editor, v2u mouse_pos)
         {
             Mark *mark = &group->mark;
             
-            if(mark->is_active)
-            {
-                if(!is_pos_inside_rect(mark->input_rect, mouse_pos))
-                {
-                    deselect_mark(mark);
-                    break;
-                }
-            }
-            else if(is_pos_inside_rect(mark->input_rect, mouse_pos))
+            if(is_pos_inside_rect(mark->input_rect, mouse_pos))
             {
                 if(is_mark_array_valid(mark->array))
                 {
-                    set_mark_cursor_at_end(mark);
+                    set_mark_at_end(mark);
                 }
                 else
                 {
-                    set_mark_cursor_at_start(mark);
+                    set_mark_at_start(mark);
                 }
                 
                 zero_editor_target(&editor->active_target);
@@ -531,7 +521,10 @@ update_editor_mark(Input *input, EditorMode *editor, v2u mouse_pos)
                 
                 mark->is_active = true;
                 result = true;
-                break;
+            }
+            else if(mark->is_active)
+            {
+                deselect_mark(mark);
             }
         }
     }
@@ -620,13 +613,16 @@ render_editor_mode(SDL_Renderer *renderer,
                 if(group->is_searchable)
                 {
                     Mark *mark = &group->mark;
+                    Font *font = editor->font;
                     
+                    v2u padding = {font->size, 8};
                     v2u mark_input_pos =
                     {
-                        name_pos.x + get_text_width(group->name, editor->font, false) + editor->font->size,
-                        name_pos.y - 8
+                        name_pos.x + get_text_width(group->name, editor->font, false) + padding.x,
+                        name_pos.y - padding.y
                     };
-                    update_and_render_mark_input(renderer, editor->font, mark, mark_input_pos, 0);
+                    
+                    update_and_render_mark_input(renderer, font, mark, mark_input_pos, 0);
                 }
                 
                 // Render sources
