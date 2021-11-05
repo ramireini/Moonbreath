@@ -196,7 +196,7 @@ typedef enum
     GameKey_DownLeft,
     GameKey_DownRight,
     
-    GameKey_OpenInventory,
+    GameKey_Inventory,
     GameKey_Pickup,
     GameKey_UsePassage,
     GameKey_AutoExplore,
@@ -372,7 +372,7 @@ typedef struct
             InputState GameKey_DownLeft;
             InputState GameKey_DownRight;
             
-            InputState GameKey_OpenInventory;
+            InputState GameKey_Inventory;
             InputState GameKey_Pickup;
             InputState GameKey_UsePassage;
             InputState GameKey_AutoExplore;

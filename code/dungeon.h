@@ -475,7 +475,7 @@ struct Dungeon
 // TODO(rami): Generic: Gold, treasure chests (mimic), swamps (traversable but slower than water?)
 // TODO(rami): Plant/other entities that are placed near water? Some could be generated as damaged already.
 // TODO(rami): Lava tiles, the ability to jump into the lava and die, if you really want to :)
-// TODO(Rami): ARt for weapons and armor.
+// TODO(Rami): Art for weapons and armor.
 typedef struct
 {
     u32 current_level;

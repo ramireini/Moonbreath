@@ -2235,7 +2235,7 @@ create_dungeon(Game *game,
         }
     }
     
-#if 0
+#if 1
     // Test room
     dungeon->can_pathfind = true;
     
@@ -2796,7 +2796,7 @@ create_dungeon(Game *game,
     
 #if 1
     // Place items
-    u32 percent_progress = ((f32)dungeon_level / (f32)MAX_DUNGEON_LEVEL) * 100.0f;
+    u32 dungeon_progress = ((f32)dungeon_level / (f32)MAX_DUNGEON_LEVEL) * 100.0f;
     u32 chance_per_level = 100.0f / (f32)MAX_DUNGEON_LEVEL;
     u32 level_chance = dungeon_level * chance_per_level;
     
@@ -2807,16 +2807,16 @@ create_dungeon(Game *game,
     ItemRarity item_rarity_counts[ItemRarity_Count] = {0};
     ItemTypeInfo item_rarity_info[ItemRarity_Count] = {0};
     
-    item_rarity_info[ItemRarity_Magical].valid = percent_progress >= 30;
+    item_rarity_info[ItemRarity_Magical].valid = dungeon_progress >= 30;
     item_rarity_info[ItemRarity_Magical].chance = level_chance * 0.5f;
     assert(item_rarity_info[ItemRarity_Magical].chance);
     
-    item_rarity_info[ItemRarity_Mythical].valid = percent_progress >= 60;
+    item_rarity_info[ItemRarity_Mythical].valid = dungeon_progress >= 60;
     item_rarity_info[ItemRarity_Mythical].chance = level_chance * 0.2f;
     assert(item_rarity_info[ItemRarity_Mythical].chance);
     
     ItemTypeInfo armor_type_info[ArmorItemType_Count] = {0};
-    armor_type_info[ArmorItemType_Steel].valid = percent_progress >= 40;
+    armor_type_info[ArmorItemType_Steel].valid = dungeon_progress >= 40;
     armor_type_info[ArmorItemType_Steel].chance = level_chance * 0.5f;
     
     for(u32 count = 0; count < spec->item_count; ++count)
@@ -2971,7 +2971,7 @@ create_dungeon(Game *game,
     
     for(ItemRarity item_rarity = ItemRarity_Common + 1; item_rarity < ItemRarity_Count; ++item_rarity)
     {
-        printf("%s Rarity: Valid: %s, Chance: %u\n", get_item_rarity_string(item_rarity), item_rarity_info[item_rarity].valid ? "True" : "False", item_rarity_info[item_rarity].chance);
+        printf("%s Rarity: Valid: %s, Chance: %u\n", get_item_rarity_string(item_rarity), get_bool_string(item_rarity_info[item_rarity].valid), item_rarity_info[item_rarity].chance);
     }
     printf("\n");
     

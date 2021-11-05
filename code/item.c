@@ -608,7 +608,7 @@ adjust_item_letter(Input *input,
     assert(is_dungeon_level_valid(dungeon_level));
     assert(ui);
     
-    char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet);
+    char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet, false);
     if(pressed)
     {
         if(pressed != item->inventory_letter)
@@ -1141,6 +1141,8 @@ drop_item_from_inventory(Game *game,
 internal void
 force_render_mark_cursor(Mark *mark)
 {
+    assert(mark);
+    
     mark->render_cursor = true;
     mark->cursor_blink_start = 0;
 }

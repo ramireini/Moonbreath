@@ -161,7 +161,7 @@ log_add_new_seen_target(char *string, UI *ui)
 }
 
 internal u32
-get_percent_value_from(u32 percent, u32 total)
+get_percent_value_from(f32 percent, u32 total)
 {
     assert(percent);
     assert(total);
@@ -218,13 +218,24 @@ internal void
 remove_entity_ghost(EntityGhost *ghost)
 {
     assert(ghost);
+    
+    // Unset the ghost pointer of the parent entity.
+    assert(is_enemy_entity_valid(ghost->parent));
+    ghost->parent->e.ghost = 0;
+    
     zero_struct(*ghost);
 }
 
 internal EntityGhost *
-add_entity_ghost(EntityGhost *ghosts, v4u tile_src, v2u pos, u32 dungeon_level, b32 flipped)
+add_entity_ghost(EntityGhost *ghosts,
+                 Entity *parent,
+                 v4u tile_src,
+                 v2u pos,
+                 u32 dungeon_level,
+                 b32 flipped)
 {
     assert(ghosts);
+    assert(is_enemy_entity_valid(parent));
     assert(is_v4u_set(tile_src));
     assert(is_v2u_set(pos));
     assert(is_dungeon_level_valid(dungeon_level));
@@ -248,6 +259,7 @@ add_entity_ghost(EntityGhost *ghosts, v4u tile_src, v2u pos, u32 dungeon_level, 
             result->pos = pos;
             result->tile_src = tile_src;
             
+            result->parent = parent;
             return(result);
         }
     }
@@ -453,7 +465,7 @@ get_item_name_interact_string(Random *random, String32 name)
         "feel",
         "seem",
     };
-    u32 first_group_index = get_random_index(random, array_count(first_group));
+    u32 first_group_index = get_random_index(random, get_array_count(first_group));
     
     // Add 's' if name is singular
     u32 name_length = get_string_length(name.s);
@@ -471,7 +483,7 @@ get_item_name_interact_string(Random *random, String32 name)
         "stronger",
         "improved",
     };
-    u32 second_group_index = get_random_index(random, array_count(second_group));
+    u32 second_group_index = get_random_index(random, get_array_count(second_group));
     
     sprintf(result.s, "%s %s",
             first_group[first_group_index].s,
@@ -3711,7 +3723,7 @@ attack_entity(Random *random,
 }
 
 internal b32
-was_pressed_core(InputState *state)
+was_pressed_core(InputState *state, b32 is_repeat_valid)
 {
     assert(state);
     
@@ -3719,7 +3731,8 @@ was_pressed_core(InputState *state)
     
     if(state->is_down)
     {
-        if(state->has_been_up || state->repeat)
+        if(state->has_been_up ||
+           (is_repeat_valid && state->repeat))
         {
             state->has_been_up = false;
             result = true;
@@ -3735,10 +3748,14 @@ was_pressed(InputState *state)
     assert(state);
     
 #if MOONBREATH_SLOW
-    if(debug_toggles[DebugToggleType_SkipHasBeenUp] && state->is_down) return(true);
+    if(debug_toggles[DebugToggleType_SkipHasBeenUp] &&
+       state->is_down)
+    {
+        return(true);
+    }
 #endif
     
-    b32 result = was_pressed_core(state);
+    b32 result = was_pressed_core(state, true);
     return(result);
 }
 
@@ -3857,7 +3874,7 @@ update_enemy_entities(Game *game,
         {
             
 #if MOONBREATH_SLOW
-            //return;
+            return;
             if(enemy->id == EntityID_Dummy) continue;
             //if(enemy->id == EntityID_SkeletonWarrior) continue;
 #endif
@@ -4238,7 +4255,7 @@ update_player_input(Game *game,
             unset_asking_player_and_ready_for_keypress(&inventory->flags);
         }
         else if(inventory->interact_type &&
-                get_pressed_keyboard_char(input, KeyboardCharType_Alphabet))
+                get_pressed_keyboard_char(input, KeyboardCharType_Alphabet, false))
         {
             // Repeat the item cancel question if we're not getting the inputs we expect.
             ask_for_item_cancel(game->keybinds, input, inventory, ui);
@@ -4248,7 +4265,7 @@ update_player_input(Game *game,
     {
         
 #if MOONBREATH_SLOW
-        if(was_pressed_core(&input->fkeys[1]) &&
+        if(was_pressed_core(&input->fkeys[1], false) &&
            windows_are_closed(examine, inventory->flags, ui->flags) &&
            !editor->is_open)
         {
@@ -4551,9 +4568,21 @@ update_player_input(Game *game,
             else if(was_pressed(&input->Button_Right))
             {
                 
+#if 0
+                DungeonTile *tile = get_dungeon_pos_tile(dungeon->tiles, input->mouse_tile_pos);
+                tile->id = DungeonTileID_StoneDoorOpen;
+                
+                printf("tile->is_seen: %u\n", tile->is_seen);
+                printf("tile->has_been_seen: %u\n", tile->has_been_seen);
+                printf("tile->entity: %p\n", tile->entity);
+                printf("tile->id: %u\n", tile->id);
+                printf("tile->seen: %u\n", tile->seen_id);
+                printf("tile->remains_id: %u\n\n", tile->remains_id);
+#endif
+                
             }
             else if(!is_set(inventory->flags, InventoryFlag_Open) &&
-                    was_pressed_and_windows_are_closed(&input->GameKey_OpenInventory, examine, inventory->flags, ui->flags))
+                    was_pressed_and_windows_are_closed(&input->GameKey_Inventory, examine, inventory->flags, ui->flags))
             {
                 set(inventory->flags, InventoryFlag_Open);
                 set_view_at_start_and_reset_move(&inventory->window.view);
@@ -4756,7 +4785,8 @@ update_player_input(Game *game,
                 {
                     Mark *mark = &item_state->temp_mark;
                     
-                    if(was_pressed(&input->Key_Home) && mark->cursor)
+                    if(was_pressed_core(&input->Key_Home, false) &&
+                       mark->cursor)
                     {
                         // Set mark at start
                         mark->cursor = 0;
@@ -4764,7 +4794,8 @@ update_player_input(Game *game,
                         
                         force_render_mark_cursor(mark);
                     }
-                    else if(was_pressed(&input->Key_End) && (mark->cursor < mark->view.count))
+                    else if(was_pressed_core(&input->Key_End, false) &&
+                            (mark->cursor < mark->view.count))
                     {
                         // Set mark at end
                         mark->cursor = mark->view.count;
@@ -4851,21 +4882,21 @@ update_player_input(Game *game,
                         }
                         else
                         {
-                            if(was_pressed(&input->Key_A))
+                            if(was_pressed_core(&input->Key_A, false))
                             {
                                 set(inventory->flags, InventoryFlag_Adjust);
                                 log_add("%sAdjust to which letter? (%s to cancel)", ui, start_color(Color_LightYellow), get_printable_key(input, game->keybinds[GameKey_Back]).s);
                             }
-                            else if(was_pressed(&input->Key_E))
+                            else if(was_pressed_core(&input->Key_E, false))
                             {
                                 equip_item(game, player, examine_item, inventory, ui, true);
                             }
-                            else if(was_pressed(&input->Key_U))
+                            else if(was_pressed_core(&input->Key_U, false))
                             {
                                 unequip_item(game, player, examine_item, ui, false);
                             }
-                            else if((was_pressed(&input->Key_C) ||
-                                     was_pressed(&input->Key_R)) &&
+                            else if((was_pressed_core(&input->Key_C, false) ||
+                                     was_pressed_core(&input->Key_R, false)) &&
                                     is_set(examine_item->flags, ItemFlag_Consumable))
                             {
                                 ItemInteractType item_interact_type = examine_item->c.interact_type;
@@ -4951,11 +4982,11 @@ update_player_input(Game *game,
                                     log_add("You don't have anything to use that on.", ui);
                                 }
                             }
-                            else if(was_pressed(&input->Key_D))
+                            else if(was_pressed_core(&input->Key_D, false))
                             {
                                 drop_item_from_inventory(game, player, examine_item, item_state, inventory, dungeon, ui);
                             }
-                            else if(was_pressed(&input->Key_M))
+                            else if(was_pressed_core(&input->Key_M, false))
                             {
                                 // Open item mark
                                 set(inventory->flags, InventoryFlag_Mark);
@@ -4984,7 +5015,7 @@ update_player_input(Game *game,
                 }
                 else
                 {
-                    char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet);
+                    char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet, false);
                     
                     if(is_set(inventory->flags, InventoryFlag_Open))
                     {
@@ -5477,8 +5508,6 @@ render_entities(Game *game,
                     }
                     else
                     {
-                        unset(enemy->flags, EntityFlag_HasBeenSeen);
-                        
                         // Add enemy ghost
                         if(is_set(enemy->flags, EntityFlag_HasBeenSeen))
                         {
@@ -5510,9 +5539,11 @@ render_entities(Game *game,
                                 printf("enemy new pos: %u, %u\n\n", enemy->new_pos.x, enemy->new_pos.y);
 #endif
                                 
-                                enemy->e.ghost = add_entity_ghost(entity_state->ghosts, enemy->tile_src, ghost_pos, enemy->dungeon_level, enemy->e.saved_ghost_flipped);
+                                enemy->e.ghost = add_entity_ghost(entity_state->ghosts, enemy, enemy->tile_src, ghost_pos, enemy->dungeon_level, enemy->e.saved_ghost_flipped);
                             }
                         }
+                        
+                        unset(enemy->flags, EntityFlag_HasBeenSeen);
                     }
                 }
                 
@@ -5556,7 +5587,7 @@ render_entities(Game *game,
 }
 
 internal void
-set_entity_health_regen(Entity *entity, u32 percent, u32 advance, u32 max)
+set_entity_health_regen(Entity *entity, f32 percent, u32 advance, u32 max)
 {
     assert(is_entity_valid(entity));
     
@@ -5603,7 +5634,7 @@ add_entity(EntityState *entity_state,
         player->p.base_stats.fov = 8;
         player->stats = player->p.base_stats;
         
-        set_entity_health_regen(player, 3, 15, 100);
+        set_entity_health_regen(player, 3.0f, 15, 100);
         
         player->p.action_time = 1.0f;
         player->p.weight_evasion_ratio = 4;
@@ -5655,7 +5686,7 @@ add_entity(EntityState *entity_state,
                 
                 if(is_set(enemy->flags, EntityFlag_HealthRegeneration))
                 {
-                    set_entity_health_regen(enemy, 1, 15, 100);
+                    set_entity_health_regen(enemy, 3.0f, 15, 100);
                 }
                 
                 entity_move_force(enemy, dungeon, enemy->new_pos, dungeon->level);

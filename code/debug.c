@@ -355,7 +355,7 @@ update_and_render_debug_state(Game *game,
                         
                         case DebugVarType_S32: snprintf(text.s, sizeof(text), "%s: %d", var->name.s, *var->s32); break;
                         case DebugVarType_U32: snprintf(text.s, sizeof(text), "%s: %u", var->name.s, *var->u32); break;
-                        case DebugVarType_B32: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, (*var->b32 == true) ? "true" : "false"); break;
+                        case DebugVarType_B32: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, get_bool_string(*var->b32)); break;
                         case DebugVarType_F32: snprintf(text.s, sizeof(text), "%s: %.01f", var->name.s, *var->f32); break;
                         case DebugVarType_V2U: snprintf(text.s, sizeof(text), "%s: %u, %u", var->name.s, var->v2u->x, var->v2u->y); break;
                         case DebugVarType_V4U: snprintf(text.s, sizeof(text), "%s: %u, %u, %u, %u", var->name.s, var->v4u->x, var->v4u->y, var->v4u->w, var->v4u->h); break;
@@ -380,7 +380,7 @@ update_and_render_debug_state(Game *game,
                             }
                         } break;
                         
-                        case DebugVarType_Flag: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, is_set(*var->flags, var->flag) ? "true" : "false"); break;
+                        case DebugVarType_Flag: snprintf(text.s, sizeof(text), "%s: %s", var->name.s, get_bool_string(is_set(*var->flags, var->flag))); break;
                         
                         invalid_default_case;
                     }

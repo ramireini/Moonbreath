@@ -230,7 +230,7 @@ typedef struct
 typedef struct
 {
     b32 next_turn;
-    u32 percent;
+    f32 percent;
     u32 advance;
     u32 max;
     u32 current;
@@ -271,6 +271,8 @@ typedef struct
     u32 dungeon_level;
     v2u pos;
     v4u tile_src;
+    
+    Entity *parent;
 } EntityGhost;
 
 typedef struct
@@ -402,7 +404,7 @@ internal b32 is_enemy_entity_valid(Entity *entity);
 internal b32 is_entity_valid(Entity *entity);
 internal b32 is_player_entity_valid(Entity *entity);
 internal u32 heal_entity(Entity *entity, u32 value);
-internal b32 was_pressed_core(InputState *state);
+internal b32 was_pressed_core(InputState *state, b32 is_repeat_valid);
 internal b32 update_entity_health_regen(Entity *entity);
 internal b32 is_pos_in_entity_view_rect(Entity *entity, v2u dungeon_size, v2u pos);
 internal v2u get_entity_tile_pos(EntityID id);

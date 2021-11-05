@@ -108,7 +108,7 @@ internal void render_texture(SDL_Renderer *renderer, SDL_Texture *texture, v4u *
 internal void render_outline_rect(SDL_Renderer *renderer, v4u rect, Color color);
 internal void render_fill_rect(SDL_Renderer *renderer, v4u rect, Color color, b32 blend);
 internal void render_window(Game *game, v4u rect, u32 border_size);
-internal char get_pressed_keyboard_char(Input *input, KeyboardCharType type);
+internal char get_pressed_keyboard_char(Input *input, KeyboardCharType type, b32 is_repeat_valid);
 internal char *get_direction_string(Direction direction);
 internal u32 tile_div(u32 value);
 internal u32 tile_mul(u32 value);

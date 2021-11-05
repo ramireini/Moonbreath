@@ -141,7 +141,7 @@ update_examine_mode(ExamineMode *examine,
             assert(is_enemy_entity_valid(examine->entity));
             
             // Begin entity spell examine
-            char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet);
+            char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Alphabet, false);
             if(pressed)
             {
                 Owner *owner = get_owner_from_letter(ui->temp_owners, pressed);
@@ -327,7 +327,7 @@ get_os_path(char *path)
     
     for(char *c = path; *c; ++c)
     {
-        assert(index < array_count(result.s));
+        assert(index < get_array_count(result.s));
         
 #if MOONBREATH_WINDOWS
         if(c[0] == '/')
@@ -627,6 +627,16 @@ render_dungeon(Game *game, Dungeon *dungeon, Assets *assets)
             v2u tileset_pos = {0};
             DungeonTile *tile = get_dungeon_pos_tile(dungeon->tiles, tile_pos);
             
+#if MOONBREATH_SLOW
+            if(!tile->id)
+            {
+                printf("tile->id: %u\n", tile->id);
+                printf("tile_pos: %u, %u\n\n", tile_pos.x, tile_pos.y);
+                
+                assert(0);
+            }
+#endif
+            
             if(is_tile_seen(dungeon->tiles, tile_pos))
             { 
                 render_tile = true;
@@ -639,7 +649,16 @@ render_dungeon(Game *game, Dungeon *dungeon, Assets *assets)
                 render_tile = true;
                 half_color = true;
                 
-                tileset_pos = get_dungeon_tileset_pos_from_tile_id(tile->seen_id);
+                // There are situations in which a tile is marked as seen but it doesn't get
+                // a tile->seen_id so we keep rendering the old one until we actually see it.
+                if(tile->seen_id)
+                {
+                    tileset_pos = get_dungeon_tileset_pos_from_tile_id(tile->seen_id);
+                }
+                else
+                {
+                    tileset_pos = get_dungeon_tileset_pos_from_tile_id(tile->id);
+                }
             }
             
             if(render_tile)
@@ -1363,7 +1382,7 @@ get_printable_key(Input *input, Key key)
 }
 
 internal char
-get_pressed_keyboard_char(Input *input, KeyboardCharType type)
+get_pressed_keyboard_char(Input *input, KeyboardCharType type, b32 is_repeat_valid)
 {
     assert(input);
     assert(type);
@@ -1386,7 +1405,7 @@ get_pressed_keyboard_char(Input *input, KeyboardCharType type)
     
     for(Key key = Key_A; key <= key_end; ++key)
     {
-        if(was_pressed(&input->keyboard[key]))
+        if(was_pressed_core(&input->keyboard[key], is_repeat_valid))
         {
             String8 printable_key = get_printable_key(input, key);
             return(printable_key.s[0]);
@@ -1969,7 +1988,7 @@ int main(int argc, char *args[])
             game->window_size = make_v2u(1280, 720);
         }
         
-        game->window_size = make_v2u(1920, 1080);
+        //game->window_size = make_v2u(1920, 1080);
         
 #if 0
         for(u32 index = 0; index < GameKey_Count; ++index)
@@ -1988,7 +2007,7 @@ int main(int argc, char *args[])
                 case GameKey_DownLeft: token_name = "key_down_left"; break;
                 case GameKey_DownRight: token_name = "key_down_right"; break;
                 
-                case GameKey_OpenInventory: token_name = "key_open_inventory"; break;
+                case GameKey_Inventory: token_name = "key_inventory"; break;
                 case GameKey_Pickup: token_name = "key_pickup"; break;
                 case GameKey_UsePassage: token_name = "key_use_passage"; break;
                 case GameKey_AutoExplore: token_name = "key_auto_explore"; break;
@@ -2027,7 +2046,7 @@ int main(int argc, char *args[])
         game->keybinds[GameKey_DownLeft] = Key_Z;
         game->keybinds[GameKey_DownRight] = Key_C;
         
-        game->keybinds[GameKey_OpenInventory] = Key_I;
+        game->keybinds[GameKey_Inventory] = Key_I;
         game->keybinds[GameKey_Pickup] = Key_Comma;
         game->keybinds[GameKey_UsePassage] = Key_U;
         game->keybinds[GameKey_AutoExplore] = Key_P;
@@ -2074,7 +2093,7 @@ int main(int argc, char *args[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 9560064343;
+                                u64 seed = 600643443564351343;
                                 printf("Seed: %lu\n", seed);
                                 game->random = set_random_seed(seed);
                                 
@@ -2108,7 +2127,7 @@ int main(int argc, char *args[])
                                     old_input->game_keys[index].has_been_up = true;
                                 }
                                 
-                                for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
+                                for(u32 index = 1; index < get_array_count(new_input->fkeys); ++index)
                                 {
                                     old_input->fkeys[index].has_been_up = true;
                                 }
@@ -2193,7 +2212,7 @@ int main(int argc, char *args[])
                                         new_input->game_keys[index] = old_input->game_keys[index];
                                     }
                                     
-                                    for(u32 index = 1; index < array_count(new_input->fkeys); ++index)
+                                    for(u32 index = 1; index < get_array_count(new_input->fkeys); ++index)
                                     {
                                         new_input->fkeys[index] = old_input->fkeys[index];
                                     }

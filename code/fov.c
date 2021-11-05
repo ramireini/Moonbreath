@@ -37,16 +37,16 @@ internal b32
 is_tile_seen_or_has_been_seen(DungeonTiles tiles, v2u pos)
 {
     b32 result = (is_tile_seen(tiles, pos) || has_tile_been_seen(tiles, pos));
-        return(result);
+    return(result);
 }
 
 internal void
 cast_light(Dungeon *dungeon,
-                       v2u start_pos,
-                       u32 range,
-                       u32 start_row,
-                       v2f slope,
-                       v4u multiplier)
+           v2u start_pos,
+           u32 range,
+           u32 start_row,
+           v2f slope,
+           v4u multiplier)
 {
     if(slope.start >= slope.end)
     {
@@ -128,24 +128,24 @@ update_player_view(Entity *player, Dungeon *dungeon)
 {
     assert(is_entity_valid(player));
     assert(dungeon);
- 
+    
 #if MOONBREATH_SLOW
- if(debug_toggles[DebugToggleType_TraverseAll])
- {
-  for(u32 y = 0; y < dungeon->size.h; ++y)
-  {
-   for(u32 x = 0; x < dungeon->size.w; ++x)
-   {
-    v2u pos = {x, y};
-    set_tile_is_seen(dungeon->tiles, pos, true);
-   }
-  }
-  
- return;
- }
- #endif
- 
- // Reset visibility
+    if(debug_toggles[DebugToggleType_TraverseAll])
+    {
+        for(u32 y = 0; y < dungeon->size.h; ++y)
+        {
+            for(u32 x = 0; x < dungeon->size.w; ++x)
+            {
+                v2u pos = {x, y};
+                set_tile_is_seen(dungeon->tiles, pos, true);
+            }
+        }
+        
+        return;
+    }
+#endif
+    
+    // Reset visibility
     for(u32 y = 0; y < dungeon->size.h; ++y)
     {
         for(u32 x = 0; x < dungeon->size.w; ++x)

@@ -68,13 +68,14 @@ render_entity_health_regen_string(SDL_Renderer *renderer, Entity *entity, v2u *p
         }
         
         // Render regen string
+        u32 regen_value = get_percent_value_from(regen->percent, entity->max_hp);
         if(is_defer)
         {
-            defer_string("Regeneration: %u health / %u %s", pos, 0, 1, ui, entity->regen.percent, regen_turn_count, regen_turn_string);
+            defer_string("Regeneration: %u health / %u %s", pos, 0, 1, ui, regen_value, regen_turn_count, regen_turn_string);
         }
         else
         {
-            render_string_and_move(renderer, "Regeneration: %u health / %u %s", pos, 0, 1, ui->font, entity->regen.percent, regen_turn_count, regen_turn_string);
+            render_string_and_move(renderer, "Regeneration: %u health / %u %s", pos, 0, 1, ui->font, regen_value, regen_turn_count, regen_turn_string);
         }
     }
     else
@@ -119,7 +120,7 @@ update_mark_input(Input *input, Mark *mark)
                 force_render_mark_cursor(mark);
             }
         }
-        else if(was_pressed_core(&input->Key_Backspace))
+        else if(was_pressed_core(&input->Key_Backspace, true))
         {
             result = true;
             
@@ -207,7 +208,7 @@ update_mark_input(Input *input, Mark *mark)
         }
         else
         {
-            char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Printable);
+            char pressed = get_pressed_keyboard_char(input, KeyboardCharType_Printable, true);
             if(pressed)
             {
                 result = true;
@@ -1751,17 +1752,20 @@ start_view_scrolling(Input *input, View *view)
         ViewMoveParams params = {0};
         params.step_multiplier = view->shared_step_multiplier;
         
-        if(was_pressed(&input->Button_ScrollUp) && can_view_go_up(*view))
+        if(input->Button_ScrollUp.is_down && can_view_go_up(*view))
         {
             params.can_extend = true;
             params.move_count = 1;
             params.direction = Direction_Up;
         }
-        else if(was_pressed(&input->Button_ScrollDown) && can_view_go_down(*view))
+        else if(input->Button_ScrollDown.is_down)
         {
-            params.can_extend = true;
-            params.move_count = 1;
-            params.direction = Direction_Down;
+            if(can_view_go_down(*view))
+            {
+                params.can_extend = true;
+                params.move_count = 1;
+                params.direction = Direction_Down;
+            }
         }
         else if(was_pressed(&input->Key_Home) && can_view_go_up(*view))
         {
@@ -1775,8 +1779,9 @@ start_view_scrolling(Input *input, View *view)
         }
         
 #if 0
+        printf("params.can_extend: %s\n", get_bool_string(params.can_extend));
         printf("params.move_count: %u\n", params.move_count);
-        printf("params.direction is vertical: %u\n", is_direction_vertical(params.direction));
+        printf("params.direction: %s\n", get_direction_string(params.direction));
         printf("params.step_multiplier: %.02f\n\n", params.step_multiplier);
 #endif
         
@@ -2822,7 +2827,7 @@ update_and_render_mark_input(SDL_Renderer *renderer, Font *font, Mark *mark, v2u
                 render_string(renderer, "%c", &char_pos, font, mark_char);
                 char_pos.x += get_glyph_advance(mark_char, font);
                 
-                if(mark->render_cursor && (index == mark->cursor))
+                if(index == mark->cursor)
                 {
                     cursor_x = char_pos.x;
                 }
@@ -2833,18 +2838,23 @@ update_and_render_mark_input(SDL_Renderer *renderer, Font *font, Mark *mark, v2u
     if(mark->is_active)
     {
         // Update cursor
-        if(mark->cursor_blink_start)
-        {
-            if(get_sdl_ticks_difference(mark->cursor_blink_start) >= mark->cursor_blink_duration)
-            {
-                mark->cursor_blink_start = 0;
-                mark->render_cursor = !mark->render_cursor;
-            }
-        }
-        else
+        
+        if(!mark->cursor_blink_start)
         {
             mark->cursor_blink_start = SDL_GetTicks();
         }
+        
+        if(get_sdl_ticks_difference(mark->cursor_blink_start) >= mark->cursor_blink_duration)
+        {
+            mark->cursor_blink_start = 0;
+            mark->render_cursor = !mark->render_cursor;
+        }
+        
+#if 0
+        printf("mark->cursor_blink_duration: %u\n", mark->cursor_blink_duration);
+        printf("mark->cursor_blink_start: %u\n", mark->cursor_blink_start);
+        printf("get_sdl_ticks_difference(mark->cursor_blink_start): %u\n\n", get_sdl_ticks_difference(mark->cursor_blink_start));
+#endif
         
         // Render cursor
         if(mark->render_cursor)

@@ -1,4 +1,5 @@
-#define array_count(array) (sizeof(array) / sizeof((array)[0]))
+#define get_bool_string(value) (value ? "True": "False")
+#define get_array_count(array) (sizeof(array) / sizeof((array)[0]))
 
 #define toggle(flags, new_flag) \
 { \

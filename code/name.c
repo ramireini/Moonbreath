@@ -11,7 +11,7 @@ is_vowel(char c)
 {
     char vowels[10] = "aeiouAEIOU";
     
-    for(u32 index = 0; index < array_count(vowels); ++index)
+    for(u32 index = 0; index < get_array_count(vowels); ++index)
     {
         if(c == vowels[index])
         {
@@ -27,7 +27,7 @@ is_consonant(char c)
 {
     char consonants[42] = "bcdfghjklmnpqrstvxzwyBCDFGHJKLMNPQRSTVXZWY";
     
-    for(u32 index = 0; index < array_count(consonants); ++index)
+    for(u32 index = 0; index < get_array_count(consonants); ++index)
     {
         if(c == consonants[index])
         {

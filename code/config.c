@@ -64,8 +64,8 @@ get_config_uint(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-  if(token->value == TokenValue_Uint &&
-     strings_match(token_name, token->name.s))
+        if(token->value == TokenValue_Uint &&
+           strings_match(token_name, token->name.s))
         {
             value.is_valid = true;
             value.uint = token->uint;
@@ -84,8 +84,8 @@ get_config_bool(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-  if(token->value == TokenValue_Bool &&
-     strings_match(token_name, token->name.s))
+        if(token->value == TokenValue_Bool &&
+           strings_match(token_name, token->name.s))
         {
             value.is_valid = true;
             value.boolean = token->boolean;
@@ -104,8 +104,8 @@ get_config_string(Config *config, char *token_name)
     for(u32 index = 0; index < config->token_count; ++index)
     {
         Token *token = &config->tokens[index];
-  if(token->value == TokenValue_String &&
-     strings_match(token_name, token->name.s))
+        if(token->value == TokenValue_String &&
+           strings_match(token_name, token->name.s))
         {
             result.is_valid = true;
             strcpy(result.string.s, token->string.s);
@@ -125,7 +125,7 @@ read_file(MemoryArena *memory_arena, char *file_path)
     if(file)
     {
         fseek(file, 0, SEEK_END);
-         memory_size file_size = ftell(file);
+        memory_size file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         
         file_contents = push_memory(memory_arena, file_size + 1);
@@ -388,7 +388,7 @@ get_config(MemoryArena *memory_arena, char *file_path)
         }
         else if(token->value == TokenValue_Bool)
         {
-            printf("Token Value: %s\n", token->boolean ? "true" : "false");
+            printf("Token Value: %s\n", get_bool_string(token->boolean));
         }
         else if(token->value == TokenValue_String)
         {
