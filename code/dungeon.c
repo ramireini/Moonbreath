@@ -2289,7 +2289,7 @@ create_dungeon(Game *game,
     set_dungeon_pos_remains(dungeon->tiles, make_v2u(blood_x + 1, blood_y), DungeonTileID_GreenBloodWater2);
 #endif
     
-#if 0
+#if 1
     // Test traps
     v2u trap_pos = {25, 2};
     
@@ -2807,7 +2807,7 @@ create_dungeon(Game *game,
     ItemRarity item_rarity_counts[ItemRarity_Count] = {0};
     ItemTypeInfo item_rarity_info[ItemRarity_Count] = {0};
     
-    item_rarity_info[ItemRarity_Magical].valid = dungeon_progress >= 30;
+    item_rarity_info[ItemRarity_Magical].valid = dungeon_progress >= 20;
     item_rarity_info[ItemRarity_Magical].chance = level_chance * 0.5f;
     assert(item_rarity_info[ItemRarity_Magical].chance);
     

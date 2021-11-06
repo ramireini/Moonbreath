@@ -300,6 +300,13 @@ is_alpha(char c)
 }
 
 internal b32
+is_hex(char c)
+{
+    b32 result = (is_numeric(c) || is_uppercase(c));
+    return(result);
+}
+
+internal b32
 is_alpha_or_space(char c)
 {
     b32 result = (is_alpha(c) || c == ' ');

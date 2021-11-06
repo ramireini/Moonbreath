@@ -39,8 +39,7 @@ process_new_seen_items(Item *array, DungeonTiles tiles, UI *ui, b32 log_names)
         {
             if(log_names)
             {
-                String128 name = get_full_item_name(item);
-                log_add_new_seen_target(name.s, ui);
+                log_add_new_seen_target(get_full_item_name(item).s, ui);
             }
             
             set(item->flags, ItemFlag_HasBeenSeen);
@@ -554,7 +553,7 @@ get_full_item_name(Item *item)
         {
             if(item->w.damage.second_type)
             {
-                sprintf(result.s, "%s%c%d %s of %s",
+                sprintf(result.s, "%s%s %s of %s",
                         get_item_cursed_prefix(item->flags),
                         get_signed_absolute(item->enchant_level).s,
                         item->name.s,
@@ -590,6 +589,7 @@ get_full_item_name(Item *item)
         }
     }
     
+    sprintf(result.s + get_string_length(result.s), "%s", end_color());
     return(result);
 }
 
@@ -986,11 +986,10 @@ log_add_item_action_string(Item *item, UI *ui, ItemActionType action)
     assert(ui);
     assert(action);
     
-    log_add("You %s the %s%s%s%s.", ui,
+    log_add("You %s the %s%s%s.", ui,
             get_item_action_string(action).s,
             get_item_status_color(item->flags, item->rarity),
             get_full_item_name(item).s,
-            end_color(),
             get_item_mark_string(item->flags, item->mark.array).s);
     
     if(action == ItemActionType_Equip &&
@@ -1015,11 +1014,10 @@ unequip_item(Game *game, Entity *player, Item *item, UI *ui, b32 came_from_drop_
         
         if(is_item_identified_and_cursed(item->flags))
         {
-            log_add("You try to %s the %s%s%s, but it won't leave your hand!", ui,
+            log_add("You try to %s the %s%s, but it's stuck!", ui,
                     get_item_action_string(came_from_drop_item ? ItemActionType_Drop : ItemActionType_Unequip).s,
                     get_item_status_color(item->flags, item->rarity),
-                    get_full_item_name(item).s,
-                    end_color());
+                    get_full_item_name(item).s);
         }
         else
         {
@@ -1320,7 +1318,7 @@ get_item_tileset_pos(ItemState *item_state, ItemID id, ItemRarity rarity, b32 is
     
     if(is_equip_tile)
     {
-        v2u base = {0, 0};
+        v2u base = {20, 14};
         switch(id)
         {
             case ItemID_Dagger: result = make_v2u(base.x + 0, base.y + 0); break;
@@ -2014,7 +2012,7 @@ add_item(Random *random,
                     {
                         item->w.damage.min = 1;
                         item->w.damage.max = 12;
-                        item->w.accuracy = -1;
+                        item->w.accuracy = -3;
                         item->w.weight = 2;
                         item->w.speed = 1.2f;
                     } break;
@@ -2023,7 +2021,7 @@ add_item(Random *random,
                     {
                         item->w.damage.min = 1;
                         item->w.damage.max = 14;
-                        item->w.accuracy = -2;
+                        item->w.accuracy = -4;
                         item->w.weight = 2;
                         item->w.speed = 1.4f;
                     } break;
@@ -2032,7 +2030,7 @@ add_item(Random *random,
                     {
                         item->w.damage.min = 1;
                         item->w.damage.max = 16;
-                        item->w.accuracy = -3;
+                        item->w.accuracy = -5;
                         item->w.weight = 2;
                         item->w.speed = 1.2f;
                     } break;
@@ -2242,13 +2240,13 @@ add_item(Random *random,
                     case ItemID_EnchantWeaponScroll:
                     {
                         item->c.interact_type = ItemInteractType_EnchantWeapon;
-                        strcpy(item->description.s, "Enchant a weapon with +1 damage and accuracy.");
+                        strcpy(item->description.s, "Enchants a weapon with +1 damage and accuracy.");
                     } break;
                     
                     case ItemID_EnchantArmorScroll:
                     {
                         item->c.interact_type = ItemInteractType_EnchantArmor;
-                        strcpy(item->description.s, "Enchant a piece of armor with +1 defence.");
+                        strcpy(item->description.s, "Enchants a piece of armor with +1 defence.");
                     } break;
                     
                     case ItemID_MagicMappingScroll:

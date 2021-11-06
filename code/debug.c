@@ -690,11 +690,13 @@ update_and_render_debug_state(Game *game,
                             
                             start_debug_group(debug, new_tree, "Regen", false);
                             {
-                                add_debug_variable(new_tree, "Next Turn", entity->regen.next_turn, DebugVarType_B32);
-                                add_debug_variable(new_tree, "Percent", entity->regen.percent, DebugVarType_U32);
-                                add_debug_variable(new_tree, "Advance", entity->regen.advance, DebugVarType_U32);
-                                add_debug_variable(new_tree, "Max", entity->regen.max, DebugVarType_U32);
-                                add_debug_variable(new_tree, "Current", entity->regen.current, DebugVarType_U32);
+                                EntityRegen *regen = &entity->regen;
+                                
+                                add_debug_variable(new_tree, "Next Turn", regen->next_turn, DebugVarType_B32);
+                                add_debug_variable(new_tree, "Value", regen->value, DebugVarType_U32);
+                                add_debug_variable(new_tree, "Advance", regen->advance, DebugVarType_U32);
+                                add_debug_variable(new_tree, "Max", regen->max, DebugVarType_U32);
+                                add_debug_variable(new_tree, "Current", regen->current, DebugVarType_U32);
                             }
                             end_debug_group(new_tree);
                             

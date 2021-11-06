@@ -230,9 +230,9 @@ typedef struct
 typedef struct
 {
     b32 next_turn;
-    f32 percent;
-    u32 advance;
+    u32 value;
     u32 max;
+    u32 advance;
     u32 current;
 } EntityRegen;
 

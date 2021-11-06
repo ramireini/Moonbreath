@@ -108,11 +108,10 @@ is_entity_health_regen_valid(EntityRegen *regen)
     b32 result = false;
     
     if(regen &&
-       regen->percent &&
+       regen->value &&
        regen->advance &&
        regen->max &&
-       regen->advance <= regen->max &&
-       regen->percent <= 100)
+       regen->advance <= regen->max)
     {
         result = true;
     }
@@ -166,7 +165,7 @@ get_percent_value_from(f32 percent, u32 total)
     assert(percent);
     assert(total);
     
-    u32 result = ((total * percent) / 100.0f);
+    u32 result = (total * percent) / 100.0f;
     return(result);
 }
 
@@ -219,9 +218,11 @@ remove_entity_ghost(EntityGhost *ghost)
 {
     assert(ghost);
     
-    // Unset the ghost pointer of the parent entity.
-    assert(is_enemy_entity_valid(ghost->parent));
-    ghost->parent->e.ghost = 0;
+    // Unset parent ghost pointer if the parent is still alive.
+    if(is_enemy_entity_valid(ghost->parent))
+    {
+        ghost->parent->e.ghost = 0;
+    }
     
     zero_struct(*ghost);
 }
@@ -593,7 +594,6 @@ change_entity_stat(u32 *value, s32 change, b32 is_add)
     {
         *value = 0;
     }
-    
 }
 
 internal void
@@ -634,7 +634,7 @@ update_entity_health_regen(Entity *entity)
             regen->next_turn = false;
             regen->current = 0;
             
-            heal_entity(entity, get_percent_value_from(regen->percent, entity->max_hp));
+            heal_entity(entity, regen->value);
         }
         else if(regen->current + regen->advance >= regen->max)
         {
@@ -753,9 +753,10 @@ select_and_cast_entity_spell(Random *random,
     assert(ui);
     
     EntitySpellCastResult result = {0};
-    Entity *target = get_player_entity();
     
     b32 loop = true;
+    Entity *target = 0;
+    
     while(loop) // Loop until a usable spell is found.
     {
         assert_loop_count();
@@ -764,13 +765,14 @@ select_and_cast_entity_spell(Random *random,
         
 #if 0
         printf("spell->name: %s\n", spell->name.s);
+        printf("spell->range: %u\n\n", spell->range);
         printf("spell->value.min: %u\n", spell->value.min);
         printf("spell->value.max: %u\n", spell->value.max);
-        printf("spell->range: %u\n\n", spell->range);
 #endif
         
         if(spell->status_type == EntityStatusType_Damage)
         {
+            target = get_player_entity();
             if(is_entity_in_view_and_spell_range(caster, target->pos, spell->range))
             {
                 attack_entity(random, caster, 0, target, dungeon, ui, spell->damage, true);
@@ -787,14 +789,14 @@ select_and_cast_entity_spell(Random *random,
         {
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
-                Entity *entity = &entity_state->entities[index];
-                if(is_entity_valid_and_not_index(entity, caster->index) &&
-                   is_entity_in_view_and_spell_range(caster, entity->pos, spell->range) &&
-                   entity->type == EntityType_Enemy &&
-                   entity->hp != entity->max_hp)
+                target = &entity_state->entities[index];
+                if(is_entity_valid_and_not_index(target, caster->index) &&
+                   is_entity_in_view_and_spell_range(caster, target->pos, spell->range) &&
+                   target->type == EntityType_Enemy &&
+                   target->hp != target->max_hp)
                 {
-                    heal_entity(entity, get_random(random, spell->value.min, spell->value.max));
-                    log_add_entity_interact_string(random, caster, 0, entity, ui, 0, EntityResistInfoType_None, EntityInteractInfoType_None);
+                    heal_entity(target, get_random(random, spell->value.min, spell->value.max));
+                    log_add_entity_interact_string(random, caster, 0, target, ui, 0, EntityResistInfoType_None, EntityInteractInfoType_None);
                     
                     loop = false;
                     break;
@@ -807,51 +809,51 @@ select_and_cast_entity_spell(Random *random,
             
             for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
             {
-                Entity *entity = &entity_state->entities[index];
-                if(is_entity_valid_and_not_index(entity, caster->index))
+                target = &entity_state->entities[index];
+                if(is_entity_valid_and_not_index(target, caster->index))
                 {
-                    // Make sure the target is valid for the spell target type
-                    b32 valid_target = false;
+                    // Entity has to be valid for the spell.
+                    b32 is_target_valid = false;
                     switch(spell->target_type)
                     {
                         case EntityType_Player:
                         {
-                            if(is_player_entity_valid(entity))
+                            if(is_player_entity_valid(target))
                             {
-                                valid_target = true;
+                                is_target_valid = true;
                             }
                         } break;
                         
                         case EntityType_Enemy:
                         {
-                            if(is_enemy_entity_valid(entity) &&
-                               entity->e.state == EnemyEntityState_Fighting)
+                            if(is_enemy_entity_valid(target) &&
+                               target->e.state == EnemyEntityState_Fighting)
                             {
-                                valid_target = true;
+                                is_target_valid = true;
                             }
                         } break;
                         
                         invalid_default_case;
                     }
                     
-                    // Make sure the spell is valid for the target stats
-                    b32 valid_spell = true;
+                    // Spell has to be valid for the target entity stat.
+                    b32 is_spell_valid = true;
                     if(spell->status_type == EntityStatusType_Stat)
                     {
                         switch(spell->stat_type)
                         {
-                            case EntityStatusStatType_Str: valid_spell = ((s32)entity->stats.str > 0); break;
-                            case EntityStatusStatType_Int: valid_spell = ((s32)entity->stats.intel > 0); break;
-                            case EntityStatusStatType_Dex: valid_spell = ((s32)entity->stats.dex > 0); break;
-                            case EntityStatusStatType_Def: valid_spell = ((s32)entity->stats.def > 0); break;
-                            case EntityStatusStatType_EV: valid_spell = ((s32)entity->stats.ev > 0); break;
-                            case EntityStatusStatType_FOV: valid_spell = ((s32)entity->stats.fov > 0); break;
+                            case EntityStatusStatType_Str: is_spell_valid = ((s32)target->stats.str > 0); break;
+                            case EntityStatusStatType_Int: is_spell_valid = ((s32)target->stats.intel > 0); break;
+                            case EntityStatusStatType_Dex: is_spell_valid = ((s32)target->stats.dex > 0); break;
+                            case EntityStatusStatType_EV: is_spell_valid = ((s32)target->stats.ev > 0); break;
+                            case EntityStatusStatType_FOV: is_spell_valid = ((s32)target->stats.fov > 0); break;
+                            case EntityStatusStatType_Def: break;
                             
                             case EntityStatusStatType_StrIntDex:
                             {
-                                valid_spell = ((s32)entity->stats.str > 0 &&
-                                               (s32)entity->stats.intel > 0 &&
-                                               (s32)entity->stats.dex > 0);
+                                is_spell_valid = ((s32)target->stats.str > 0 &&
+                                                  (s32)target->stats.intel > 0 &&
+                                                  (s32)target->stats.dex > 0);
                             } break;
                             
                             invalid_default_case;
@@ -859,18 +861,23 @@ select_and_cast_entity_spell(Random *random,
                     }
                     
 #if 0
-                    printf("valid_spell: %u\n", valid_spell);
-                    printf("valid_target: %u\n", valid_target);
+                    printf("caster: %s\n", caster->name.s);
+                    printf("target: %s\n", target->name.s);
+                    printf("is_target_valid: %u\n", is_target_valid);
+                    printf("is_spell_valid: %u\n", is_spell_valid);
+                    printf("spell->name: %s\n", spell->name.s);
+                    printf("spell->range: %u\n", spell->range);
                     printf("spell->value.min: %d\n", spell->value.min);
                     printf("spell->value.max: %d\n", spell->value.max);
                     printf("spell->target_type: %s\n", get_entity_type_string(spell->target_type));
                     printf("get_total_stat_status_value(): %d\n\n", get_total_stat_status_value(target->statuses, spell->stat_type));
 #endif
                     
-                    if(valid_target && valid_spell &&
-                       is_entity_in_view_and_spell_range(caster, entity->pos, spell->range))
+                    if(is_target_valid &&
+                       is_spell_valid &&
+                       is_entity_in_view_and_spell_range(caster, target->pos, spell->range))
                     {
-                        cast_entity_spell(random, caster, entity, dungeon, ui);
+                        cast_entity_spell(random, caster, target, dungeon, ui);
                         
                         loop = false;
                         break;
@@ -3096,8 +3103,14 @@ update_entity_statuses(Random *random,
                             
                             if(status->is_value_percent)
                             {
-                                f32 value = get_percent_from(status->value.max, entity->max_hp);
-                                status->value.max = get_u32_from_up_rounded_f32(value);
+                                
+#if 0
+                                printf("entity->max_hp: %u\n", entity->max_hp);
+                                printf("status->value.max: %u\n\n", status->value.max);
+#endif
+                                
+                                assert(get_percent_value_from(status->value.max, entity->max_hp));
+                                status->value.max = get_percent_value_from(status->value.max, entity->max_hp);
                             }
                             
                             log_add(status->player_active.s, ui, start_color(status->player_active_color), status->player_active_target.s, status->value.max);
@@ -3438,18 +3451,10 @@ heal_entity(Entity *entity, u32 heal_value)
 {
     assert(is_entity_valid(entity));
     
-#if MOONBREATH_SLOW
-    if(entity->type != EntityType_Player &&
-       (!entity->hp ||
-        !entity->max_hp ||
-        entity->hp > entity->max_hp ||
-        !heal_value))
-    {
-        printf("heal_entity()\n");
-        printf("Heal Value: %u\n", heal_value);
-        print_enemy_entity_info(entity);
-        assert(0);
-    }
+#if 0
+    printf("heal_entity()\n");
+    printf("Heal Value: %u\n", heal_value);
+    print_enemy_entity_info(entity);
 #endif
     
     entity->hp += heal_value;
@@ -3874,7 +3879,7 @@ update_enemy_entities(Game *game,
         {
             
 #if MOONBREATH_SLOW
-            return;
+            //return;
             if(enemy->id == EntityID_Dummy) continue;
             //if(enemy->id == EntityID_SkeletonWarrior) continue;
 #endif
@@ -5225,60 +5230,63 @@ update_entities(Game *game,
                         
                         if(entity_move(random, player, dungeon, ui, player->new_pos))
                         {
-                            // Player dungeon trap interact
-                            DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, player->new_pos);
-                            if(trap)
+                            if(!is_set(player->flags, EntityFlag_InvulnerableToTraps))
                             {
-                                switch(trap->type)
+                                // Player dungeon trap interact
+                                DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, player->new_pos);
+                                if(trap)
                                 {
-                                    case DungeonTrapType_Spike:
-                                    case DungeonTrapType_Sword:
-                                    case DungeonTrapType_Arrow:
-                                    case DungeonTrapType_Magic:
+                                    switch(trap->type)
                                     {
-                                        attack_entity(&game->random, 0, trap, player, dungeon, ui, trap->damage, true);
-                                    } break;
-                                    
-                                    case DungeonTrapType_Bind:
-                                    {
-                                        EntityStatus bind_status = {0};
-                                        bind_status.type = EntityStatusType_Bind;
-                                        bind_status.duration = get_random_from_v2u(random, trap->value_range);
+                                        case DungeonTrapType_Spike:
+                                        case DungeonTrapType_Sword:
+                                        case DungeonTrapType_Arrow:
+                                        case DungeonTrapType_Magic:
+                                        {
+                                            attack_entity(&game->random, 0, trap, player, dungeon, ui, trap->damage, true);
+                                        } break;
                                         
-                                        add_entity_status(random, player, dungeon, ui, &bind_status);
-                                    } break;
-                                    
-                                    case DungeonTrapType_Shaft:
-                                    {
-                                        assert(!is_set(player->flags, EntityFlag_Pathfinding));
-                                        
-                                        log_add("You step and fall into the shaft!", ui);
-                                        
-                                        if(!trap->is_shaft_set)
-                                        { 
-                                            trap->shaft_depth = get_random_from_v2u(random, trap->value_range);
-                                            u32 shaft_dungeon_level = dungeon_state->current_level + trap->shaft_depth;
+                                        case DungeonTrapType_Bind:
+                                        {
+                                            EntityStatus bind_status = {0};
+                                            bind_status.type = EntityStatusType_Bind;
+                                            bind_status.duration = get_random_from_v2u(random, trap->value_range);
                                             
-                                            Dungeon *shaft_dungeon = get_dungeon_from_level(dungeon_state, shaft_dungeon_level);
-                                            trap->shaft_dest = get_random_dungeon_traversable_unoccupied_pos(random, shaft_dungeon);
-                                            move_player_between_dungeons(game, entity_state, dungeon_state, item_state, inventory, ui, trap->shaft_dest, shaft_dungeon_level);
+                                            add_entity_status(random, player, dungeon, ui, &bind_status);
+                                        } break;
+                                        
+                                        case DungeonTrapType_Shaft:
+                                        {
+                                            assert(!is_set(player->flags, EntityFlag_Pathfinding));
                                             
-                                            trap->is_shaft_set = true;
-                                        }
-                                    } break;
-                                    
-                                    case DungeonTrapType_Summon:
-                                    {
-                                        summon_entity(random, entity_state, player, dungeon, ui, 0);
-                                    } break;
-                                    
-                                    case DungeonTrapType_Teleport:
-                                    {
-                                        log_add("You step on the trap and find yourself in a different place!", ui);
-                                        teleport_entity(random, player, dungeon, ui, DungeonRandomPosType_Traversable);
-                                    } break;
-                                    
-                                    invalid_default_case;
+                                            log_add("You step and fall into the shaft!", ui);
+                                            
+                                            if(!trap->is_shaft_set)
+                                            { 
+                                                trap->shaft_depth = get_random_from_v2u(random, trap->value_range);
+                                                u32 shaft_dungeon_level = dungeon_state->current_level + trap->shaft_depth;
+                                                
+                                                Dungeon *shaft_dungeon = get_dungeon_from_level(dungeon_state, shaft_dungeon_level);
+                                                trap->shaft_dest = get_random_dungeon_traversable_unoccupied_pos(random, shaft_dungeon);
+                                                move_player_between_dungeons(game, entity_state, dungeon_state, item_state, inventory, ui, trap->shaft_dest, shaft_dungeon_level);
+                                                
+                                                trap->is_shaft_set = true;
+                                            }
+                                        } break;
+                                        
+                                        case DungeonTrapType_Summon:
+                                        {
+                                            summon_entity(random, entity_state, player, dungeon, ui, 0);
+                                        } break;
+                                        
+                                        case DungeonTrapType_Teleport:
+                                        {
+                                            log_add("You step on the trap and find yourself in a different place!", ui);
+                                            teleport_entity(random, player, dungeon, ui, DungeonRandomPosType_Traversable);
+                                        } break;
+                                        
+                                        invalid_default_case;
+                                    }
                                 }
                             }
                         }
@@ -5587,15 +5595,16 @@ render_entities(Game *game,
 }
 
 internal void
-set_entity_health_regen(Entity *entity, f32 percent, u32 advance, u32 max)
+set_entity_health_regen(Entity *entity, u32 value, u32 turns_to_regen)
 {
     assert(is_entity_valid(entity));
     
     EntityRegen *regen = &entity->regen;
     set(entity->flags, EntityFlag_HealthRegeneration);
-    regen->percent = percent;
-    regen->advance = advance;
-    regen->max = max;
+    
+    regen->value = value;
+    regen->max = 100;
+    regen->advance = (regen->max / turns_to_regen) + 1;
     
     assert(is_entity_health_regen_valid(regen));
 }
@@ -5634,7 +5643,7 @@ add_entity(EntityState *entity_state,
         player->p.base_stats.fov = 8;
         player->stats = player->p.base_stats;
         
-        set_entity_health_regen(player, 3.0f, 15, 100);
+        set_entity_health_regen(player, 1, 10);
         
         player->p.action_time = 1.0f;
         player->p.weight_evasion_ratio = 4;
@@ -5686,7 +5695,7 @@ add_entity(EntityState *entity_state,
                 
                 if(is_set(enemy->flags, EntityFlag_HealthRegeneration))
                 {
-                    set_entity_health_regen(enemy, 3.0f, 15, 100);
+                    set_entity_health_regen(enemy, 1, 10);
                 }
                 
                 entity_move_force(enemy, dungeon, enemy->new_pos, dungeon->level);
@@ -5759,7 +5768,7 @@ add_entity(EntityState *entity_state,
                     
                     case EntityID_Rat:
                     {
-                        enemy->max_hp = enemy->hp = 12;
+                        enemy->max_hp = enemy->hp = 8;
                         enemy->e.wandering_type = EnemyWanderingType_Random;
                         
                         enemy->e.damage.min = 1;
@@ -5793,7 +5802,7 @@ add_entity(EntityState *entity_state,
                         enemy->remains_type = EntityRemainsType_RedBlood;
                         
                         add_entity_heal_spell(enemy, "Healing Touch", 3, 6, 40, enemy->stats.fov);
-                        add_entity_attack_spell(enemy, "Lightning Whip", 4, EntityDamageType_Lightning, 60, 4);
+                        add_entity_attack_spell(enemy, "Lightning Whip", 4, EntityDamageType_Lightning, 60, 3);
                     } break;
                     
                     case EntityID_Snail:

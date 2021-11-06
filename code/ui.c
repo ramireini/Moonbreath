@@ -61,21 +61,22 @@ render_entity_health_regen_string(SDL_Renderer *renderer, Entity *entity, v2u *p
         }
         
         // Set turn string
-        char *regen_turn_string = "turn";
-        if(regen_turn_count > 1)
+        char *regen_turn_string = "turns";
+        if(regen_turn_count == 1)
         {
-            regen_turn_string = "turns";
+            regen_turn_string = "turn";
         }
         
         // Render regen string
-        u32 regen_value = get_percent_value_from(regen->percent, entity->max_hp);
+        assert(regen->value);
+        
         if(is_defer)
         {
-            defer_string("Regeneration: %u health / %u %s", pos, 0, 1, ui, regen_value, regen_turn_count, regen_turn_string);
+            defer_string("Regeneration: %u health / %u %s", pos, 0, 1, ui, regen->value, regen_turn_count, regen_turn_string);
         }
         else
         {
-            render_string_and_move(renderer, "Regeneration: %u health / %u %s", pos, 0, 1, ui->font, regen_value, regen_turn_count, regen_turn_string);
+            render_string_and_move(renderer, "Regeneration: %u health / %u %s", pos, 0, 1, ui->font, regen->value, regen_turn_count, regen_turn_string);
         }
     }
     else
@@ -690,18 +691,11 @@ render_window_items(Game *game,
                 {
                     if(is_set(item->flags, ItemFlag_Identified))
                     {
-                        String32 equipped_string = {0};
-                        
-                        if(is_set(item->flags, ItemFlag_Equipped))
-                        {
-                            strcpy(equipped_string.s, " (equipped)");
-                        }
-                        
                         render_string(game->renderer, "%s%s%s%s%s", &item_name_pos, ui->font,
                                       get_item_status_color(item->flags, item->rarity),
                                       item_letter.s,
                                       get_full_item_name(item).s,
-                                      equipped_string.s,
+                                      is_set(item->flags, ItemFlag_Equipped) ? " (equipped)" : "",
                                       item_mark.s);
                     }
                     else
@@ -1314,8 +1308,15 @@ render_entity_status_effects(Game *game, EntityStatus *statuses, v2u *pos, UI *u
             {
                 if(is_defer)
                 {
-                    assert(status->type != EntityStatusType_Stat);
-                    defer_string("%s", pos, 0, 1, ui, get_status_type_string(status->type));
+                    if(status->type == EntityStatusType_Stat)
+                    {
+                        assert(status->name.s[0]);
+                        defer_string("%s", pos, 0, 1, ui, status->name.s);
+                    }
+                    else
+                    {
+                        defer_string("%s", pos, 0, 1, ui, get_status_type_string(status->type));
+                    }
                 }
                 else
                 {
@@ -2127,11 +2128,10 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
     defer_tile(pos, item->tile_src, ui, false);
     
     v2u header_pos = get_window_header_pos(*pos, ui);
-    defer_string("%s%s%s%s%s", &header_pos, 0, 1, ui,
+    defer_string("%s%s%s%s", &header_pos, 0, 1, ui,
                  get_item_status_color(item->flags, item->rarity),
                  get_item_letter_string(item).s,
                  get_full_item_name(item).s,
-                 end_color(),
                  get_item_mark_string(item->flags, item->mark.array).s);
     
     if(item->type == ItemType_Weapon)
@@ -2140,14 +2140,18 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
         {
             defer_string("Damage: %u-%u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max + item->enchant_level);
             defer_string("Accuracy: %d", pos, 1, 0, ui, item->w.accuracy + item->enchant_level);
-            defer_string("Attack Speed: %.1f", pos, 1, 0, ui, item->w.speed);
         }
         else
         {
             defer_string("Base Damage: %u-%u", pos, 3, 0, ui, item->w.damage.min, item->w.damage.max);
             defer_string("Base Accuracy: %d", pos, 1, 0, ui, item->w.accuracy);
-            defer_string("Base Attack Speed: %.1f", pos, 1, 0, ui, item->w.speed);
         }
+        
+        // TODO(Rami): Attack speed and weight stats.
+        // We want to have some base stats in the struct like for attack speed and weight so that
+        // we can render those as base stats for the unidentified item.
+        defer_string("Attack Speed: %.1f", pos, 1, 0, ui, item->w.speed);
+        defer_string("Weight: %u", pos, 1, 0, ui, item->w.weight);
     }
     else if(item->type == ItemType_Armor)
     {
@@ -2977,8 +2981,7 @@ render_ui(Game *game,
                 if(regen->next_turn)
                 {
                     v4u regen_rect = healthbar_inside;
-                    u32 hp_after_regen = player->hp + get_percent_value_from(regen->percent, player->max_hp);
-                    regen_rect.w = get_ratio(hp_after_regen, player->max_hp, healthbar_inside.w);
+                    regen_rect.w = get_ratio(player->hp + regen->value, player->max_hp, healthbar_inside.w);
                     render_fill_rect(game->renderer, regen_rect, Color_DarkRed, false);
                 }
                 

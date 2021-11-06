@@ -224,7 +224,7 @@ start_color(Color color)
 internal char *
 end_color()
 {
-    char *result = "##";
+    char *result = "###";
     return(result);
 }
 
@@ -463,60 +463,60 @@ render_string_(SDL_Renderer *renderer,
         assert(metrics->w);
         assert(metrics->h);
         
-        if(at[0] == '#' &&
-           at[1] == '#')
+        if(at[0] && at[0] == '#' &&
+           at[1] && at[1] == '#')
         {
-            if(has_color_code)
+            assert(at[2]);
+            
+            if(at[2] == '#')
             {
                 has_color_code = false;
                 
                 set_texture_color(font->atlas, Color_White);
-                at += 2;
+                at += get_string_length(end_color());
             }
             else
             {
-                if(at[2])
+                assert(is_hex(at[2]));
+                Color color = Color_None;
+                
+                switch(at[2])
                 {
-                    Color color = Color_None;
+                    case '0': color = Color_Black; break;
+                    case '1': color = Color_White; break;
                     
-                    switch(at[2])
-                    {
-                        case '0': color = Color_Black; break;
-                        case '1': color = Color_White; break;
-                        
-                        case '2': color = Color_LightGray; break;
-                        case '3': color = Color_DarkGray; break;
-                        
-                        case '4': color = Color_LightRed; break;
-                        case '5': color = Color_DarkRed; break;
-                        
-                        case '6': color = Color_Green; break;
-                        case '7': color = Color_LightGreen; break;
-                        case '8': color = Color_DarkGreen; break;
-                        
-                        case '9': color = Color_LightBlue; break;
-                        case 'A': color = Color_DarkBlue; break;
-                        
-                        case 'B': color = Color_LightBrown; break;
-                        case 'C': color = Color_DarkBrown; break;
-                        
-                        case 'D': color = Color_Yellow; break;
-                        case 'E': color = Color_LightYellow; break;
-                        
-                        case 'F': color = Color_Cyan; break;
-                        case 'G': color = Color_Purple; break;
-                        case 'H': color = Color_Orange; break;
-                        
-                        case 'I': color = Color_AlmostWhite; break;
-                        
-                        invalid_default_case;
-                    }
+                    case '2': color = Color_LightGray; break;
+                    case '3': color = Color_DarkGray; break;
                     
-                    has_color_code = true;
+                    case '4': color = Color_LightRed; break;
+                    case '5': color = Color_DarkRed; break;
                     
-                    set_texture_color(font->atlas, color);
-                    at += 3;
+                    case '6': color = Color_Green; break;
+                    case '7': color = Color_LightGreen; break;
+                    case '8': color = Color_DarkGreen; break;
+                    
+                    case '9': color = Color_LightBlue; break;
+                    case 'A': color = Color_DarkBlue; break;
+                    
+                    case 'B': color = Color_LightBrown; break;
+                    case 'C': color = Color_DarkBrown; break;
+                    
+                    case 'D': color = Color_Yellow; break;
+                    case 'E': color = Color_LightYellow; break;
+                    
+                    case 'F': color = Color_Cyan; break;
+                    case 'G': color = Color_Purple; break;
+                    case 'H': color = Color_Orange; break;
+                    
+                    case 'I': color = Color_AlmostWhite; break;
+                    
+                    invalid_default_case;
                 }
+                
+                has_color_code = true;
+                
+                set_texture_color(font->atlas, color);
+                at += 3;
             }
         }
         else if(at[0] == '\n')

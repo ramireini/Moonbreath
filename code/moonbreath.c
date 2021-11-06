@@ -2093,7 +2093,7 @@ int main(int argc, char *args[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 600643443564351343;
+                                u64 seed = 606506434435643513;
                                 printf("Seed: %lu\n", seed);
                                 game->random = set_random_seed(seed);
                                 
