@@ -75,7 +75,7 @@ get_debug_tree_root_var_count(DebugTree *tree)
 }
 
 internal void
-delete_debug_tree(DebugState *debug, DebugTree *tree)
+delete_debug_tree(DebugMode *debug, DebugTree *tree)
 {
     // Pop tree variables
     u32 var_count = get_debug_tree_root_var_count(tree);
@@ -90,7 +90,7 @@ delete_debug_tree(DebugState *debug, DebugTree *tree)
 
 #define add_debug_variable(tree_type, name, value, variable_type) add_debug_variable_(debug, tree_type, name, &value, 0, 0, 0, variable_type)
 internal DebugVar *
-add_debug_variable_(DebugState *debug,
+add_debug_variable_(DebugMode *debug,
                     DebugTree *tree,
                     char *name,
                     void *value,
@@ -152,14 +152,14 @@ add_debug_variable_(DebugState *debug,
 
 #define add_debug_flag(tree, name, flags, flag) add_debug_flag_(debug, tree, name, &flags, flag)
 internal void
-add_debug_flag_(DebugState *debug, DebugTree *tree, char *name, u32 *flags, u32 flag)
+add_debug_flag_(DebugMode *debug, DebugTree *tree, char *name, u32 *flags, u32 flag)
 {
     add_debug_variable_(debug, tree, name, &flag, 0, 0, flags, DebugVarType_Flag);
 }
 
 #define add_debug_enum(tree, name, value, enum_to_string_callback) add_debug_enum_(debug, tree, name, (u32 *)&value, enum_to_string_callback)
 internal void
-add_debug_enum_(DebugState *debug,
+add_debug_enum_(DebugMode *debug,
                 DebugTree *tree,
                 char *name,
                 u32 *value,
@@ -169,13 +169,13 @@ add_debug_enum_(DebugState *debug,
 }
 
 internal void
-add_debug_newline(DebugState *debug, DebugTree *tree)
+add_debug_newline(DebugMode *debug, DebugTree *tree)
 {
     add_debug_variable_(debug, tree, "", 0, 0, 0, 0, DebugVarType_Newline);
 }
 
 internal DebugVar *
-start_debug_group(DebugState *debug, DebugTree *tree, char *name, b32 is_expanded)
+start_debug_group(DebugMode *debug, DebugTree *tree, char *name, b32 is_expanded)
 {
     DebugVar *var = add_debug_variable_(debug, tree, name, 0, 0, 0, 0, DebugVarType_Group);
     
@@ -189,7 +189,7 @@ start_debug_group(DebugState *debug, DebugTree *tree, char *name, b32 is_expande
 }
 
 internal DebugTree *
-add_debug_tree(DebugState *debug, u32 x, u32 y)
+add_debug_tree(DebugMode *debug, u32 x, u32 y)
 {
     for(u32 index = 0; index < MAX_DEBUG_TREE_COUNT; ++index)
     {
@@ -230,9 +230,9 @@ add_debug_tree(DebugState *debug, u32 x, u32 y)
     return(0);
 }
 
-#define add_debug_string(string, color, ...) add_debug_text_(&game->debug, string, color, ##__VA_ARGS__)
+#define add_debug_string(debug, string, color, ...) add_debug_string_(debug, string, color, ##__VA_ARGS__)
 internal DebugVar *
-add_debug_text_(DebugState *debug, DebugTree *tree, char *string, Color color, ...)
+add_debug_string_(DebugMode *debug, DebugTree *tree, char *string, Color color, ...)
 {
     String256 string_final = {0};
     
@@ -246,9 +246,9 @@ add_debug_text_(DebugState *debug, DebugTree *tree, char *string, Color color, .
 }
 
 internal void
-add_debug_var_action(Game *game, DebugTree *tree, void *data, DebugVarActionType type)
+add_debug_var_action(DebugMode *debug, DebugTree *tree, void *data, DebugVarActionType type)
 {
-    assert(game);
+    assert(debug);
     assert(tree);
     assert(data);
     assert(type);
@@ -258,19 +258,19 @@ add_debug_var_action(Game *game, DebugTree *tree, void *data, DebugVarActionType
     {
         case DebugVarActionType_DeleteItem:
         {
-            var = add_debug_string(tree, tree->delete_string, Color_White);
+            var = add_debug_string(debug, tree, tree->delete_string, Color_White);
             var->item = (Item *)data;
         } break;
         
         case DebugVarActionType_KillEntity:
         {
-            var = add_debug_string(tree, "Kill", Color_White);
+            var = add_debug_string(debug, tree, "Kill", Color_White);
             var->entity = (Entity *)data;
         } break;
         
         case DebugVarActionType_DeleteEntity:
         {
-            var = add_debug_string(tree, tree->delete_string, Color_White);
+            var = add_debug_string(debug, tree, tree->delete_string, Color_White);
             var->entity = (Entity *)data;
         } break;
         
@@ -288,7 +288,7 @@ end_debug_group(DebugTree *tree)
 }
 
 internal void
-add_debug_status_effect(DebugState *debug, DebugTree *tree, EntityStatus *status)
+add_debug_entity_status(DebugMode *debug, DebugTree *tree, EntityStatus *status)
 {
     assert(debug);
     assert(tree);
@@ -307,7 +307,7 @@ add_debug_status_effect(DebugState *debug, DebugTree *tree, EntityStatus *status
         
         add_debug_enum(tree, "Stat Type", status->stat_type, get_stat_type_string);
         
-        add_debug_variable(tree, "Stat Value Applied", status->stat_value_applied, DebugVarType_B32);
+        add_debug_variable(tree, "Is Value Applied", status->is_value_applied, DebugVarType_B32);
         add_debug_variable(tree, "Min Value", status->value.min, DebugVarType_S32);
         add_debug_variable(tree, "Max Value", status->value.max, DebugVarType_S32);
         add_debug_variable(tree, "Chance", status->chance, DebugVarType_U32);
@@ -317,14 +317,87 @@ add_debug_status_effect(DebugState *debug, DebugTree *tree, EntityStatus *status
 }
 
 internal void
-update_and_render_debug_state(Game *game,
-                              Input *input,
-                              EntityState *entity_state,
-                              ItemState *item_state,
-                              Dungeon *dungeon,
-                              UI *ui)
+init_debug_mode(GameMemory *memory,
+                FrameTime *frame_time,
+                DebugMode *debug,
+                Input *new_input,
+                Assets *assets,
+                v2u *player_pos)
 {
-    DebugState *debug = &game->debug;
+    assert(memory);
+    assert(frame_time);
+    assert(debug);
+    assert(new_input);
+    assert(assets);
+    assert(player_pos);
+    
+    if(!debug->is_set)
+    {
+        debug->is_set = true;
+        
+        debug->font = &assets->fonts[FontName_DosVga];
+        debug->text_offset.x = get_font_newline(debug->font->size) * 2;
+        debug->text_offset.y = get_font_newline(debug->font->size);
+        
+        debug->memory_size = megabytes(1);
+        init_memory_arena(&debug->memory_arena,
+                          memory->storage + memory->size - debug->memory_size,
+                          debug->memory_size);
+        
+        DebugTree *var_tree = add_debug_tree(debug, 50, 25);
+        DebugTree *color_tree = add_debug_tree(debug, 300, 25);
+        
+        start_debug_group(debug, var_tree, "Variables", false);
+        {
+            add_debug_variable(var_tree, "FPS", frame_time->fps, DebugVarType_F32);
+            add_debug_variable(var_tree, "Frame MS", frame_time->frame_full_ms, DebugVarType_F32);
+            add_debug_variable(var_tree, "Work MS", frame_time->frame_work_ms, DebugVarType_F32);
+            add_debug_variable(var_tree, "Frame DT", new_input->frame_dt, DebugVarType_F32);
+            add_debug_newline(debug, var_tree);
+            
+            add_debug_variable(var_tree, "Mouse", new_input->mouse_pos, DebugVarType_V2U);
+            add_debug_variable(var_tree, "Mouse Tile", new_input->mouse_tile_pos, DebugVarType_V2U);
+            add_debug_variable(var_tree, "Player Tile", *player_pos, DebugVarType_V2U);
+            add_debug_newline(debug, var_tree);
+            
+            add_debug_variable(var_tree, "Traverse All", debug_toggles[DebugToggleType_TraverseAll], DebugVarType_B32);
+            add_debug_variable(var_tree, "Skip Has Been Up", debug_toggles[DebugToggleType_SkipHasBeenUp], DebugVarType_B32);
+            add_debug_variable(var_tree, "Entity Hit Test", debug_toggles[DebugToggleType_EntityHitTest], DebugVarType_B32);
+        }
+        end_debug_group(var_tree);
+        
+        start_debug_group(debug, color_tree, "Colors", false);
+        {
+            add_debug_string(debug, color_tree, get_color_string(Color_White), Color_White);
+            add_debug_string(debug, color_tree, get_color_string(Color_LightGray), Color_LightGray);
+            add_debug_string(debug, color_tree, get_color_string(Color_DarkGray), Color_DarkGray);
+            add_debug_string(debug, color_tree, get_color_string(Color_LightRed), Color_LightRed);
+            add_debug_string(debug, color_tree, get_color_string(Color_DarkRed), Color_DarkRed);
+            add_debug_string(debug, color_tree, get_color_string(Color_Green), Color_Green);
+            add_debug_string(debug, color_tree, get_color_string(Color_LightGreen), Color_LightGreen);
+            add_debug_string(debug, color_tree, get_color_string(Color_DarkGreen), Color_DarkGreen);
+            add_debug_string(debug, color_tree, get_color_string(Color_LightBlue), Color_LightBlue);
+            add_debug_string(debug, color_tree, get_color_string(Color_DarkBlue), Color_DarkBlue);
+            add_debug_string(debug, color_tree, get_color_string(Color_LightBrown), Color_LightBrown);
+            add_debug_string(debug, color_tree, get_color_string(Color_DarkBrown), Color_DarkBrown);
+            add_debug_string(debug, color_tree, get_color_string(Color_Cyan), Color_Cyan);
+            add_debug_string(debug, color_tree, get_color_string(Color_LightYellow), Color_LightYellow);
+            add_debug_string(debug, color_tree, get_color_string(Color_Purple), Color_Purple);
+            add_debug_string(debug, color_tree, get_color_string(Color_Orange), Color_Orange);
+        }
+        end_debug_group(color_tree);
+    }
+}
+
+internal void
+update_and_render_debug_mode(Game *game,
+                             Input *input,
+                             EntityState *entity_state,
+                             ItemState *item_state,
+                             Dungeon *dungeon,
+                             UI *ui)
+{
+    DebugMode *debug = &game->debug;
     if(debug->is_open)
     {
         zero_struct(debug->hot);
@@ -399,7 +472,7 @@ update_and_render_debug_state(Game *game,
                     {
                         base_pos.x,
                         base_pos.y,
-                        get_text_width(text.s, font, false),
+                        get_text_width(text.s, font, true),
                         font->size
                     };
                     
@@ -619,8 +692,8 @@ update_and_render_debug_state(Game *game,
                         
                         start_debug_group(debug, new_tree, entity->name.s, true);
                         {
-                            add_debug_var_action(game, new_tree, entity, DebugVarActionType_KillEntity);
-                            add_debug_var_action(game, new_tree, entity, DebugVarActionType_DeleteEntity);
+                            add_debug_var_action(&game->debug, new_tree, entity, DebugVarActionType_KillEntity);
+                            add_debug_var_action(&game->debug, new_tree, entity, DebugVarActionType_DeleteEntity);
                             add_debug_newline(&game->debug, new_tree);
                             
                             add_debug_variable(new_tree, "Index", entity->index, DebugVarType_U32);
@@ -654,16 +727,16 @@ update_and_render_debug_state(Game *game,
                             
                             start_debug_group(debug, new_tree, "Flags", false);
                             {
+                                add_debug_flag(new_tree, "PhysicalAttacks", entity->flags, EntityFlag_PhysicalAttacks);
+                                add_debug_flag(new_tree, "RangedAttacks", entity->flags, EntityFlag_RangedAttacks);
+                                add_debug_flag(new_tree, "MagicalAttacks", entity->flags, EntityFlag_MagicalAttacks);
                                 add_debug_flag(new_tree, "ShowViewRange", entity->flags, EntityFlag_ShowViewRange);
                                 add_debug_flag(new_tree, "NotifyAboutMultipleItems", entity->flags, EntityFlag_NotifyAboutMultipleItems);
-                                add_debug_flag(new_tree, "UsesPhysicalAttacks", entity->flags, EntityFlag_UsesPhysicalAttacks);
-                                add_debug_flag(new_tree, "UsesRangedAttacks", entity->flags, EntityFlag_UsesRangedAttacks);
                                 add_debug_flag(new_tree, "HasBeenSeen", entity->flags, EntityFlag_HasBeenSeen);
                                 add_debug_flag(new_tree, "Flipped", entity->flags, EntityFlag_Flipped);
                                 add_debug_flag(new_tree, "FightingWithInvisible", entity->flags, EntityFlag_FightingWithInvisible);
                                 add_debug_flag(new_tree, "Pathfinding", entity->flags, EntityFlag_Pathfinding);
                                 add_debug_flag(new_tree, "NormalWaterMovement", entity->flags, EntityFlag_NormalWaterMovement);
-                                add_debug_flag(new_tree, "InvulnerableToTraps", entity->flags, EntityFlag_InvulnerableToTraps);
                                 add_debug_flag(new_tree, "Undead", entity->flags, EntityFlag_Undead);
                                 add_debug_flag(new_tree, "CanOpenDoors", entity->flags, EntityFlag_CanOpenDoors);
                                 add_debug_flag(new_tree, "FleeOnLowHP", entity->flags, EntityFlag_FleeOnLowHP);
@@ -712,7 +785,7 @@ update_and_render_debug_state(Game *game,
                             
                             for(u32 index = 0; index < MAX_ENTITY_STATUS_COUNT; ++index)
                             {
-                                add_debug_status_effect(&game->debug, new_tree, &entity->statuses[index]);
+                                add_debug_entity_status(&game->debug, new_tree, &entity->statuses[index]);
                             }
                         }
                         end_debug_group(new_tree);
@@ -727,7 +800,7 @@ update_and_render_debug_state(Game *game,
                     {
                         start_debug_group(debug, new_tree, get_item_type_string(item->type), true);
                         {
-                            add_debug_var_action(game, new_tree, item, DebugVarActionType_DeleteItem);
+                            add_debug_var_action(&game->debug, new_tree, item, DebugVarActionType_DeleteItem);
                             add_debug_newline(&game->debug, new_tree);
                             
                             start_debug_group(debug, new_tree, "Flags", false);
@@ -739,6 +812,19 @@ update_and_render_debug_state(Game *game,
                                 add_debug_flag(new_tree, "Selected", item->flags, ItemFlag_Selected);
                                 add_debug_flag(new_tree, "Inventory", item->flags, ItemFlag_Inventory);
                                 add_debug_flag(new_tree, "HasBeenSeen", item->flags, ItemFlag_HasBeenSeen);
+                            }
+                            end_debug_group(new_tree);
+                            
+                            start_debug_group(debug, new_tree, "Stats", false);
+                            {
+                                for(u32 stat_index = 0; stat_index < MAX_ITEM_STAT_COUNT; ++stat_index)
+                                {
+                                    ItemStat *stat = &item->stats[stat_index];
+                                    if(stat->type)
+                                    {
+                                        add_debug_string(debug, new_tree, "%s", Color_White, stat->name.s);
+                                    }
+                                }
                             }
                             end_debug_group(new_tree);
                             add_debug_newline(debug, new_tree);
@@ -789,7 +875,7 @@ update_and_render_debug_state(Game *game,
                             }
                             else if(is_set(item->flags, ItemFlag_Consumable))
                             {
-                                add_debug_status_effect(&game->debug, new_tree, &item->c.status);
+                                add_debug_entity_status(&game->debug, new_tree, &item->c.status);
                             }
                             
                             add_debug_newline(debug, new_tree);

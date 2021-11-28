@@ -242,8 +242,8 @@ typedef struct
     ItemStatType type;
     
     s32 value;
+    String64 name;
     EntityDamageType resist_type;
-    String64 description;
 } ItemStat;
 
 struct Item
@@ -312,12 +312,13 @@ typedef struct
 // TODO(rami): Polish: Log message colors depending on message.
 
 #define add_weapon_item(random, item_state, dungeon_level, id, rarity, x, y, is_cursed) add_item(random, item_state, dungeon_level, id, rarity, x, y, is_cursed, 0)
-#define add_armor_item(random, item_state, dungeon_level, id, x, y, is_cursed) add_item(random, item_state, dungeon_level, id, ItemRarity_Common, x, y, is_cursed, 0)
+#define add_armor_item(random, item_state, dungeon_level, id, rarity, x, y, is_cursed) add_item(random, item_state, dungeon_level, id, rarity, x, y, is_cursed, 0)
 #define add_consumable_item(random, item_state, dungeon_level, id, x, y, stack_count) add_item(random, item_state, dungeon_level, id, ItemRarity_Common, x, y, false, stack_count)
 
 internal void remove_item(Item *item, Owner *item_owners);
 internal char *get_entity_damage_type_string(EntityDamageType damage_type);
 internal char *get_item_rarity_string(ItemRarity rarity);
+internal char *get_item_id_string(ItemID id, b32 include_consumables);
 internal b32 is_valid_not_inventory_item(Item *item);
 internal s32 get_index(s32 value);
 internal s32 get_item_stat_type_value(ItemStat *stats, ItemStatType type);

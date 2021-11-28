@@ -62,7 +62,14 @@ typedef struct
     
     u32 start;
     u32 end;
-} GameTimer;
+} GameplayTimer;
+
+typedef struct
+{
+    f32 fps;
+    f32 frame_full_ms;
+    f32 frame_work_ms;
+} FrameTime;
 
 typedef struct
 {
@@ -75,17 +82,18 @@ struct Game
     
 #if MOONBREATH_SLOW
     // TODO(rami): Final: Things like Debug and Editor have to be #ifdef'd out of the final build.
-    DebugState debug;
+    DebugMode debug;
     EditorMode editor;
 #endif
     
+    b32 resting;
     b32 should_update;
     f32 passed_time;
     f32 time;
     
     Random random;
     GameMode mode;
-    GameTimer timer;
+    GameplayTimer timer;
     GameCamera camera;
     ExamineMode examine;
     MemoryArena memory;
@@ -118,6 +126,7 @@ internal b32 is_direction_vertical(Direction direction);
 internal b32 is_chance_valid(u32 chance);
 internal b32 was_pressed(InputState *state);
 internal b32 is_value_in_range(s32 value, s32 start, s32 end);
+internal b32 is_pos_next_to_pos(v2u a, v2u b);
 internal v4u get_pos_tile_rect(v2u pos);
 internal v4u get_pos_tile_mul_rect(v2u pos);
 internal v4u get_game_dest(v4s camera, v2u pos);

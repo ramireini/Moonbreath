@@ -6,10 +6,10 @@ typedef enum
     EntityStatusStatType_Int,
     EntityStatusStatType_Dex,
     EntityStatusStatType_Def,
- EntityStatusStatType_EV,
- EntityStatusStatType_FOV,
- EntityStatusStatType_StrIntDex,
- EntityStatusStatType_Darkness,
+    EntityStatusStatType_EV,
+    EntityStatusStatType_FOV,
+    EntityStatusStatType_StrIntDex,
+    EntityStatusStatType_Darkness,
 } EntityStatusStatType;
 
 typedef enum
@@ -26,8 +26,9 @@ typedef enum
     EntityStatusType_BrokenArmor,
     EntityStatusType_Confusion,
     EntityStatusType_Summon,
- EntityStatusType_Invisible,
- EntityStatusType_Darkness,
+    EntityStatusType_Invisible,
+    EntityStatusType_Darkness,
+    EntityStatusType_TrapInvulnerability,
 } EntityStatusType;
 
 typedef enum
@@ -58,8 +59,10 @@ typedef struct
 
 struct EntityStatus
 {
-    b32 stat_value_applied;
-    b32 print_end_on_last_status;
+    b32 is_value_applied;
+    b32 is_value_percent;
+    b32 removed_manually;
+    b32 log_add_end_message_on_last_status;
     
     String32 name;
     
@@ -77,16 +80,14 @@ struct EntityStatus
     
     EntityStatusType type;
     EntityStatusStatType stat_type;
+    u32 duration;
+    u32 chance;
     
-    b32 is_value_percent;
     union
     {
         EntityDamage value;
         EntityDamage damage;
     };
-    
-    u32 duration;
-    u32 chance;
     
     Spell *spell;
     ItemInfo *item_info;

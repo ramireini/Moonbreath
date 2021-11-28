@@ -1,17 +1,18 @@
 typedef enum
 {
- PathfindMethod_None,
- 
- PathfindMethod_Away,
- PathfindMethod_Toward,
+    PathfindMethod_None,
+    
+    PathfindMethod_Away,
+    PathfindMethod_Toward,
 } PathfindMethod;
 
 typedef struct
 {
- b32 can_move;
- v2u pos;
- u32 value;
- Direction direction;
+    b32 can_move;
+    b32 can_attack;
+    v2u pos;
+    u32 value;
+    Direction direction;
 } PathfindPosInfo;
 
 typedef struct PathfindMap PathfindMap;

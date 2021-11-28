@@ -427,7 +427,7 @@ render_header_text_separator(SDL_Renderer *renderer, char *text, u32 x, u32 y, F
     v4u separator_rect = {0};
     separator_rect.x = x;
     separator_rect.y = y;
-    separator_rect.w = get_text_width(text, font, false);
+    separator_rect.w = get_text_width(text, font, true);
     separator_rect.h = 1;
     
     render_fill_rect(renderer, separator_rect, Color_WindowShadow, false);
@@ -1047,6 +1047,9 @@ pos_newline(v2u *pos, u32 font_size, u32 count)
     pos->y += (get_font_newline(font_size) * count);
 }
 
+// TODO(Rami): For item marks, we might want to have a max width cap on the defer window
+// and if the item mark crosses that, then cap the window width and clip the rect.
+// Depends on how I feel about this in the future.
 internal void
 update_defer_window_rect(char *text, v2u *pos, u32 lines_after, UI *ui)
 {
@@ -1054,13 +1057,10 @@ update_defer_window_rect(char *text, v2u *pos, u32 lines_after, UI *ui)
     assert(pos);
     assert(ui);
     
-    u32 new_width = pos->x + get_text_width(text, ui->font, true);
+    u32 new_width = pos->x + get_text_width(text, ui->font, false);
     if(new_width > ui->defer_window_rect.w)
     {
         ui->defer_window_rect.w = new_width;
-        
-        // Going over custom width means we're no longer custom
-        if(ui->defer_window_has_custom_width) ui->defer_window_has_custom_width = false;
     }
     
     if(lines_after) pos_newline(pos, ui->font->size, lines_after);
@@ -1170,7 +1170,7 @@ defer_header_text_separator(char *text, u32 x, u32 y, UI *ui)
             defer->type = DeferType_Separator;
             defer->rect.x = x;
             defer->rect.y = y;
-            defer->rect.w = get_text_width(text, ui->font, false);
+            defer->rect.w = get_text_width(text, ui->font, true);
             defer->rect.h = 1;
             
             return;
@@ -1401,8 +1401,7 @@ end_defer_window(Game *game, DeferWindow *window, Assets *assets, UI *ui)
     ui->defer_window_rect.h = window->pos.y;
     
     // Width padding
-    if(!ui->defer_window_has_custom_width &&
-       ui->defer_window_padding.x)
+    if(ui->defer_window_padding.x)
     {
         ui->defer_window_rect.w += ui->defer_window_padding.x;
     }
@@ -1654,7 +1653,7 @@ defer_window_option(char *text, v2u *pos, UI *ui)
     assert(ui);
     
     defer_string(text, pos, 0, 0, ui);
-    pos->x += (get_text_width(text, ui->font, false) + 10);
+    pos->x += (get_text_width(text, ui->font, true) + 10);
 }
 
 internal b32
@@ -1997,6 +1996,10 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
             }
         }
         
+#if 0
+        // TODO(Rami): I don't think this is a good idea, we just want to see the status it
+        // inflicts on the list of statuses.
+        
         { // Render spells affected by
             render_header_string_and_separator("Spells Affected By", game, &spells_affected_by_pos, ui, 6, true);
             
@@ -2020,6 +2023,7 @@ render_entity_examine_window(Game *game, Entity *entity, Assets *assets, UI *ui)
             
             if(!affected_by_any_spell) defer_string("None", &spells_affected_by_pos, 0, 1, ui);
         }
+#endif
         
         if(entity->e.spell_count) defer_string("Press the key next to a spell to view it.", pos, 2, 1, ui);
     }
@@ -2124,9 +2128,8 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
     DeferWindow window = {0};
     v2u *pos = init_defer_window(&window, 2, 2, ui);
     
-    // Render item picture and name
+    // Render item tile and name
     defer_tile(pos, item->tile_src, ui, false);
-    
     v2u header_pos = get_window_header_pos(*pos, ui);
     defer_string("%s%s%s%s", &header_pos, 0, 1, ui,
                  get_item_status_color(item->flags, item->rarity),
@@ -2193,7 +2196,7 @@ render_item_examine_window(Game *game, Item *item, Assets *assets, UI *ui, b32 s
             ItemStat *stat = &item->stats[stat_type];
             if(stat->type)
             {
-                defer_string("%s", pos, stat_lines_before, 0, ui, stat->description.s);
+                defer_string("%s", pos, stat_lines_before, 0, ui, stat->name.s);
                 stat_lines_before = 1;
             }
         }
@@ -2774,7 +2777,7 @@ update_and_render_mark_input(SDL_Renderer *renderer, Font *font, Mark *mark, v2u
                 estimation_string.s[index] = mark->array[index];
             }
             
-            mark->input_rect.w = get_text_width(estimation_string.s, font, false);
+            mark->input_rect.w = get_text_width(estimation_string.s, font, true);
         }
         else
         {
@@ -2783,7 +2786,7 @@ update_and_render_mark_input(SDL_Renderer *renderer, Font *font, Mark *mark, v2u
                 estimation_string.s[index] = 'a';
             }
             
-            mark->input_rect.w = get_text_width(estimation_string.s, font, false);
+            mark->input_rect.w = get_text_width(estimation_string.s, font, true);
         }
         
         mark->input_rect.h = font->size + height_pad;
@@ -2894,7 +2897,7 @@ render_item_mark_window(Game *game, Item *item, Assets *assets, Mark *mark, Font
             header = "Replace mark with what?";
         }
         
-        u32 header_width = get_text_width(header, font, false);
+        u32 header_width = get_text_width(header, font, true);
         v2u header_pos =
         {
             window_rect.x + get_centering_offset(window_rect.w, header_width),

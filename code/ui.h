@@ -134,7 +134,6 @@ typedef struct
     DeferWindow full_log;
     LogMessage log_messages[MAX_LOG_MESSAGE_COUNT];
     
-    b32 defer_window_has_custom_width;
     v2u defer_window_padding;
     v4u defer_window_rect;
     Defer defers[MAX_DEFER_COUNT];

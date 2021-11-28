@@ -173,18 +173,6 @@ get_pathfind_result(Entity *entity,
         *info = get_pathfind_pos_info(map, entity->pos, direction);
         
         info->can_move = can_entity_move_to_pos(entity, dungeon, info->pos, true);
-        
-        // Set can_move if there is an entity on the pos we can fight with.
-        if(!info->can_move && !info->value)
-        {
-            Entity *on_pos_entity = get_dungeon_pos_entity(dungeon->tiles, info->pos);
-            if(on_pos_entity &&
-               entity->type == EntityType_Enemy &&
-               on_pos_entity->type == EntityType_Player)
-            {
-                info->can_move = true;
-            }
-        }
     }
     
     // Find the best direction position

@@ -349,21 +349,22 @@ are_chars_equal_no_case(char a, char b)
 }
 
 internal b32
-string_has_string(char *a, char *b, b32 case_sensitive)
+string_has_string(char *a, char *b)
 {
     assert(a);
     assert(b);
     
     while(a[0])
     {
-        // Start substring search
+        // Start search
         if(are_chars_equal_no_case(a[0], b[0]))
         {
             char *sub_a = a;
             char *sub_b = b;
             
             // While matching
-            while(sub_a[0] && sub_b[0] &&
+            while(sub_a[0] &&
+                  sub_b[0] &&
                   are_chars_equal_no_case(sub_a[0], sub_b[0]))
             {
                 ++sub_a;
@@ -375,7 +376,6 @@ string_has_string(char *a, char *b, b32 case_sensitive)
                     return(true);
                 }
             }
-            
         }
         
         ++a;

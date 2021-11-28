@@ -2,6 +2,7 @@
 #include <SDL2/include/SDL_image.h>
 #include <SDL2/include/SDL_ttf.h>
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,164 @@
 #include "entity.c"
 #include "ui.c"
 #include "debug.c"
-#include "config.c"
+
+#include "token.h"
+#include "config_parser.c"
+#include "enum_parser.c"
+
+#if MOONBREATH_WINDOWS
+internal void
+test_game_data(Entity *player, Inventory *inventory, Dungeon *dungeon)
+{
+    assert(is_player_entity_valid(player));
+    assert(inventory);
+    assert(dungeon);
+    
+#if 0
+    printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
+    printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
+#endif
+    
+#if 0
+    for(u32 index = 0; index < MAX_FONT_METRICS_COUNT; ++index)
+    {
+        Font *font = &assets->fonts[FontName_DosVga];
+        char c = index + FIRST_FONT_GLYPH;
+        
+        printf("%c advance: %u\n", c, font->metrics[index].advance);
+    }
+    printf("\n\n");
+#endif
+    
+#if 0
+    printf("\nDungeon Level %u Items:\n", dungeon->level);
+    
+    for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+    {
+        Item *item = &items->array[index];
+        
+        if(is_item_valid_and_not_in_inventory(item, dungeon->level))
+        {
+            printf("%s at %u, %u\n", item->name.s, item->pos.x, item->pos.y);
+        }
+    }
+#endif
+    
+#if 0
+    for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
+    {
+        Dungeon *dungeon = &dungeons->levels[index];
+        
+        for(u32 y = 0; y < dungeon->size.h; ++y)
+        {
+            for(u32 x = 0; x < dungeon->size.w; ++x)
+            {
+                if(is_dungeon_pos_occupied(dungeon->tiles, make_v2u(x, y)))
+                {
+                    printf("Dungeon Level %u (Index %u): %u, %u is occupied\n", index + 1, index, x, y);
+                }
+            }
+        }
+    }
+#endif
+    
+#if 0
+    for(u32 index = 0; index < MAX_OWNER_COUNT; ++index)
+    {
+        Owner *owner = &inventory->item_owners[index];
+        
+        if(owner->type)
+        {
+            printf("owner->type: %u\n", owner->type);
+            printf("owner->item: %p\n", owner->item);
+            printf("owner->c: %c\n\n", owner->c);
+        }
+    }
+#endif
+    
+#if 0
+    for(u32 index = 0; index < MAX_DEBUG_TREE_COUNT; ++index)
+    {
+        DebugTree *tree = &game->debug.trees[index];
+        if(tree->is_set)
+        {
+            printf("Debug Tree Index: %u\n\n", index);
+        }
+    }
+#endif
+    
+#if 0
+    for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
+    {
+        DungeonTrap *trap = &dungeon->traps.array[index];
+        if(trap->type)
+        {
+            printf("Index: %u\n", index);
+            printf("Name: %s\n\n", trap->name.s);
+        }
+    }
+    
+    printf("\n");
+#endif
+    
+#if 0
+    for(u32 index = 0; index < MAX_ENTITY_GHOST_COUNT; ++index)
+    {
+        EntityGhost *ghost = &entity_state->ghosts[index];
+        if(ghost->set)
+        {
+            printf("Index: %u\n", index);
+            printf("Pos: %u, %u\n", ghost->pos.x, ghost->pos.y);
+        }
+    }
+    
+    printf("\n");
+#endif
+    
+    // Assert player equipment
+    for(ItemSlot slot = ItemSlot_None + 1; slot < ItemSlot_Count; ++slot)
+    {
+        Item *item = player->p.equipment[slot];
+        if(item)
+        {
+            assert(is_valid_inventory_item(item) &&
+                   is_set(item->flags, ItemFlag_Equipped));
+        }
+    }
+    
+    // Assert inventory items
+    for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
+    {
+        Item *item = inventory->slots[index];
+        if(item)
+        {
+            assert(is_valid_inventory_item(item));
+        }
+    }
+    
+    // Assert dungeon passages
+    for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
+    {
+        DungeonPassage *passage = &dungeon->passages.array[index];
+        if(passage->type)
+        {
+            assert(!is_v2u_zero(passage->pos));
+            assert(is_dungeon_level_valid(passage->dungeon_level));
+            
+            if(passage->type == DungeonPassageType_Up &&
+               passage->dungeon_level > 1 &&
+               is_v2u_zero(passage->dest_pos))
+            {
+                print_v2u(passage->pos);
+                print_v2u(passage->dest_pos);
+                printf("passage->dungeon_level: %u\n\n", passage->dungeon_level);
+                
+                assert(0);
+            }
+        }
+    }
+}
+#endif
 
 internal u32
 tile_div(u32 value)
@@ -67,7 +225,7 @@ get_game_session_time_string(u32 time)
 }
 
 internal void
-update_game_session_time(GameTimer *timer)
+update_gameplay_timer(GameplayTimer *timer)
 {
     if(timer->start > timer->end + 1000)
     {
@@ -365,26 +523,29 @@ init_view_scrolling_data(View *view, u32 entry_size, f32 shared_step_multiplier)
 internal Texture
 load_texture(SDL_Renderer *renderer, char *path, v4u *color_key)
 {
+    assert(renderer);
+    assert(path);
+    
     Texture result = {0};
     
-    SDL_Surface *loaded_surf = IMG_Load(path);
-    if(loaded_surf)
+    SDL_Surface *surface = IMG_Load(path);
+    if(surface)
     {
-        result.w = loaded_surf->w;
-        result.h = loaded_surf->h;
+        result.w = surface->w;
+        result.h = surface->h;
         
         if(color_key)
         {
             // Store the rgb color into formatted_key in the color format of the surface.
             // All pixels with the color of formatted_key will be transparent.
-            u32 formatted_key = SDL_MapRGB(loaded_surf->format, color_key->r, color_key->g, color_key->b);
-            SDL_SetColorKey(loaded_surf, 1, formatted_key);
+            u32 formatted_key = SDL_MapRGB(surface->format, color_key->r, color_key->g, color_key->b);
+            SDL_SetColorKey(surface, 1, formatted_key);
         }
         
-        SDL_Texture *new_tex = SDL_CreateTextureFromSurface(renderer, loaded_surf);
-        if(new_tex)
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        if(texture)
         {
-            result.tex = new_tex;
+            result.tex = texture;
         }
         else
         {
@@ -396,7 +557,7 @@ load_texture(SDL_Renderer *renderer, char *path, v4u *color_key)
         printf("Error: Image could not be loaded: \"%s\".\n", path);
     }
     
-    SDL_FreeSurface(loaded_surf);
+    SDL_FreeSurface(surface);
     return(result);
 }
 
@@ -443,6 +604,24 @@ get_direction_string(Direction direction)
         case Direction_DownRight: result = "Down Right"; break;
         
         invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal b32
+is_pos_next_to_pos(v2u a, v2u b)
+{
+    assert(is_v2u_set(a));
+    assert(is_v2u_set(b));
+    
+    b32 result = false;
+    
+    Direction direction = get_direction_between_positions(a, b);
+    if(direction)
+    {
+        assert(is_v2u_equal(get_direction_pos(b, direction), a));
+        result = true;
     }
     
     return(result);
@@ -1648,72 +1827,6 @@ update_and_render_game(Game *game,
             }
 #endif
             
-#if MOONBREATH_SLOW
-            // Init editor
-            EditorMode *editor = &game->editor;
-            if(!editor->is_set)
-            {
-                editor->is_set = true;
-                
-                u32 editor_x = 2;
-                u32 editor_y = 2;
-                editor->font = &assets->fonts[FontName_DosVga];
-                
-                EditorGroup *tile_group = add_editor_group(editor, "Tiles", editor_x, editor_y, 10, false);
-                {
-                    add_editor_source_tile(tile_group, EditorSourceType_Wall, DungeonTileID_StoneWall1);
-                    add_editor_source_tile(tile_group, EditorSourceType_Water, DungeonTileID_Water1);
-                    add_editor_source_tile(tile_group, EditorSourceType_DungeonTile, DungeonTileID_StoneDoorClosed);
-                }
-                
-                EditorGroup *trap_group = add_editor_group(editor, "Traps", editor_x, editor_y + 3, 10, false);
-                {
-                    for(DungeonTrapType type = DungeonTrapType_None + 1; type < DungeonTrapType_Count; ++type)
-                    {
-                        add_editor_source_trap(trap_group, type);
-                    }
-                }
-                
-                EditorGroup *entity_group = add_editor_group(editor, "Entities", editor_x, editor_y + 6, 10, true);
-                {
-                    for(EntityID id = EntityID_EnemyStart + 1; id < EntityID_EnemyEnd; ++id)
-                    {
-                        add_editor_source_entity(entity_group, id);
-                    }
-                }
-                
-                EditorGroup *item_group = add_editor_group(editor, "Items", editor_x, editor_y + 13, 0, true);
-                {
-                    for(ItemID id = ItemID_WeaponStart + 1; id < ItemID_WeaponEnd; ++id)
-                    {
-                        for(ItemRarity rarity = ItemRarity_None + 1; rarity < ItemRarity_Count; ++rarity)
-                        {
-                            add_editor_source_item(item_group, item_state, id, rarity);
-                        }
-                    }
-                    add_editor_newline(item_group, 2);
-                    
-                    for(ItemID id = ItemID_ArmorStart + 1; id < ItemID_ArmorEnd; ++id)
-                    {
-                        add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
-                    }
-                    add_editor_newline(item_group, 2);
-                    
-                    for(ItemID id = ItemID_PotionStart + 1; id < ItemID_PotionEnd; ++id)
-                    {
-                        add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
-                    }
-                    add_editor_newline(item_group, 2);
-                    
-                    for(ItemID id = ItemID_ScrollStart + 1; id < ItemID_ScrollEnd; ++id)
-                    {
-                        add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
-                    }
-                    add_editor_newline(item_group, 2);
-                }
-            }
-#endif
-            
             // TODO(rami): Let the player set their name or generate a random one.
             log_add("%sWelcome, %s!", ui, start_color(Color_LightYellow), player->name.s);
             log_add("%sFind and destroy the underworld portal,", ui, start_color(Color_LightYellow));
@@ -1721,148 +1834,18 @@ update_and_render_game(Game *game,
             
             create_dungeon(game, entity_state, item_state, inventory, dungeon_state, ui, 1, make_v2u(0, 0));
             
+            init_editor_mode(&game->editor, item_state, assets);
             game->is_set = true;
         }
         
         ExamineMode *examine = &game->examine;
         Dungeon *dungeon = get_dungeon_from_level(dungeon_state, dungeon_state->current_level);
         
-#if 0
-        printf("Used Game Memory: %lu/%lu\n", game->memory_arena.used, game->memory_arena.size);
-        printf("Used Debug Memory: %lu/%lu\n\n", game->debug.memory_arena.used, game->debug.memory_arena.size);
-#endif
-        
-#if 0
-        for(u32 index = 0; index < MAX_FONT_METRICS_COUNT; ++index)
-        {
-            Font *font = &assets->fonts[FontName_DosVga];
-            char c = index + FIRST_FONT_GLYPH;
-            
-            printf("%c advance: %u\n", c, font->metrics[index].advance);
-        }
-        printf("\n\n");
-#endif
-        
-#if 0
-        printf("\nDungeon Level %u Items:\n", dungeon->level);
-        
-        for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
-        {
-            Item *item = &items->array[index];
-            
-            if(is_item_valid_and_not_in_inventory(item, dungeon->level))
-            {
-                printf("%s at %u, %u\n", item->name.s, item->pos.x, item->pos.y);
-            }
-        }
-#endif
-        
-#if 0
-        for(u32 index = 0; index < MAX_DUNGEON_LEVEL; ++index)
-        {
-            Dungeon *dungeon = &dungeons->levels[index];
-            
-            for(u32 y = 0; y < dungeon->size.h; ++y)
-            {
-                for(u32 x = 0; x < dungeon->size.w; ++x)
-                {
-                    if(is_dungeon_pos_occupied(dungeon->tiles, make_v2u(x, y)))
-                    {
-                        printf("Dungeon Level %u (Index %u): %u, %u is occupied\n", index + 1, index, x, y);
-                    }
-                }
-            }
-        }
-#endif
-        
-#if 0
-        for(u32 index = 0; index < MAX_OWNER_COUNT; ++index)
-        {
-            Owner *owner = &inventory->item_owners[index];
-            
-            if(owner->type)
-            {
-                printf("owner->type: %u\n", owner->type);
-                printf("owner->item: %p\n", owner->item);
-                printf("owner->c: %c\n\n", owner->c);
-            }
-        }
-#endif
-        
-#if 0
-        for(u32 index = 0; index < MAX_DEBUG_TREE_COUNT; ++index)
-        {
-            DebugTree *tree = &game->debug.trees[index];
-            if(tree->is_set)
-            {
-                printf("Debug Tree Index: %u\n\n", index);
-            }
-        }
-#endif
-        
-#if 0
-        for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
-        {
-            DungeonTrap *trap = &dungeon->traps.array[index];
-            if(trap->type)
-            {
-                printf("Index: %u\n", index);
-                printf("Name: %s\n\n", trap->name.s);
-            }
-        }
-        
-        printf("\n");
-#endif
-        
-#if 0
-        for(u32 index = 0; index < MAX_ENTITY_GHOST_COUNT; ++index)
-        {
-            EntityGhost *ghost = &entity_state->ghosts[index];
-            if(ghost->set)
-            {
-                printf("Index: %u\n", index);
-                printf("Pos: %u, %u\n", ghost->pos.x, ghost->pos.y);
-            }
-        }
-        
-        printf("\n");
-#endif
-        
 #if MOONBREATH_SLOW
-        // Make sure inventory items are valid.
-        for(u32 index = 0; index < MAX_INVENTORY_SLOT_COUNT; ++index)
-        {
-            Item *item = inventory->slots[index];
-            if(item)
-            {
-                assert(is_valid_inventory_item(item));
-            }
-        }
-        
-        // Make sure dungeon passages are valid.
-        for(u32 index = 0; index < MAX_DUNGEON_PASSAGE_COUNT; ++index)
-        {
-            DungeonPassage *passage = &dungeon->passages.array[index];
-            if(passage->type)
-            {
-                assert(!is_v2u_zero(passage->pos));
-                assert(is_dungeon_level_valid(passage->dungeon_level));
-                
-                if(passage->type == DungeonPassageType_Up &&
-                   passage->dungeon_level > 1 &&
-                   is_v2u_zero(passage->dest_pos))
-                {
-                    print_v2u(passage->pos);
-                    print_v2u(passage->dest_pos);
-                    printf("passage->dungeon_level: %u\n\n", passage->dungeon_level);
-                    
-                    assert(0);
-                }
-            }
-        }
+        test_game_data(player, inventory, dungeon);
 #endif
         
-        update_game_session_time(&game->timer);
+        update_gameplay_timer(&game->timer);
         update_examine_mode(examine, input, player, entity_state, item_state, &inventory->flags, dungeon, ui);
         update_entities(game, input, entity_state, item_state, inventory, dungeon_state, assets, ui);
         update_camera(game, player->pos, dungeon->size);
@@ -1874,7 +1857,7 @@ update_and_render_game(Game *game,
         
 #if MOONBREATH_SLOW
         render_editor_mode(game->renderer, game->camera, input, &game->editor, assets->tileset);
-        update_and_render_debug_state(game, input, entity_state, item_state, dungeon, ui);
+        update_and_render_debug_mode(game, input, entity_state, item_state, dungeon, ui);
 #endif
         
         render_game_mouse_highlight(game, input, examine, inventory->flags, ui->flags, assets);
@@ -2093,7 +2076,7 @@ int main(int argc, char *args[])
                                 init_view_scrolling_data(&ui->full_log.view, get_font_newline(ui->font->size), ui->default_view_step_multiplier);
                                 
                                 //u64 seed = time(0);
-                                u64 seed = 606506434435643513;
+                                u64 seed = 66506434435651;
                                 printf("Seed: %lu\n", seed);
                                 game->random = set_random_seed(seed);
                                 
@@ -2133,63 +2116,9 @@ int main(int argc, char *args[])
                                 }
                                 
 #if MOONBREATH_SLOW
-                                f32 fps = 0.0f;
-                                f32 full_ms_per_frame = 0.0f;
-                                f32 work_ms_per_frame = 0.0f;
                                 
-                                // Init debug
-                                DebugState *debug = &game->debug;
-                                
-                                debug->font = &assets->fonts[FontName_DosVga];
-                                debug->text_offset.x = get_font_newline(debug->font->size) * 2;
-                                debug->text_offset.y = get_font_newline(debug->font->size);
-                                
-                                debug->memory_size = megabytes(1);
-                                init_memory_arena(&debug->memory_arena,
-                                                  memory.storage + memory.size - debug->memory_size,
-                                                  debug->memory_size);
-                                
-                                DebugTree *var_tree = add_debug_tree(debug, 50, 25);
-                                DebugTree *color_tree = add_debug_tree(debug, 300, 25);
-                                
-                                start_debug_group(debug, var_tree, "Variables", false);
-                                {
-                                    add_debug_variable(var_tree, "Frame MS", full_ms_per_frame, DebugVarType_F32);
-                                    add_debug_variable(var_tree, "Work MS", work_ms_per_frame, DebugVarType_F32);
-                                    add_debug_variable(var_tree, "Frame DT", new_input->frame_dt, DebugVarType_F32);
-                                    add_debug_newline(debug, var_tree);
-                                    
-                                    add_debug_variable(var_tree, "Mouse", new_input->mouse_pos, DebugVarType_V2U);
-                                    add_debug_variable(var_tree, "Mouse Tile", new_input->mouse_tile_pos, DebugVarType_V2U);
-                                    add_debug_variable(var_tree, "Player Tile", player->pos, DebugVarType_V2U);
-                                    add_debug_newline(debug, var_tree);
-                                    
-                                    add_debug_variable(var_tree, "Traverse All", debug_toggles[DebugToggleType_TraverseAll], DebugVarType_B32);
-                                    add_debug_variable(var_tree, "Skip Has Been Up", debug_toggles[DebugToggleType_SkipHasBeenUp], DebugVarType_B32);
-                                    add_debug_variable(var_tree, "Entity Hit Test", debug_toggles[DebugToggleType_EntityHitTest], DebugVarType_B32);
-                                }
-                                end_debug_group(var_tree);
-                                
-                                start_debug_group(debug, color_tree, "Colors", false);
-                                {
-                                    add_debug_string(color_tree, get_color_string(Color_White), Color_White);
-                                    add_debug_string(color_tree, get_color_string(Color_LightGray), Color_LightGray);
-                                    add_debug_string(color_tree, get_color_string(Color_DarkGray), Color_DarkGray);
-                                    add_debug_string(color_tree, get_color_string(Color_LightRed), Color_LightRed);
-                                    add_debug_string(color_tree, get_color_string(Color_DarkRed), Color_DarkRed);
-                                    add_debug_string(color_tree, get_color_string(Color_Green), Color_Green);
-                                    add_debug_string(color_tree, get_color_string(Color_LightGreen), Color_LightGreen);
-                                    add_debug_string(color_tree, get_color_string(Color_DarkGreen), Color_DarkGreen);
-                                    add_debug_string(color_tree, get_color_string(Color_LightBlue), Color_LightBlue);
-                                    add_debug_string(color_tree, get_color_string(Color_DarkBlue), Color_DarkBlue);
-                                    add_debug_string(color_tree, get_color_string(Color_LightBrown), Color_LightBrown);
-                                    add_debug_string(color_tree, get_color_string(Color_DarkBrown), Color_DarkBrown);
-                                    add_debug_string(color_tree, get_color_string(Color_Cyan), Color_Cyan);
-                                    add_debug_string(color_tree, get_color_string(Color_LightYellow), Color_LightYellow);
-                                    add_debug_string(color_tree, get_color_string(Color_Purple), Color_Purple);
-                                    add_debug_string(color_tree, get_color_string(Color_Orange), Color_Orange);
-                                }
-                                end_debug_group(color_tree);
+                                FrameTime frame_time = {0};
+                                init_debug_mode(&memory, &frame_time, &game->debug, new_input, assets, &player->pos);
 #endif
                                 
                                 while(game->mode)
@@ -2227,7 +2156,7 @@ int main(int argc, char *args[])
                                     
 #if MOONBREATH_SLOW
                                     u64 work_elapsed_counter = SDL_GetPerformanceCounter() - last_counter;
-                                    work_ms_per_frame = get_ms_from_elapsed(work_elapsed_counter, performance_frequency);
+                                    frame_time.frame_work_ms = get_ms_from_elapsed(work_elapsed_counter, performance_frequency);
 #endif
                                     
                                     if(get_seconds_elapsed(last_counter, SDL_GetPerformanceCounter(), performance_frequency) < target_seconds_per_frame)
@@ -2250,8 +2179,8 @@ int main(int argc, char *args[])
                                     last_counter = end_counter;
                                     
 #if MOONBREATH_SLOW
-                                    fps = (f32)performance_frequency / (f32)elapsed_counter;
-                                    full_ms_per_frame = get_ms_from_elapsed(elapsed_counter, performance_frequency);
+                                    frame_time.fps = (f32)performance_frequency / (f32)elapsed_counter;
+                                    frame_time.frame_full_ms = get_ms_from_elapsed(elapsed_counter, performance_frequency);
 #endif
                                     
                                     Input *temp = new_input;

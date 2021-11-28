@@ -88,7 +88,7 @@ get_glyph_advance(char c, Font *font)
 }
 
 internal u32
-get_text_width(char *text, Font *font, b32 skip_color_codes)
+get_text_width(char *text, Font *font, b32 include_color_codes)
 {
     assert(text);
     assert(font);
@@ -98,10 +98,10 @@ get_text_width(char *text, Font *font, b32 skip_color_codes)
     
     for(char *c = text; *c; ++c)
     {
-        if(skip_color_codes &&
+        if(!include_color_codes &&
            c[0] == '#' &&
            c[1] == '#' &&
-           (is_numeric(c[2] || is_uppercase(c[2]))))
+           is_hex(c[2]))
         {
             c += 3;
         }

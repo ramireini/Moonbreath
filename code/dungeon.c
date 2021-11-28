@@ -14,13 +14,16 @@ debug_place_dungeon_room(Random *random, DungeonTiles tiles, v4u room)
 #endif
 
 internal b32
-process_new_seen_dungeon_traps(DungeonTrap *array, DungeonTiles tiles, UI *ui, b32 log_names)
+process_new_seen_dungeon_traps(DungeonTraps *traps, DungeonTiles tiles, UI *ui, b32 log_names)
 {
+    assert(traps);
+    assert(ui);
+    
     b32 result = false;
     
     for(u32 index = 0; index < MAX_DUNGEON_TRAP_COUNT; ++index)
     {
-        DungeonTrap *trap = &array[index];
+        DungeonTrap *trap = &traps->array[index];
         
         if(trap->type &&
            is_tile_seen(tiles, trap->pos) &&
@@ -184,7 +187,7 @@ get_new_dungeon_passage_pos(Random *random, Dungeon *dungeon, ItemState *item_st
 }
 
 internal b32
-is_type_info_valid(Random *random, ItemTypeInfo info)
+is_item_type_info_valid(Random *random, ItemTypeInfo info)
 {
     assert(random);
     
@@ -1361,8 +1364,8 @@ can_player_auto_explore_dungeon(Entity *player, Dungeon *dungeon)
 internal v4u
 get_dungeon_dimension_rect(v2u dungeon_size, v2u pos, u32 dimension)
 {
-    assert(!is_v2u_zero(dungeon_size));
-    assert(!is_v2u_zero(pos));
+    assert(is_v2u_set(dungeon_size));
+    assert(is_v2u_set(pos));
     assert(dimension);
     
     v4u result = {0};
@@ -2343,11 +2346,11 @@ create_dungeon(Game *game,
     // Test items
     v2u weapon = {8, 1};
     {
-        for(ItemID weapon_id = ItemID_WeaponStart + 1; weapon_id < ItemID_WeaponEnd; ++weapon_id)
+        for(ItemID id = ItemID_WeaponStart + 1; id < ItemID_WeaponEnd; ++id)
         {
-            add_weapon_item(random, item_state, dungeon_level, weapon_id, ItemRarity_Common, weapon.x + 1, weapon.y, true);
-            add_weapon_item(random, item_state, dungeon_level, weapon_id, ItemRarity_Magical, weapon.x + 2, weapon.y, false);
-            add_weapon_item(random, item_state, dungeon_level, weapon_id, ItemRarity_Mythical, weapon.x + 3, weapon.y, false);
+            add_weapon_item(random, item_state, dungeon_level, id, ItemRarity_Common, weapon.x + 1, weapon.y, false);
+            add_weapon_item(random, item_state, dungeon_level, id, ItemRarity_Magical, weapon.x + 2, weapon.y, false);
+            add_weapon_item(random, item_state, dungeon_level, id, ItemRarity_Mythical, weapon.x + 3, weapon.y, false);
             
             ++weapon.y;
         }
@@ -2355,23 +2358,35 @@ create_dungeon(Game *game,
     
     v2u armor = {weapon.x + 4, 1};
     {
-        add_armor_item(random, item_state, dungeon_level, ItemID_LeatherHelmet, armor.x + 1, armor.y, false);
-        add_armor_item(random, item_state, dungeon_level, ItemID_LeatherChestplate, armor.x + 2, armor.y, false);
-        add_armor_item(random, item_state, dungeon_level, ItemID_LeatherGreaves, armor.x + 3, armor.y, false);
-        add_armor_item(random, item_state, dungeon_level, ItemID_LeatherBoots, armor.x + 4, armor.y, false);
+        for(ItemID id = ItemID_LeatherHelmet; id <= ItemID_LeatherBoots; ++id)
+        {
+            for(ItemRarity rarity = ItemRarity_Common; rarity < ItemRarity_Count; ++rarity)
+            {
+                add_armor_item(random, item_state, dungeon_level, id, rarity, armor.x + rarity, armor.y, false);
+            }
+            
+            ++armor.y;
+        }
         
-        add_armor_item(random, item_state, dungeon_level, ItemID_SteelHelmet, armor.x + 1, armor.y + 1, false);
-        add_armor_item(random, item_state, dungeon_level, ItemID_SteelChestplate, armor.x + 2, armor.y + 1, false);
-        add_armor_item(random, item_state, dungeon_level, ItemID_SteelGreaves, armor.x + 3, armor.y + 1, false);
-        add_armor_item(random, item_state, dungeon_level, ItemID_SteelBoots, armor.x + 4, armor.y + 1, false);
+        ++armor.y;
+        
+        for(ItemID id = ItemID_SteelHelmet; id <= ItemID_SteelBoots; ++id)
+        {
+            for(ItemRarity rarity = ItemRarity_Common; rarity < ItemRarity_Count; ++rarity)
+            {
+                add_armor_item(random, item_state, dungeon_level, id, rarity, armor.x + rarity, armor.y, false);
+            }
+            
+            ++armor.y;
+        }
     }
     
-    v2u potion = {armor.x + 5, 1};
+    v2u potion = {armor.x + 4, 1};
     {
-        for(ItemID potion_id = ItemID_PotionStart + 1; potion_id < ItemID_PotionEnd; ++potion_id)
+        for(ItemID id = ItemID_PotionStart + 1; id < ItemID_PotionEnd; ++id)
         {
-            add_consumable_item(random, item_state, dungeon_level, potion_id, potion.x + 1, potion.y, 2);
-            add_consumable_item(random, item_state, dungeon_level, potion_id, potion.x + 2, potion.y, 7);
+            add_consumable_item(random, item_state, dungeon_level, id, potion.x + 1, potion.y, 2);
+            add_consumable_item(random, item_state, dungeon_level, id, potion.x + 2, potion.y, 7);
             
             ++potion.y;
         }
@@ -2382,10 +2397,10 @@ create_dungeon(Game *game,
     
     v2u scroll = {potion.x + 3, 1};
     {
-        for(ItemID scroll_id = ItemID_ScrollStart + 1; scroll_id < ItemID_ScrollEnd; ++scroll_id)
+        for(ItemID id = ItemID_ScrollStart + 1; id < ItemID_ScrollEnd; ++id)
         {
-            add_consumable_item(random, item_state, dungeon_level, scroll_id, scroll.x + 1, scroll.y, 1);
-            add_consumable_item(random, item_state, dungeon_level, scroll_id, scroll.x + 2, scroll.y, 1);
+            add_consumable_item(random, item_state, dungeon_level, id, scroll.x + 1, scroll.y, 1);
+            add_consumable_item(random, item_state, dungeon_level, id, scroll.x + 2, scroll.y, 1);
             
             ++scroll.y;
         }
@@ -2856,12 +2871,12 @@ create_dungeon(Game *game,
                 // Set item rarity
                 ItemRarity item_rarity = ItemRarity_None;
                 
-                if(is_type_info_valid(random, item_rarity_info[ItemRarity_Magical]))
+                if(is_item_type_info_valid(random, item_rarity_info[ItemRarity_Magical]))
                 {
                     item_rarity = ItemRarity_Magical;
                     ++item_rarity_counts[ItemRarity_Magical];
                 }
-                else if(is_type_info_valid(random, item_rarity_info[ItemRarity_Mythical]))
+                else if(is_item_type_info_valid(random, item_rarity_info[ItemRarity_Mythical]))
                 {
                     item_rarity = ItemRarity_Mythical;
                     ++item_rarity_counts[ItemRarity_Mythical];
@@ -2881,13 +2896,13 @@ create_dungeon(Game *game,
                 // Set armor type
                 ItemID armor_id = get_random_leather_armor(random);
                 
-                if(is_type_info_valid(random, armor_type_info[ArmorItemType_Steel]))
+                if(is_item_type_info_valid(random, armor_type_info[ArmorItemType_Steel]))
                 {
                     armor_id = get_random_steel_armor(random);
                 }
                 
                 assert(is_value_in_range(armor_id, ItemID_ArmorStart, ItemID_ArmorEnd));
-                added_item = add_armor_item(random, item_state, dungeon_level, armor_id, item_pos.x, item_pos.y, false);
+                added_item = add_armor_item(random, item_state, dungeon_level, armor_id, ItemRarity_Common, item_pos.x, item_pos.y, false);
             } break;
             
             case ItemType_Potion:

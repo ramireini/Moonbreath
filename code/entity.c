@@ -7,6 +7,13 @@ is_entity_evasion_valid(u32 evasion)
 }
 
 internal b32
+is_entity_spell_range_valid(u32 spell_range, u32 entity_fov)
+{
+    b32 result = (spell_range && spell_range <= entity_fov);
+    return(result);
+}
+
+internal b32
 is_entity_spell_valid(Spell *spell)
 {
     b32 result = (spell && spell->status_type);
@@ -62,6 +69,33 @@ get_entity_type_string(EntityType type)
 }
 
 internal char *
+get_entity_status_type_string(EntityStatusType type)
+{
+    char *result = 0;
+    
+    switch(type)
+    {
+        
+        case EntityStatusType_Damage: result = "EntityStatusType_Damage"; break;
+        case EntityStatusType_Heal: result = "EntityStatusType_Heal"; break;
+        case EntityStatusType_Stat: result = "EntityStatusType_Stat"; break;
+        case EntityStatusType_Poison: result = "EntityStatusType_Poison"; break;
+        case EntityStatusType_Burn: result = "EntityStatusType_Burn"; break;
+        case EntityStatusType_Bind: result = "EntityStatusType_Bind"; break;
+        case EntityStatusType_Bleed: result = "EntityStatusType_Bleed"; break;
+        case EntityStatusType_BrokenArmor: result = "EntityStatusType_BrokenArmor"; break;
+        case EntityStatusType_Confusion: result = "EntityStatusType_Confusion"; break;
+        case EntityStatusType_Summon: result = "EntityStatusType_Summon"; break;
+        case EntityStatusType_Invisible: result = "EntityStatusType_Invisible"; break;
+        case EntityStatusType_Darkness: result = "EntityStatusType_Darkness"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
 get_enemy_entity_state_string(EnemyEntityState type)
 {
     char *result = 0;
@@ -81,23 +115,24 @@ get_enemy_entity_state_string(EnemyEntityState type)
 }
 
 internal void
-print_enemy_entity_state(EnemyEntityState type)
+print_enemy_entity_state(EnemyEntityState state)
 {
-    printf("Enemy State: %s\n", get_enemy_entity_state_string(type));
+    assert(state);
+    printf("Enemy State: %s\n", get_enemy_entity_state_string(state));
 }
 
 internal void
-print_enemy_entity_info(Entity *enemy)
+print_entity_info(Entity *entity)
 {
-    assert(is_enemy_entity_valid(enemy));
+    assert(is_entity_valid(entity));
     
-    printf("Name: %s\n", enemy->name.s);
-    printf("Index: %u\n", enemy->index);
-    printf("Dungeon Level: %u\n", enemy->dungeon_level);
-    printf("HP: %u\n", enemy->hp);
-    printf("Max HP: %u\n", enemy->max_hp);
-    printf("Pos: %u, %u\n", enemy->pos.x, enemy->pos.y);
-    printf("New Pos: %u, %u\n", enemy->new_pos.x, enemy->new_pos.y);
+    printf("Name: %s\n", entity->name.s);
+    printf("Index: %u\n", entity->index);
+    printf("Dungeon Level: %u\n", entity->dungeon_level);
+    printf("HP: %u\n", entity->hp);
+    printf("Max HP: %u\n", entity->max_hp);
+    printf("Pos: %u, %u\n", entity->pos.x, entity->pos.y);
+    printf("New Pos: %u, %u\n", entity->new_pos.x, entity->new_pos.y);
     
     printf("\n");
 }
@@ -452,47 +487,6 @@ get_entity_status(EntityStatus *statuses, EntityStatusType type)
     return(result);
 }
 
-internal String64
-get_item_name_interact_string(Random *random, String32 name)
-{
-    assert(random);
-    
-    String64 result = {0};
-    
-    // First group
-    String16 first_group[3] =
-    {
-        "look",
-        "feel",
-        "seem",
-    };
-    u32 first_group_index = get_random_index(random, get_array_count(first_group));
-    
-    // Add 's' if name is singular
-    u32 name_length = get_string_length(name.s);
-    if(name.s[name_length - 1] != 's')
-    {
-        u32 word_length = get_string_length(first_group[first_group_index].s);
-        first_group[first_group_index].s[word_length] = 's';
-    }
-    
-    // Second group
-    String16 second_group[4] =
-    {
-        "different",
-        "sturdier",
-        "stronger",
-        "improved",
-    };
-    u32 second_group_index = get_random_index(random, get_array_count(second_group));
-    
-    sprintf(result.s, "%s %s",
-            first_group[first_group_index].s,
-            second_group[second_group_index].s);
-    
-    return(result);
-}
-
 internal u32
 get_max_enum_string_length(u32 enum_type_none, u32 enum_type_count, char *enum_to_string_callback(u32))
 {
@@ -718,28 +712,36 @@ set_random_entity_spell(Random *random, Entity *entity)
 internal b32
 is_pos_in_spell_range(v2u start_pos, v2u end_pos, u32 spell_range)
 {
-    assert(!is_v2u_zero(start_pos));
-    assert(!is_v2u_zero(end_pos));
+    assert(is_v2u_set(start_pos));
     assert(spell_range);
+    assert(is_v2u_set(end_pos));
     
     b32 result = cardinal_and_ordinal_distance(start_pos, end_pos) <= spell_range;
     return(result);
 }
 
 internal b32
-is_entity_in_view_and_spell_range(Entity *attacker, v2u defender_pos, u32 spell_range)
+is_entity_in_casters_view_rect_and_spell_range(Entity *caster,
+                                               u32 spell_range,
+                                               v2u entity_pos)
 {
-    assert(is_enemy_entity_valid(attacker));
-    assert(!is_v2u_zero(defender_pos));
+    assert(is_enemy_entity_valid(caster));
     assert(spell_range);
     
-    b32 result = (is_dungeon_pos_inside_rect(defender_pos, attacker->e.view_rect) &&
-                  is_pos_in_spell_range(attacker->pos, defender_pos, spell_range));
+    //assert(is_v2u_set(entity_pos));
+    if(!is_v2u_set(entity_pos))
+    {
+        print_v2u(entity_pos);
+        assert(0);
+    }
+    
+    b32 result = (is_dungeon_pos_inside_rect(entity_pos, caster->e.view_rect) &&
+                  is_pos_in_spell_range(caster->pos, entity_pos, spell_range));
     
     return(result);
 }
 
-internal EntitySpellCastResult
+internal b32
 select_and_cast_entity_spell(Random *random,
                              EntityState *entity_state,
                              Entity *caster,
@@ -748,42 +750,43 @@ select_and_cast_entity_spell(Random *random,
 {
     assert(random);
     assert(entity_state);
-    assert(is_entity_valid(caster));
+    assert(is_enemy_entity_valid(caster));
+    assert(caster->e.spell_count);
+    assert(!caster->e.selected_spell);
     assert(dungeon);
     assert(ui);
     
-    EntitySpellCastResult result = {0};
+    b32 result = true;
+    b32 selecting_spell = true;
     
-    b32 loop = true;
-    Entity *target = 0;
-    
-    while(loop) // Loop until a usable spell is found.
+    while(selecting_spell)
     {
         assert_loop_count();
         
+        Entity *target = get_player_entity(); // Init to player here because of the branching.
         Spell *spell = set_random_entity_spell(random, caster);
         
 #if 0
-        printf("spell->name: %s\n", spell->name.s);
-        printf("spell->range: %u\n\n", spell->range);
+        printf("\nspell->name: %s\n", spell->name.s);
+        printf("spell->status_type: %s\n", get_entity_status_type_string(spell->status_type));
+        printf("spell->range: %u\n", spell->range);
         printf("spell->value.min: %u\n", spell->value.min);
         printf("spell->value.max: %u\n", spell->value.max);
 #endif
         
         if(spell->status_type == EntityStatusType_Damage)
         {
-            target = get_player_entity();
-            if(is_entity_in_view_and_spell_range(caster, target->pos, spell->range))
+            if(is_entity_in_casters_view_rect_and_spell_range(caster, spell->range, target->pos))
             {
                 attack_entity(random, caster, 0, target, dungeon, ui, spell->damage, true);
             }
             else
             {
                 assert(!is_pos_in_spell_range(caster->pos, target->pos, spell->range));
-                result.target_not_in_spell_range = true;
+                result = false;
             }
             
-            loop = false;
+            selecting_spell = false;
         }
         else if(spell->status_type == EntityStatusType_Heal)
         {
@@ -791,14 +794,14 @@ select_and_cast_entity_spell(Random *random,
             {
                 target = &entity_state->entities[index];
                 if(is_entity_valid_and_not_index(target, caster->index) &&
-                   is_entity_in_view_and_spell_range(caster, target->pos, spell->range) &&
+                   is_entity_in_casters_view_rect_and_spell_range(caster, spell->range, target->pos) &&
                    target->type == EntityType_Enemy &&
                    target->hp != target->max_hp)
                 {
                     heal_entity(target, get_random(random, spell->value.min, spell->value.max));
                     log_add_entity_interact_string(random, caster, 0, target, ui, 0, EntityResistInfoType_None, EntityInteractInfoType_None);
                     
-                    loop = false;
+                    selecting_spell = false;
                     break;
                 }
             }
@@ -818,7 +821,8 @@ select_and_cast_entity_spell(Random *random,
                     {
                         case EntityType_Player:
                         {
-                            if(is_player_entity_valid(target))
+                            if(is_player_entity_valid(target) &&
+                               !get_entity_status(target->statuses, spell->status_type))
                             {
                                 is_target_valid = true;
                             }
@@ -827,7 +831,8 @@ select_and_cast_entity_spell(Random *random,
                         case EntityType_Enemy:
                         {
                             if(is_enemy_entity_valid(target) &&
-                               target->e.state == EnemyEntityState_Fighting)
+                               target->e.state == EnemyEntityState_Fighting &&
+                               !get_entity_status(target->statuses, spell->status_type))
                             {
                                 is_target_valid = true;
                             }
@@ -875,11 +880,11 @@ select_and_cast_entity_spell(Random *random,
                     
                     if(is_target_valid &&
                        is_spell_valid &&
-                       is_entity_in_view_and_spell_range(caster, target->pos, spell->range))
+                       is_entity_in_casters_view_rect_and_spell_range(caster, spell->range, target->pos))
                     {
-                        cast_entity_spell(random, caster, target, dungeon, ui);
+                        cast_entity_spell(random, caster, target, ui);
                         
-                        loop = false;
+                        selecting_spell = false;
                         break;
                     }
                 }
@@ -887,24 +892,24 @@ select_and_cast_entity_spell(Random *random,
         }
         else if((spell->status_type == EntityStatusType_Bind ||
                  spell->status_type == EntityStatusType_Burn || 
-                 spell->status_type == EntityStatusType_Confusion) &&
-                is_entity_in_view_and_spell_range(caster, target->pos, spell->range) &&
-                !get_entity_status(target->statuses, spell->status_type))
+                 spell->status_type == EntityStatusType_Confusion))
         {
-            // This is for statuses are that applied only when they aren't already active.
-            
-            cast_entity_spell(random, caster, target, dungeon, ui);
-            loop = false;
+            if(is_entity_in_casters_view_rect_and_spell_range(caster, spell->range, target->pos) &&
+               !get_entity_status(target->statuses, spell->status_type))
+            {
+                // This is for statuses are that applied only when they aren't already active.
+                cast_entity_spell(random, caster, target, ui);
+                selecting_spell = false;
+            }
         }
         else if(spell->status_type == EntityStatusType_Summon)
         {
             summon_entity(random, entity_state, caster, dungeon, ui, spell->summon_flags);
-            loop = false;
+            selecting_spell = false;
         }
     }
     
-    // Nothing should use this until we set it again.
-    caster->e.selected_spell = 0;
+    caster->e.selected_spell = 0; // Only used in this function.
     return(result);
 }
 
@@ -1021,7 +1026,7 @@ log_add_entity_interact_string(Random *random,
             }
             else if(!attack_string.s[0])
             {
-                if(is_set(attacker->flags, EntityFlag_UsesRangedAttacks))
+                if(is_set(attacker->flags, EntityFlag_RangedAttacks))
                 {
                     snprintf(attack_string.s, sizeof(attack_string.s), "fires an arrow at");
                 }
@@ -1505,263 +1510,307 @@ get_enemy_entity_flags(EntityID id)
         {
             set(result, EntityFlag_Undead);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_SkeletonArcher:
         {
             set(result, EntityFlag_Undead);
             set(result, EntityFlag_CanOpenDoors);
-            set(result, EntityFlag_UsesRangedAttacks);
+            set(result, EntityFlag_RangedAttacks);
         } break;
         
         case EntityID_SkeletonMage:
         {
             set(result, EntityFlag_Undead);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
         } break;
         
         case EntityID_Bat:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Rat:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_KoboldWarrior:
         {
-            set(result, EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_HealthRegeneration);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_KoboldShaman:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_Snail:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Slime:
         {
+            set(result, EntityFlag_PhysicalAttacks);
             set(result, EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_Dog:
         {
+            set(result, EntityFlag_PhysicalAttacks);
             set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_OrcWarrior:
         {
-            set(result, EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
+            set(result, EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_OrcArcher:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
-            set(result, EntityFlag_UsesRangedAttacks);
+            set(result, EntityFlag_RangedAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_OrcShaman:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_Python:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Shade:
         {
             set(result, EntityFlag_Undead);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_ElfKnight:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_ElfArbalest:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
-            set(result, EntityFlag_UsesRangedAttacks);
+            set(result, EntityFlag_RangedAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_ElfMage:
         {
+            set(result, EntityFlag_MagicalAttacks);
             set(result, EntityFlag_CanOpenDoors);
         } break;
         
         case EntityID_GiantSlime:
         {
             set(result, EntityFlag_HealthRegeneration);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Spectre:
         {
             set(result, EntityFlag_Undead);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_OrcAssassin:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_OrcSorcerer:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_Minotaur:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Treant:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Viper:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_CentaurWarrior:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_CentaurSpearman:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_CentaurArcher:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
-            set(result, EntityFlag_UsesRangedAttacks);
+            set(result, EntityFlag_RangedAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_CursedSkull:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Wolf:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_OgreWarrior:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_OgreArcher:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
-            set(result, EntityFlag_UsesRangedAttacks);
+            set(result, EntityFlag_RangedAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_OgreMage:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_Cyclops:
         {
-            set(result, EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_HealthRegeneration);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_ShadowWalker:
         {
             set(result, EntityFlag_Undead);
-            set(result, EntityFlag_UsesRangedAttacks);
+            set(result, EntityFlag_RangedAttacks);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_DwarfKnight:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_DwarfSoldier:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_DwarfTinkerer:
         {
-            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
+            set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_ScarletSnake:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Lich:
         {
             set(result, EntityFlag_Undead);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
         } break;
         
         case EntityID_AbyssalFiend:
         {
-            set(result, EntityFlag_UsesRangedAttacks);
+            set(result, EntityFlag_RangedAttacks);
         } break;
         
         case EntityID_BloodTroll:
         {
-            set(result, EntityFlag_HealthRegeneration);
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
+            set(result, EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_IronGolem:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Griffin:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Imp:
         {
+            set(result, EntityFlag_PhysicalAttacks);
             set(result, EntityFlag_FleeOnLowHP || EntityFlag_HealthRegeneration);
         } break;
         
         case EntityID_BlackKnight:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_GiantDemon:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_Hellhound:
         {
+            set(result, EntityFlag_PhysicalAttacks);
         } break;
         
         case EntityID_AbyssalHexmaster:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
         } break;
         
         case EntityID_Zarimahar:
         {
             set(result, EntityFlag_CanOpenDoors);
+            set(result, EntityFlag_MagicalAttacks);
             set(result, EntityFlag_HealthRegeneration);
         } break;
         
@@ -1834,59 +1883,13 @@ attack_entity_with_status(Random *random,
     log_add(status->player_active.s, ui, start_color(status->player_active_color), damage);
 }
 
-internal b32
-end_inventory_item_interact(Inventory *inventory)
-{
-    assert(inventory);
-    
-    inventory->validate_view = true;
-    inventory->interact_type = ItemInteractType_None;
-}
-
 internal void
-process_inventory_item_interact(Random *random, Inventory *inventory, Item *item, UI *ui)
+log_add_while_enemies_are_nearby(char *string, UI *ui)
 {
-    assert(random);
-    assert(inventory);
-    assert(item);
+    assert(string);
     assert(ui);
     
-    switch(inventory->interact_type)
-    {
-        case ItemInteractType_Identify:
-        {
-            assert(!is_set(item->flags, ItemFlag_Identified));
-            
-            set(item->flags, ItemFlag_Identified);
-            log_add("You identify the %s%s.", ui, get_item_status_color(item->flags, item->rarity), get_full_item_name(item).s);
-        } break;
-        
-        case ItemInteractType_EnchantWeapon:
-        case ItemInteractType_EnchantArmor:
-        {
-            ++item->enchant_level;
-            log_add("%sThe %s %s.", ui, start_color(Color_LightBlue), get_full_item_name(item).s, get_item_name_interact_string(random, item->name).s);
-        } break;
-        
-        case ItemInteractType_Uncurse:
-        {
-            assert(is_set(item->flags, ItemFlag_Identified));
-            
-            unset(item->flags, ItemFlag_Cursed);
-            log_add("The %s feels slightly different now.", ui, get_full_item_name(item).s);
-        } break;
-        
-        invalid_default_case;
-    }
-    
-    end_inventory_item_interact(inventory);
-}
-
-internal void
-log_add_there_are_enemies_nearby(UI *ui)
-{
-    assert(ui);
-    log_add("There are enemies nearby!", ui);
+    log_add("Can't %s while enemies are nearby!", ui, string);
 }
 
 internal b32
@@ -1903,7 +1906,7 @@ can_player_auto_explore(u32 *examine_flags, EntityState *entity_state, Dungeon *
     {
         result = false;
         
-        log_add_there_are_enemies_nearby(ui);
+        log_add_while_enemies_are_nearby("explore", ui);
         unset(*examine_flags, ExamineFlag_Open); // Unset in case we came through examine mode.
     }
     
@@ -2021,7 +2024,7 @@ reset_inventory_multiple_pickup(ItemState *item_state,
     assert(temp_owners);
     
     reset_all_owner_select_letters(temp_owners);
-    unset_all_item_is_selected_flags(item_state, dungeon_level);
+    unselect_all_items(item_state, dungeon_level);
     unset(*inventory_flags, InventoryFlag_MultiplePickup);
 }
 
@@ -2043,6 +2046,7 @@ get_status_type_string(EntityStatusType type)
         case EntityStatusType_Confusion: result = "Confusion"; break;
         case EntityStatusType_Invisible: result = "Invisible"; break;
         case EntityStatusType_Darkness: result = "Darkness"; break;
+        case EntityStatusType_TrapInvulnerability: result = "Trap Invulnerability"; break;
         
         invalid_default_case;
     }
@@ -2119,9 +2123,9 @@ entity_move_force(Entity *entity,
 }
 
 internal b32
-process_new_seen_enemy_entities(Entity *entities, Dungeon *dungeon, UI *ui, b32 log_names)
+process_new_seen_enemy_entities(EntityState *entity_state, Dungeon *dungeon, UI *ui, b32 log_names)
 {
-    assert(entities);
+    assert(entity_state);
     assert(dungeon);
     assert(ui);
     
@@ -2129,7 +2133,7 @@ process_new_seen_enemy_entities(Entity *entities, Dungeon *dungeon, UI *ui, b32 
     
     for(u32 index = 0; index < MAX_ENTITY_COUNT; ++index)
     {
-        Entity *enemy = &entities[index];
+        Entity *enemy = &entity_state->entities[index];
         
         if(is_enemy_entity_valid_in_level(enemy, dungeon->level) &&
            is_tile_seen(dungeon->tiles, enemy->pos) &&
@@ -2291,17 +2295,17 @@ process_new_seen_targets_by_player(EntityState *entity_state,
     
     b32 result = false;
     
-    if(process_new_seen_enemy_entities(entity_state->entities, dungeon, ui, log_names))
+    if(process_new_seen_enemy_entities(entity_state, dungeon, ui, log_names))
     {
         result = true;
     }
     
-    if(process_new_seen_dungeon_traps(dungeon->traps.array, dungeon->tiles, ui, log_names))
+    if(process_new_seen_dungeon_traps(&dungeon->traps, dungeon->tiles, ui, log_names))
     {
         result = true;
     }
     
-    if(process_new_seen_items(item_state->array, dungeon->tiles, ui, log_names))
+    if(process_new_seen_items(item_state, dungeon->tiles, ui, log_names))
     {
         result = true;
     }
@@ -2642,8 +2646,8 @@ add_entity_attack_spell(Entity *entity,
 {
     assert(is_enemy_entity_valid(entity));
     assert(name);
-    assert(damage_type);
     assert(damage);
+    assert(damage_type);
     assert(is_chance_valid(chance));
     
     for(u32 index = 0; index < MAX_ENTITY_SPELL_COUNT; ++index)
@@ -2876,9 +2880,9 @@ update_entity_stats_from_status(Entity *entity,
     
     // This function is called before status is removed after ending, we need to pass to update
     // the entity stats.
-    if(!status->stat_value_applied || !is_add)
+    if(!status->is_value_applied || !is_add)
     {
-        if(is_add) status->stat_value_applied = true;
+        if(is_add) status->is_value_applied = true;
         
         switch(status->stat_type)
         {
@@ -2930,7 +2934,6 @@ update_entity_stats_from_status(Entity *entity,
 internal void
 add_entity_status(Random *random,
                   Entity *entity,
-                  Dungeon *dungeon,
                   UI *ui,
                   EntityStatus *new_status)
 {
@@ -2965,7 +2968,7 @@ add_entity_status(Random *random,
                     assert(entity->type == EntityType_Player);
                     
                     status->is_player_active_custom = true;
-                    status->print_end_on_last_status = true;
+                    status->log_add_end_message_on_last_status = true;
                     status->player_active_color = Color_White;
                     
                     strcpy(status->player_start.s, "You feel poisoned!");
@@ -2978,7 +2981,7 @@ add_entity_status(Random *random,
                     assert(entity->type == EntityType_Player);
                     
                     status->is_player_active_custom = true;
-                    status->print_end_on_last_status = true;
+                    status->log_add_end_message_on_last_status = true;
                     status->player_active_color = Color_White;
                     
                     strcpy(status->player_start.s, "Your body starts burning!");
@@ -2991,7 +2994,7 @@ add_entity_status(Random *random,
                     assert(entity->type == EntityType_Player);
                     
                     status->is_player_active_custom = true;
-                    status->print_end_on_last_status = true;
+                    status->log_add_end_message_on_last_status = true;
                     status->player_active_color = Color_White;
                     
                     strcpy(status->player_start.s, "Your wounds start bleeding!");
@@ -3001,7 +3004,7 @@ add_entity_status(Random *random,
                 
                 case EntityStatusType_Bind:
                 {
-                    status->print_end_on_last_status = true;
+                    status->log_add_end_message_on_last_status = true;
                     
                     if(entity->type == EntityType_Player)
                     {
@@ -3012,7 +3015,7 @@ add_entity_status(Random *random,
                 
                 case EntityStatusType_Confusion:
                 {
-                    status->print_end_on_last_status = true;
+                    status->log_add_end_message_on_last_status = true;
                     
                     if(entity->type == EntityType_Player)
                     {
@@ -3023,7 +3026,7 @@ add_entity_status(Random *random,
                 
                 case EntityStatusType_BrokenArmor:
                 {
-                    status->print_end_on_last_status = true;
+                    status->log_add_end_message_on_last_status = true;
                     
                     if(entity->type == EntityType_Player)
                     {
@@ -3049,6 +3052,13 @@ add_entity_status(Random *random,
     }
     
     assert(0);
+}
+
+internal void
+remove_entity_status(EntityStatus *status)
+{
+    assert(status);
+    zero_struct(*status);
 }
 
 internal void
@@ -3135,6 +3145,7 @@ update_entity_statuses(Random *random,
                 case EntityStatusType_Confusion: break;
                 case EntityStatusType_Invisible: break;
                 case EntityStatusType_Darkness: update_entity_stats_from_status(entity, ui, status, true); break;
+                case EntityStatusType_TrapInvulnerability: break;
                 
                 invalid_default_case;
             }
@@ -3145,11 +3156,12 @@ update_entity_statuses(Random *random,
             }
             
             // End status
-            if(!status->duration)
+            if(!status->duration &&
+               !status->removed_manually)
             {
                 b32 can_print_end = true;
                 
-                if(status->print_end_on_last_status &&
+                if(status->log_add_end_message_on_last_status &&
                    get_entity_status_type_count(entity->statuses, status->type) > 1)
                 {
                     can_print_end = false;
@@ -3183,7 +3195,7 @@ update_entity_statuses(Random *random,
                     }
                 }
                 
-                zero_struct(*status);
+                remove_entity_status(status);
             }
         }
     }
@@ -3192,13 +3204,11 @@ update_entity_statuses(Random *random,
 internal void
 add_entity_status_from_spell(Random *random,
                              Entity *entity,
-                             Dungeon *dungeon,
                              UI *ui,
                              Spell *spell)
 {
     assert(random);
     assert(is_entity_valid(entity));
-    assert(dungeon);
     assert(ui);
     assert(is_entity_spell_valid(spell));
     
@@ -3213,25 +3223,23 @@ add_entity_status_from_spell(Random *random,
     
     // Only update if the spell has a value.
     if(status.value.max) update_entity_stats_from_status(entity, ui, &status, true);
-    add_entity_status(random, entity, dungeon, ui, &status);
+    add_entity_status(random, entity, ui, &status);
 }
 
 internal void
 cast_entity_spell(Random *random,
                   Entity *caster,
                   Entity *target,
-                  Dungeon *dungeon,
                   UI *ui)
 {
     assert(random);
     assert(is_enemy_entity_valid(caster));
     assert(is_entity_spell_valid(caster->e.selected_spell));
     assert(is_entity_valid(target));
-    assert(dungeon);
     assert(ui);
     
     log_add_entity_interact_string(random, caster, 0, target, ui, 0, EntityResistInfoType_None, EntityInteractInfoType_None);
-    add_entity_status_from_spell(random, target, dungeon, ui, caster->e.selected_spell);
+    add_entity_status_from_spell(random, target, ui, caster->e.selected_spell);
 }
 
 internal b32
@@ -3418,13 +3426,13 @@ entity_move(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_po
             printf("New pos is traversable or closed door: %u\n\n", is_dungeon_pos_traversable_or_closed_door(dungeon->tiles, new_pos));
             
             printf("- Mover -\n");
-            print_enemy_entity_info(entity);
+            print_entity_info(entity);
             
             Entity *occupier = get_dungeon_pos_entity(dungeon->tiles, new_pos);
             if(occupier)
             {
                 printf("- Occupier -\n");
-                print_enemy_entity_info(occupier);
+                print_entity_info(occupier);
             }
             
             assert(0);
@@ -3433,7 +3441,7 @@ entity_move(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u new_po
         
         if(entity->type == EntityType_Player)
         {
-            process_new_seen_dungeon_traps(dungeon->traps.array, dungeon->tiles, ui, false);
+            process_new_seen_dungeon_traps(&dungeon->traps, dungeon->tiles, ui, false);
         }
         else if(entity->type == EntityType_Enemy)
         {
@@ -3536,16 +3544,20 @@ attack_entity(Random *random,
     {
         printf("\n--------------------\n");
         
+        
         if(attacker)
         {
-            printf("Attacker: %s\n", attacker->name.s);
+            printf("Attacker:\n");
+            print_entity_info(attacker);
         }
-        else
+        else if(trap)
         {
-            printf("Attacker: None\n");
+            printf("Attacker: Trap\n");
         }
         
-        printf("Defender: %s\n", defender->name.s);
+        printf("Defender:\n");
+        print_entity_info(defender);
+        
         printf("Damage Info Min: %u\n", damage_info.min);
         printf("Damage Info Max: %u\n", damage_info.max);
         printf("Damage Type: %s\n", get_entity_damage_type_string(damage_info.type));
@@ -3557,6 +3569,7 @@ attack_entity(Random *random,
     assert(dungeon);
     assert(ui);
     assert(damage_info.type);
+    assert(attacker || trap);
     
 #if MOONBREATH_SLOW
     if(attacker) assert(is_entity_valid_in_level(attacker, defender->dungeon_level));
@@ -3669,7 +3682,7 @@ attack_entity(Random *random,
                                 }
                                 else
                                 {
-                                    add_entity_status(random, defender, dungeon, ui, status);
+                                    add_entity_status(random, defender, ui, status);
                                 }
                             }
                         }
@@ -3938,196 +3951,203 @@ update_enemy_entities(Game *game,
                     --enemy_turn_count;
                     enemy->e.action_timer = 0;
                     
-#if MOONBREATH_SLOW
-                    b32 print_state = 0;
-#endif
-                    
-                    // After changing enemy state we can jump here to update immediately.
-                    update_states:
-                    
-                    if(enemy->e.state == EnemyEntityState_Wandering)
+                    if(!is_enemy_entity_alerted(enemy->e.player_seen_count))
                     {
                         
 #if MOONBREATH_SLOW
-                        if(print_state) print_enemy_entity_state(enemy->e.state);
+                        b32 print_state = 0;
 #endif
                         
-                        unset(enemy->flags, EntityFlag_FightingFromCornered);
+                        // After changing enemy state we can jump here to update immediately.
+                        update_states:
                         
-                        if(can_enemy_see_entity(enemy, player, dungeon->tiles))
+                        if(enemy->e.state == EnemyEntityState_Wandering)
                         {
-                            reset_entity_pathfind(enemy);
                             
-                            enemy->e.state = EnemyEntityState_Fighting;
-                            goto update_states;
-                        }
-                        else
-                        {
-                            update_enemy_wandering(random, enemy, dungeon);
-                        }
-                    }
-                    else if(enemy->e.state == EnemyEntityState_Fighting)
-                    {
-                        
 #if MOONBREATH_SLOW
-                        if(print_state) print_enemy_entity_state(enemy->e.state);
+                            if(print_state) print_enemy_entity_state(enemy->e.state);
 #endif
-                        
-                        set_entity_facing_direction(enemy, player);
-                        
-                        if(!is_set(enemy->flags, EntityFlag_FightingFromCornered) && // If enemy fights out of desparation then don't go back to fleeing.
-                           is_set(enemy->flags, EntityFlag_FleeOnLowHP) &&
-                           get_percent_from(enemy->hp, enemy->max_hp) <= enemy->e.hp_flee_percent)
-                        {
-                            log_add("The %s starts to flee!", ui, enemy->name.s);
                             
-                            enemy->e.state = EnemyEntityState_Fleeing;
-                            goto update_states;
-                        }
-                        else
-                        {
-                            if(is_set(enemy->flags, EntityFlag_FightingWithInvisible))
+                            unset(enemy->flags, EntityFlag_FightingFromCornered);
+                            
+                            if(can_enemy_see_entity(enemy, player, dungeon->tiles))
                             {
-                                // If direction is valid then player is in the immediate vicinity of the enemy.
-                                Direction direction = get_direction_between_positions(player->pos, enemy->pos);
-                                if(direction)
+                                reset_entity_pathfind(enemy);
+                                
+                                enemy->e.state = EnemyEntityState_Fighting;
+                                goto update_states;
+                            }
+                            else
+                            {
+                                update_enemy_wandering(random, enemy, dungeon);
+                            }
+                        }
+                        else if(enemy->e.state == EnemyEntityState_Fighting)
+                        {
+                            
+#if MOONBREATH_SLOW
+                            if(print_state) print_enemy_entity_state(enemy->e.state);
+#endif
+                            
+                            set_entity_facing_direction(enemy, player);
+                            
+                            if(!is_set(enemy->flags, EntityFlag_FightingFromCornered) && // If enemy fights out of desparation then don't go back to fleeing.
+                               is_set(enemy->flags, EntityFlag_FleeOnLowHP) &&
+                               get_percent_from(enemy->hp, enemy->max_hp) <= enemy->e.hp_flee_percent)
+                            {
+                                log_add("The %s starts to flee!", ui, enemy->name.s);
+                                
+                                enemy->e.state = EnemyEntityState_Fleeing;
+                                goto update_states;
+                            }
+                            else
+                            {
+                                if(is_set(enemy->flags, EntityFlag_FightingWithInvisible))
                                 {
-                                    assert(is_v2u_equal(get_direction_pos(enemy->pos, direction), player->pos));
-                                    
-                                    // Attack
-                                    if(enemy->e.spell_count)
+                                    if(is_pos_next_to_pos(player->pos, enemy->pos))
                                     {
-                                        select_and_cast_entity_spell(random, entity_state, enemy, dungeon, ui);
+                                        // Attack
+                                        if(enemy->e.spell_count)
+                                        {
+                                            select_and_cast_entity_spell(random, entity_state, enemy, dungeon, ui);
+                                        }
+                                        else
+                                        {
+                                            attack_entity(random, enemy, 0, player, dungeon, ui, enemy->e.damage, true);
+                                        }
                                     }
                                     else
                                     {
-                                        attack_entity(random, enemy, 0, player, dungeon, ui, enemy->e.damage, true);
+                                        log_add("The %s attacks nothing but air.", ui, enemy->name.s);
+                                        
+                                        unset(enemy->flags, EntityFlag_FightingWithInvisible);
+                                        enemy->e.state = EnemyEntityState_Wandering;
+                                        goto update_states;
                                     }
                                 }
                                 else
                                 {
-                                    log_add("The %s attacks nothing but air.", ui, enemy->name.s);
-                                    
-                                    unset(enemy->flags, EntityFlag_FightingWithInvisible);
+                                    if(can_enemy_see_entity(enemy, player, dungeon->tiles))
+                                    {
+                                        PathfindPosInfo pathfind = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Toward, false);
+                                        
+                                        b32 attacked = false;
+                                        if(is_dungeon_pos_inside_rect(player->pos, enemy->e.view_rect))
+                                        {
+                                            if(is_set(enemy->flags, EntityFlag_MagicalAttacks) &&
+                                               select_and_cast_entity_spell(random, entity_state, enemy, dungeon, ui))
+                                            {
+                                                //printf("Spell attack\n");
+                                                
+                                                attacked = true;
+                                            }
+                                            else if(is_set(enemy->flags, EntityFlag_RangedAttacks) ||
+                                                    (is_set(enemy->flags, EntityFlag_PhysicalAttacks) &&
+                                                     is_pos_next_to_pos(player->pos, enemy->pos)))
+                                            {
+                                                //printf("Ranged / Physical attack\n");
+                                                
+                                                attack_entity(random, enemy, 0, player, dungeon, ui, enemy->e.damage, true);
+                                                attacked = true;
+                                            }
+                                        }
+                                        
+                                        if(!attacked && pathfind.can_move)
+                                        {
+                                            enemy->new_pos = pathfind.pos;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        enemy->e.state = EnemyEntityState_Chasing;
+                                        goto update_states;
+                                    }
+                                }
+                            }
+                        }
+                        else if(enemy->e.state == EnemyEntityState_Chasing)
+                        {
+                            
+#if MOONBREATH_SLOW
+                            if(print_state) print_enemy_entity_state(enemy->e.state);
+#endif
+                            
+                            if(can_enemy_see_entity(enemy, player, dungeon->tiles))
+                            {
+                                reset_entity_pathfind(enemy);
+                                
+                                enemy->e.state = EnemyEntityState_Fighting;
+                                goto update_states;
+                            }
+                            else
+                            {
+                                UpdateEnemyPathfindType type = update_enemy_pathfind(enemy, dungeon, &enemy->pathfind_map, player->pos);
+                                if(type == UpdateEnemyPathfindType_ReachedTarget)
+                                {
+                                    reset_entity_pathfind(enemy);
                                     enemy->e.state = EnemyEntityState_Wandering;
+                                    // No goto so entity moves to the target pos.
+                                }
+                                else if(type == UpdateEnemyPathfindType_CantMove)
+                                {
+                                    reset_entity_pathfind(enemy);
+                                    enemy->e.state = EnemyEntityState_Wandering;
+                                    goto update_states;
+                                }
+                            }
+                        }
+                        else if(enemy->e.state == EnemyEntityState_Fleeing)
+                        {
+                            
+#if MOONBREATH_SLOW
+                            if(print_state) print_enemy_entity_state(enemy->e.state);
+#endif
+                            
+                            set_entity_facing_direction(enemy, player);
+                            if(resume_entity_wandering_from_health_percent(enemy))
+                            {
+                                goto update_states;
+                            }
+                            
+                            PathfindPosInfo pathfind = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Away, false);
+                            if(pathfind.can_move)
+                            {
+                                enemy->new_pos = pathfind.pos;
+                            }
+                            else
+                            {
+                                reset_entity_pathfind(enemy);
+                                enemy->e.state = EnemyEntityState_Cornered;
+                                goto update_states;
+                            }
+                        }
+                        else
+                        {
+                            assert(enemy->e.state == EnemyEntityState_Cornered);
+                            
+#if MOONBREATH_SLOW
+                            if(print_state) print_enemy_entity_state(enemy->e.state);
+#endif
+                            
+                            set_entity_facing_direction(enemy, player);
+                            if(resume_entity_wandering_from_health_percent(enemy))
+                            {
+                                goto update_states;
+                            }
+                            
+                            if(can_enemy_see_entity(enemy, player, dungeon->tiles))
+                            {
+                                if(is_set(enemy->flags, EntityFlag_FightingFromCornered))
+                                {
+                                    enemy->e.state = EnemyEntityState_Fighting;
                                     goto update_states;
                                 }
                             }
                             else
                             {
-                                if(can_enemy_see_entity(enemy, player, dungeon->tiles))
-                                {
-                                    PathfindPosInfo pathfind = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Toward, false);
-                                    
-                                    if(enemy->e.spell_count)
-                                    {
-                                        EntitySpellCastResult cast_result = select_and_cast_entity_spell(random, entity_state, enemy, dungeon, ui);
-                                        if(cast_result.target_not_in_spell_range)
-                                        {
-                                            enemy->new_pos = pathfind.pos;
-                                        }
-                                    }
-                                    else if((is_dungeon_pos_inside_rect(player->pos, enemy->e.view_rect) &&
-                                             is_set(enemy->flags, EntityFlag_UsesRangedAttacks)) ||
-                                            is_v2u_equal(pathfind.pos, player->pos))
-                                    {
-                                        attack_entity(random, enemy, 0, player, dungeon, ui, enemy->e.damage, true);
-                                    }
-                                    else if(pathfind.can_move)
-                                    {
-                                        enemy->new_pos = pathfind.pos;
-                                    }
-                                }
-                                else
-                                {
-                                    enemy->e.state = EnemyEntityState_Chasing;
-                                    goto update_states;
-                                }
-                            }
-                        }
-                    }
-                    else if(enemy->e.state == EnemyEntityState_Chasing)
-                    {
-                        
-#if MOONBREATH_SLOW
-                        if(print_state) print_enemy_entity_state(enemy->e.state);
-#endif
-                        
-                        if(can_enemy_see_entity(enemy, player, dungeon->tiles))
-                        {
-                            reset_entity_pathfind(enemy);
-                            
-                            enemy->e.state = EnemyEntityState_Fighting;
-                            goto update_states;
-                        }
-                        else
-                        {
-                            UpdateEnemyPathfindType type = update_enemy_pathfind(enemy, dungeon, &enemy->pathfind_map, player->pos);
-                            if(type == UpdateEnemyPathfindType_ReachedTarget)
-                            {
-                                reset_entity_pathfind(enemy);
-                                enemy->e.state = EnemyEntityState_Wandering;
-                                // No goto so entity moves to the target pos.
-                            }
-                            else if(type == UpdateEnemyPathfindType_CantMove)
-                            {
-                                reset_entity_pathfind(enemy);
                                 enemy->e.state = EnemyEntityState_Wandering;
                                 goto update_states;
                             }
-                        }
-                    }
-                    else if(enemy->e.state == EnemyEntityState_Fleeing)
-                    {
-                        
-#if MOONBREATH_SLOW
-                        if(print_state) print_enemy_entity_state(enemy->e.state);
-#endif
-                        
-                        set_entity_facing_direction(enemy, player);
-                        if(resume_entity_wandering_from_health_percent(enemy))
-                        {
-                            goto update_states;
-                        }
-                        
-                        PathfindPosInfo pathfind = get_pathfind_result(enemy, dungeon, enemy->e.pathfind_map_to_player, PathfindMethod_Away, false);
-                        if(pathfind.can_move)
-                        {
-                            enemy->new_pos = pathfind.pos;
-                        }
-                        else
-                        {
-                            reset_entity_pathfind(enemy);
-                            enemy->e.state = EnemyEntityState_Cornered;
-                            goto update_states;
-                        }
-                    }
-                    else
-                    {
-                        assert(enemy->e.state == EnemyEntityState_Cornered);
-                        
-#if MOONBREATH_SLOW
-                        if(print_state) print_enemy_entity_state(enemy->e.state);
-#endif
-                        
-                        set_entity_facing_direction(enemy, player);
-                        if(resume_entity_wandering_from_health_percent(enemy))
-                        {
-                            goto update_states;
-                        }
-                        
-                        if(can_enemy_see_entity(enemy, player, dungeon->tiles))
-                        {
-                            if(is_set(enemy->flags, EntityFlag_FightingFromCornered))
-                            {
-                                enemy->e.state = EnemyEntityState_Fighting;
-                                goto update_states;
-                            }
-                        }
-                        else
-                        {
-                            enemy->e.state = EnemyEntityState_Wandering;
-                            goto update_states;
                         }
                     }
                     
@@ -4189,7 +4209,7 @@ update_player_input(Game *game,
     b32 result = true;
     
 #if MOONBREATH_SLOW
-    DebugState *debug = &game->debug;
+    DebugMode *debug = &game->debug;
     EditorMode *editor = &game->editor;
 #endif
     
@@ -4333,14 +4353,14 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[5]))
         {
-            printf("F5: All items identified/unidentified.\n");
+            printf("F5: Identify all.\n");
             
             for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
             {
                 Item *item = &item_state->array[index];
                 if(is_item_valid(item) && item->type != ItemType_Ration)
                 {
-                    toggle(item->flags, ItemFlag_Identified);
+                    set(item->flags, ItemFlag_Identified);
                 }
             }
             
@@ -4348,11 +4368,16 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[6]))
         {
+            printf("F6: Unidentify all.\n");
             
-#if 0
-            printf("F6: Item mark test string.\n");
-            strcpy(item_state->temp_mark.array, "Donec in tellus et mauris maximus interdum in at ex. Proin pla.");
-#endif
+            for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
+            {
+                Item *item = &item_state->array[index];
+                if(is_item_valid(item) && item->type != ItemType_Ration)
+                {
+                    unset(item->flags, ItemFlag_Identified);
+                }
+            }
             
             return(result);
         }
@@ -4362,6 +4387,12 @@ update_player_input(Game *game,
         }
         else if(was_pressed(&input->fkeys[8]))
         {
+            
+#if 0
+            printf("F6: Item mark test string.\n");
+            strcpy(item_state->temp_mark.array, "Donec in tellus et mauris maximus interdum in at ex. Proin pla.");
+#endif
+            
             return(result);
         }
         else if(was_pressed(&input->fkeys[9]))
@@ -4400,13 +4431,13 @@ update_player_input(Game *game,
         {
             printf("F12: Entity status test.\n");
             
-#if 1
+#if 0
             EntityStatus test = {0};
             test.type = EntityStatusType_Stat;
             test.stat_type = EntityStatusStatType_FOV;
             test.value.max = -2;
             test.duration = 8;
-            add_entity_status(random, player, dungeon, ui, &test);
+            add_entity_status(random, player, ui, &test);
 #endif
             
 #if 0
@@ -4746,7 +4777,7 @@ update_player_input(Game *game,
             {
                 if(get_seen_enemy_entity_count(entity_state->entities, dungeon))
                 {
-                    log_add_there_are_enemies_nearby(ui);
+                    log_add_while_enemies_are_nearby("rest", ui);
                 }
                 else if(player->hp < player->max_hp)
                 {
@@ -4768,7 +4799,7 @@ update_player_input(Game *game,
 #endif
                         
                         // Notify player about enemies even if max health is reached from regen.
-                        if(process_new_seen_enemy_entities(entity_state->entities, dungeon, ui, true) ||
+                        if(process_new_seen_enemy_entities(entity_state, dungeon, ui, true) ||
                            player->hp == player->max_hp)
                         {
                             advance_game_and_player_time(game, &player->action_time);
@@ -4961,7 +4992,7 @@ update_player_input(Game *game,
                                     EntityStatus *status_from_item = &examine_item->c.status;
                                     if(status_from_item->type)
                                     {
-                                        add_entity_status(random, player, dungeon, ui, status_from_item);
+                                        add_entity_status(random, player, ui, status_from_item);
                                     }
                                     
                                     // Set item as known
@@ -5230,7 +5261,7 @@ update_entities(Game *game,
                         
                         if(entity_move(random, player, dungeon, ui, player->new_pos))
                         {
-                            if(!is_set(player->flags, EntityFlag_InvulnerableToTraps))
+                            if(!get_entity_status(player->statuses, EntityStatusType_TrapInvulnerability))
                             {
                                 // Player dungeon trap interact
                                 DungeonTrap *trap = get_dungeon_pos_trap(&dungeon->traps, player->new_pos);
@@ -5252,7 +5283,7 @@ update_entities(Game *game,
                                             bind_status.type = EntityStatusType_Bind;
                                             bind_status.duration = get_random_from_v2u(random, trap->value_range);
                                             
-                                            add_entity_status(random, player, dungeon, ui, &bind_status);
+                                            add_entity_status(random, player, ui, &bind_status);
                                         } break;
                                         
                                         case DungeonTrapType_Shaft:
@@ -5801,8 +5832,8 @@ add_entity(EntityState *entity_state,
                         enemy->action_time = 1.0f;
                         enemy->remains_type = EntityRemainsType_RedBlood;
                         
-                        add_entity_heal_spell(enemy, "Healing Touch", 3, 6, 40, enemy->stats.fov);
-                        add_entity_attack_spell(enemy, "Lightning Whip", 4, EntityDamageType_Lightning, 60, 3);
+                        add_entity_heal_spell(enemy, "Healing Touch", 3, 6, 30, enemy->stats.fov);
+                        add_entity_attack_spell(enemy, "Lightning Whip", 3, EntityDamageType_Lightning, 70, 3);
                     } break;
                     
                     case EntityID_Snail:
@@ -5884,7 +5915,7 @@ add_entity(EntityState *entity_state,
                         enemy->resists[EntityDamageType_Poison].value = 5;
                         
                         add_entity_stat_spell(enemy, "Protective Shout", EntityStatusStatType_Def, 3, 5, 30, enemy->stats.fov);
-                        add_entity_attack_spell(enemy, "Lightning Whip", 5, EntityDamageType_Lightning, 70, enemy->stats.fov);
+                        add_entity_attack_spell(enemy, "Lightning Whip", 5, EntityDamageType_Lightning, 70, 3);
                     } break;
                     
                     case EntityID_Python:
@@ -6011,7 +6042,7 @@ add_entity(EntityState *entity_state,
                         enemy->remains_type = EntityRemainsType_RedBlood;
                         
                         add_entity_attack_spell(enemy, "Ignite", 12, EntityDamageType_Fire, 80, enemy->stats.fov);
-                        add_entity_status_spell(enemy, "Bind", EntityStatusType_Bind, 0, 4, 30, enemy->stats.fov);
+                        add_entity_status_spell(enemy, "Bind", EntityStatusType_Bind, 0, 4, 20, 3);
                     } break;
                     
                     case EntityID_Minotaur:
@@ -6469,24 +6500,32 @@ add_entity(EntityState *entity_state,
 #endif
                 
 #if MOONBREATH_SLOW
-                if(is_set(enemy->flags, EntityFlag_FleeOnLowHP) &&
-                   !enemy->e.hp_flee_percent)
-                {
-                    printf("enemy->name.s: %s\n", enemy->name.s);
-                    printf("enemy->e.hp_flee_percent: %.0f%%\n\n", enemy->e.hp_flee_percent);
-                    
-                    assert(0);
-                }
-                
                 if(id != EntityID_Dummy)
                 {
+                    if(is_set(enemy->flags, EntityFlag_FleeOnLowHP) &&
+                       !enemy->e.hp_flee_percent)
+                    {
+                        printf("enemy->name.s: %s\n", enemy->name.s);
+                        printf("enemy->e.hp_flee_percent: %.0f%%\n\n", enemy->e.hp_flee_percent);
+                        
+                        assert(0);
+                    }
+                    
+                    if(!is_set(enemy->flags, EntityFlag_PhysicalAttacks) &&
+                       !is_set(enemy->flags, EntityFlag_RangedAttacks) &&
+                       !is_set(enemy->flags, EntityFlag_MagicalAttacks))
+                    {
+                        printf("Enemy \"%s\" has no valid Attack flag.\n", enemy->name.s);
+                        assert(0);
+                    }
+                    
                     if(!is_entity_evasion_valid(enemy->stats.ev))
                     {
                         printf("Enemy \"%s\" evasion is %u which is not valid.\n", enemy->name.s, enemy->stats.ev);
                         assert(0);
                     }
                     
-                    if((!enemy->e.damage.min || !enemy->e.damage.max) &&
+                    if(is_set(enemy->flags, EntityFlag_MagicalAttacks) &&
                        !enemy->e.spell_count)
                     {
                         printf("Enemy \"%s\" has no valid damage source.\n", enemy->name.s);
@@ -6510,16 +6549,12 @@ add_entity(EntityState *entity_state,
                     {
                         Spell *spell = &enemy->e.spells[index];
                         
-                        if(spell->status_type)
+                        if(spell->status_type &&
+                           !spell->summon_type &&
+                           !is_entity_spell_range_valid(spell->range, enemy->stats.fov))
                         {
-                            if(!(spell->range && spell->range <= enemy->stats.fov))
-                            {
-                                if(!spell->summon_type)
-                                {
-                                    printf("Enemy \"%s\" spell \"%s\" has a range of %u which is not valid.\n", enemy->name.s, spell->name.s, spell->range);
-                                    assert(0);
-                                }
-                            }
+                            printf("Enemy \"%s\" spell \"%s\" has a range of %u which is not valid.\n", enemy->name.s, spell->name.s, spell->range);
+                            assert(0);
                         }
                     }
                 }

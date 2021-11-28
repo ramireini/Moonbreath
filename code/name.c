@@ -9,47 +9,59 @@ typedef enum
 internal b32
 is_vowel(char c)
 {
-    char vowels[10] = "aeiouAEIOU";
+    b32 result = false;
     
+    char vowels[10] = "aeiouAEIOU";
     for(u32 index = 0; index < get_array_count(vowels); ++index)
     {
         if(c == vowels[index])
         {
-            return(true);
+            result = true;
+            break;
         }
     }
     
-    return(false);
+    return(result);
 }
 
 internal b32
 is_consonant(char c)
 {
-    char consonants[42] = "bcdfghjklmnpqrstvxzwyBCDFGHJKLMNPQRSTVXZWY";
+    b32 result = false;
     
+    char consonants[42] = "bcdfghjklmnpqrstvxzwyBCDFGHJKLMNPQRSTVXZWY";
     for(u32 index = 0; index < get_array_count(consonants); ++index)
     {
         if(c == consonants[index])
         {
-            return(true);
+            result = true;
+            break;
         }
     }
     
-    return(false);
+    return(result);
 }
 
 internal char
 get_random_vowel(Random *random)
 {
     char vowels[5] = "aeiou";
-    return(vowels[get_random(random, 0, 4)]);
+    
+    u32 index = get_random_index(random, get_array_count(vowels));
+    char result = vowels[index];
+    
+    return(result);
 }
 
 internal char
 get_random_consonant(Random *random)
 {
     char consonants[21] = "bcdfghjklmnpqrstvxzwy";
-    return(consonants[get_random(random, 0, 20)]);
+    
+    u32 index = get_random_index(random, get_array_count(consonants));
+    char result = consonants[index];
+    
+    return(result);
 }
 
 internal char
@@ -62,11 +74,12 @@ get_random_lower_char(Random *random)
 internal char
 get_random_upper_char(Random *random)
 {
-    char result = get_uppercase(get_random_lower_char(random));
+    char lower_c = get_random_lower_char(random);
+    char result = get_uppercase(lower_c);
     return(result);
 }
 
-internal char *
+internal void
 set_random_name(Random *random, char *name, RandomNameType type)
 {
     assert(random);
@@ -135,5 +148,4 @@ set_random_name(Random *random, char *name, RandomNameType type)
     }
     
     name[name_index] = 0;
-    return(name);
 }

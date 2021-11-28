@@ -15,7 +15,7 @@
 #define ENTITY_RESISTANCE_PER_POINT ((100 / MAX_ENTITY_RESIST_VALUE) / 10)
 #define get_player_entity() &entity_state->entities[0];
 
-enum EntityID
+typedef enum
 {
     EntityID_None,
     
@@ -85,7 +85,7 @@ enum EntityID
     EntityID_EnemyEnd,
     
     EntityID_Count
-};
+} EntityID;
 
 typedef enum
 {
@@ -95,16 +95,16 @@ typedef enum
 
 typedef enum
 {
-    EntityFlag_ShowViewRange = (1 << 1),
-    EntityFlag_NotifyAboutMultipleItems = (1 << 2),
-    EntityFlag_UsesPhysicalAttacks = (1 << 3),
-    EntityFlag_UsesRangedAttacks = (1 << 4),
-    EntityFlag_HasBeenSeen = (1 << 5),
-    EntityFlag_Flipped = (1 << 6),
-    EntityFlag_FightingWithInvisible = (1 << 7),
-    EntityFlag_Pathfinding = (1 << 8),
-    EntityFlag_NormalWaterMovement = (1 << 9),
-    EntityFlag_InvulnerableToTraps = (1 << 10),
+    EntityFlag_PhysicalAttacks = (1 << 1),
+    EntityFlag_RangedAttacks = (1 << 2),
+    EntityFlag_MagicalAttacks = (1 << 3),
+    EntityFlag_ShowViewRange = (1 << 4),
+    EntityFlag_NotifyAboutMultipleItems = (1 << 5),
+    EntityFlag_HasBeenSeen = (1 << 6),
+    EntityFlag_Flipped = (1 << 7),
+    EntityFlag_FightingWithInvisible = (1 << 8),
+    EntityFlag_Pathfinding = (1 << 9),
+    EntityFlag_NormalWaterMovement = (1 << 10),
     EntityFlag_Undead = (1 << 11),
     EntityFlag_CanOpenDoors = (1 << 12),
     EntityFlag_FleeOnLowHP = (1 << 13),
@@ -188,8 +188,8 @@ typedef enum
 
 typedef struct
 {
-    b32 target_not_in_spell_range;
-} EntitySpellCastResult;
+    b32 target_not_in_range;
+} EntityCastResult;
 
 typedef struct
 {
@@ -382,6 +382,7 @@ internal char *get_entity_type_string(EntityType type);
 internal char *get_enemy_entity_state_string(EnemyEntityState type);
 #endif
 
+internal void remove_entity_status(EntityStatus *status);
 internal void log_add_new_seen_target(char *string, UI *ui);
 internal void change_entity_resist(EntityResist *resist, s32 change, b32 is_add);
 internal void entity_move_force(Entity *entity, Dungeon *dungeon, v2u new_pos, u32 dungeon_level);
@@ -389,15 +390,16 @@ internal void remove_entity(Entity *entity, DungeonTiles tiles);
 internal void log_add_entity_interact_string(Random *random, Entity *attacker, DungeonTrap *trap, Entity *defender, UI *ui, u32 value, EntityResistInfoType resist_type, EntityInteractInfoType info_type);
 internal void change_entity_stat(u32 *value, s32 change, b32 is_add);
 internal void update_entity_statuses(Random *random, Entity *entity, Dungeon *dungeon, Inventory *inventory, UI *ui);
-internal void cast_entity_spell(Random *random, Entity *caster, Entity *target, Dungeon *dungeon, UI *ui);
+internal void cast_entity_spell(Random *random, Entity *caster, Entity *target, UI *ui);
 internal void kill_entity(Random *random, Entity *entity, Dungeon *dungeon, UI *ui);
-internal void add_entity_status(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, EntityStatus *new_status);
+internal void add_entity_status(Random *random, Entity *entity, UI *ui, EntityStatus *new_status);
 internal void teleport_entity(Random *random, Entity *player, Dungeon *dungeon, UI *ui, DungeonRandomPosType type);
+internal char *get_entity_name(EntityID id);
 internal s32 get_total_stat_status_value(EntityStatus *statuses, EntityStatusStatType type);
 internal u32 attack_entity(Random *random, Entity *attacker, DungeonTrap *trap, Entity *defender, Dungeon *dungeon, UI *ui, EntityDamage damage, b32 log_interact);
 internal u32 get_seen_enemy_entity_count(Entity *entities, Dungeon *dungeon);
 internal u32 get_enemy_entity_level(EntityID id);
-internal b32 is_entity_in_view_and_spell_range(Entity *attacker, v2u defender_pos, u32 spell_range);
+internal b32 is_entity_in_casters_view_rect_and_spell_range(Entity *attacker, u32 spell_range, v2u defender_pos);
 internal b32 entity_move(Random *random, Entity *entity, Dungeon *dungeon, UI *ui, v2u pos);
 internal b32 is_enemy_entity_valid_in_level(Entity *enemy, u32 dungeon_level);
 internal b32 is_enemy_entity_valid(Entity *entity);
@@ -412,3 +414,4 @@ internal EntityID get_random_enemy_entity_id(Random *random);
 internal EntityInfo get_enemy_entity_info(EntityID id);
 internal EntityInfo get_random_enemy_entity_info(Random *random);
 internal Entity *add_entity(EntityState *entity_state, EntityID id, u32 x, u32 y, Dungeon *dungeon);
+internal EntityStatus *get_entity_status(EntityStatus *statuses, EntityStatusType type);

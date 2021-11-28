@@ -90,7 +90,7 @@ struct DebugVar
     };
     
     EntityStatus *status;
-    };
+};
 
 typedef struct
 {
@@ -108,7 +108,7 @@ typedef struct
     
     v4u move_rect;
     v4u delete_rect;
-     char *delete_string;
+    char *delete_string;
     
     DebugColorPair move_color;
     DebugColorPair delete_color;
@@ -130,27 +130,28 @@ typedef struct
     DebugEventType type;
     
     v2u *pos;
-     DebugTree *tree;
-    } DebugEvent;
+    DebugTree *tree;
+} DebugEvent;
 
 typedef struct
 {
- b32 is_open;
- b32 update_state;
- 
+    b32 is_set;
+    b32 is_open;
+    b32 update_state;
+    
     Font *font;
     v2u text_offset;
     
- DebugHot hot;
+    DebugHot hot;
     DebugEvent event;
     
     memory_size memory_size;
     MemoryArena memory_arena;
     
-     DebugTree trees[MAX_DEBUG_TREE_COUNT];
-} DebugState;
+    DebugTree trees[MAX_DEBUG_TREE_COUNT];
+} DebugMode;
 
 internal void end_debug_group(DebugTree *tree);
 internal void reset_debug_event(DebugEvent *event);
-internal void add_debug_status_effect(DebugState *debug, DebugTree *tree, EntityStatus *status);
-internal DebugVar *start_debug_group(DebugState *debug, DebugTree *tree, char *name, b32 is_expanded);
+internal void add_debug_entity_status(DebugMode *debug, DebugTree *tree, EntityStatus *status);
+internal DebugVar *start_debug_group(DebugMode *debug, DebugTree *tree, char *name, b32 is_expanded);

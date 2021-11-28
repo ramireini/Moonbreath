@@ -473,8 +473,6 @@ typedef struct
     u32 temporary_memory_count;
 } MemoryArena;
 
-typedef enum EntityID EntityID;
-
 typedef struct Game Game;
 typedef struct Item Item;
 typedef struct Spell Spell;

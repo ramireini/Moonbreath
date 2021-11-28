@@ -1,3 +1,33 @@
+internal char *
+get_item_status_color(u32 item_flags, ItemRarity rarity)
+{
+    assert(item_flags);
+    assert(rarity);
+    
+    char *result = start_color(Color_White);
+    
+    if(is_set(item_flags, ItemFlag_Identified))
+    {
+        if(is_set(item_flags, ItemFlag_Cursed))
+        {
+            result = start_color(Color_LightRed);
+        }
+        else
+        {
+            switch(rarity)
+            {
+                case ItemRarity_Common: result = start_color(Color_White); break;
+                case ItemRarity_Magical: result = start_color(Color_DarkBlue); break;
+                case ItemRarity_Mythical: result = start_color(Color_Orange); break;
+                
+                invalid_default_case;
+            }
+        }
+    }
+    
+    return(result);
+}
+
 internal b32
 is_entity_damage_valid(EntityDamage damage)
 {
@@ -23,15 +53,15 @@ unset_asking_player_and_ready_for_keypress(u32 *inventory_flags)
 }
 
 internal b32
-process_new_seen_items(Item *array, DungeonTiles tiles, UI *ui, b32 log_names)
+process_new_seen_items(ItemState *item_state, DungeonTiles tiles, UI *ui, b32 log_names)
 {
-    assert(array);
+    assert(item_state);
     
     b32 result = false;
     
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
-        Item *item = &array[index];
+        Item *item = &item_state->array[index];
         
         if(is_valid_not_inventory_item(item) &&
            is_tile_seen(tiles, item->pos) &&
@@ -108,6 +138,61 @@ can_interact_type_be_used_on_item(Item *item, ItemInteractType type)
 }
 
 internal b32
+end_inventory_item_interact(Inventory *inventory)
+{
+    assert(inventory);
+    
+    inventory->validate_view = true;
+    inventory->interact_type = ItemInteractType_None;
+}
+
+internal String64
+get_item_name_interact_string()
+{
+    String64 result = {"it glows for a moment"};
+    return(result);
+}
+
+internal void
+process_inventory_item_interact(Random *random, Inventory *inventory, Item *item, UI *ui)
+{
+    assert(random);
+    assert(inventory);
+    assert(item);
+    assert(ui);
+    
+    switch(inventory->interact_type)
+    {
+        case ItemInteractType_Identify:
+        {
+            assert(!is_set(item->flags, ItemFlag_Identified));
+            
+            set(item->flags, ItemFlag_Identified);
+            log_add("You identify the %s%s.", ui, get_item_status_color(item->flags, item->rarity), get_full_item_name(item).s);
+        } break;
+        
+        case ItemInteractType_EnchantWeapon:
+        case ItemInteractType_EnchantArmor:
+        {
+            log_add("You enchant the %s, %s.", ui, get_full_item_name(item).s, get_item_name_interact_string().s);
+            ++item->enchant_level;
+        } break;
+        
+        case ItemInteractType_Uncurse:
+        {
+            assert(is_set(item->flags, ItemFlag_Identified));
+            
+            unset(item->flags, ItemFlag_Cursed);
+            log_add("You uncurse the %s, %s.", ui, get_full_item_name(item).s, get_item_name_interact_string());
+        } break;
+        
+        invalid_default_case;
+    }
+    
+    end_inventory_item_interact(inventory);
+}
+
+internal b32
 can_item_interact_with_inventory(Inventory *inventory, ItemInteractType type, u32 item_flags)
 {
     assert(inventory);
@@ -172,6 +257,16 @@ is_item_id_scroll(ItemID id)
 }
 
 internal b32
+is_item_id_consumable(ItemID id)
+{
+    b32 result = (is_item_id_potion(id) ||
+                  is_item_id_scroll(id) ||
+                  id == ItemID_Ration);
+    
+    return(result);
+}
+
+internal b32
 is_item_id_potion_or_scroll(ItemID id)
 {
     b32 result = (is_item_id_potion(id) ||
@@ -192,6 +287,22 @@ copy_item_info_to_consumable(Item *item, ItemInfo *info)
 }
 
 internal char *
+get_item_handedness_string(ItemHandedness handedness)
+{
+    char *result = 0;
+    
+    switch(handedness)
+    {
+        case ItemHandedness_OneHanded: result = "One-Handed"; break;
+        case ItemHandedness_TwoHanded: result = "Two-Handed"; break;
+        
+        invalid_default_case;
+    }
+    
+    return(result);
+}
+
+internal char *
 get_item_slot_string(ItemSlot slot)
 {
     char *result = 0;
@@ -206,22 +317,6 @@ get_item_slot_string(ItemSlot slot)
         case ItemSlot_Feet: result = "Feet"; break;
         case ItemSlot_Amulet: result = "Amulet"; break;
         case ItemSlot_Ring: result = "Ring"; break;
-        
-        invalid_default_case;
-    }
-    
-    return(result);
-}
-
-internal char *
-get_item_handedness_string(ItemHandedness handedness)
-{
-    char *result = 0;
-    
-    switch(handedness)
-    {
-        case ItemHandedness_OneHanded: result = "One-Handed"; break;
-        case ItemHandedness_TwoHanded: result = "Two-Handed"; break;
         
         invalid_default_case;
     }
@@ -297,50 +392,119 @@ is_valid_not_inventory_item_on_pos_and_dungeon_level(Item *item, u32 dungeon_lev
     return(result);
 }
 
-internal void
-apply_item_stats_to_player(Entity *player, Item *item, b32 is_add)
+internal b32
+item_has_item_stat_type(Item *item, ItemStatType search_type)
 {
+    assert(is_item_valid(item));
+    assert(search_type);
+    
+    b32 result = false;
+    
+    for(ItemStatType type = ItemStatType_None + 1; type < ItemStatType_Count; ++type)
+    {
+        ItemStat *stat = &item->stats[type];
+        if(stat->type == search_type)
+        {
+            result = true;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal b32
+player_equipment_has_item_stat_type(Entity *player, ItemStatType search_type)
+{
+    assert(is_player_entity_valid(player));
+    assert(search_type);
+    
+    b32 result = false;
+    
+    for(ItemSlot slot = ItemSlot_None + 1; slot < ItemSlot_Count; ++slot)
+    {
+        Item *item = player->p.equipment[slot];
+        if(item && item_has_item_stat_type(item, search_type))
+        {
+            result = true;
+            break;
+        }
+    }
+    
+    return(result);
+}
+
+internal void
+add_player_item_stats(Random *random, Entity *player, Item *item, UI *ui, b32 is_add)
+{
+    assert(random);
     assert(is_player_entity_valid(player));
     assert(is_item_valid(item));
     
-    if(item->type == ItemType_Weapon)
+    for(ItemStatType stat_type = ItemStatType_None; stat_type < MAX_ITEM_STAT_COUNT; ++stat_type)
     {
-        for(ItemStatType stat_type = ItemStatType_None; stat_type < MAX_ITEM_STAT_COUNT; ++stat_type)
+        ItemStat *stat = &item->stats[stat_type];
+        if(stat->type)
         {
-            ItemStat *stat = &item->stats[stat_type];
-            if(stat->type)
+            EntityResist *resists = player->resists;
+            
+            switch(stat->type)
             {
-                EntityResist *resists = player->resists;
-                
-                switch(stat->type)
+                case ItemStatType_Health:
                 {
-                    case ItemStatType_Health:
+                    change_entity_stat(&player->max_hp, stat->value, is_add);
+                    if(player->hp > player->max_hp) player->hp = player->max_hp;
+                } break;
+                
+                case ItemStatType_Strength: change_entity_stat(&player->stats.str, stat->value, is_add); break;
+                case ItemStatType_Intelligence: change_entity_stat(&player->stats.intel, stat->value, is_add); break;
+                case ItemStatType_Dexterity: change_entity_stat(&player->stats.dex, stat->value, is_add); break;
+                case ItemStatType_Evasion: break; // Updated later in this function.
+                case ItemStatType_Defence: break; // Updated in player update.
+                case ItemStatType_ViewRange: change_entity_stat(&player->stats.fov, stat->value, is_add); break;
+                
+                case ItemStatType_InvulnerableToTraps:
+                {
+                    if(is_add)
                     {
-                        change_entity_stat(&player->max_hp, stat->value, is_add);
-                        if(player->hp > player->max_hp) player->hp = player->max_hp;
-                    } break;
-                    
-                    case ItemStatType_Strength: change_entity_stat(&player->stats.str, stat->value, is_add); break;
-                    case ItemStatType_Intelligence: change_entity_stat(&player->stats.intel, stat->value, is_add); break;
-                    case ItemStatType_Dexterity: change_entity_stat(&player->stats.dex, stat->value, is_add); break;
-                    case ItemStatType_Evasion: break; // Updated later in this function.
-                    case ItemStatType_Defence: break; // Updated in player update.
-                    case ItemStatType_ViewRange: change_entity_stat(&player->stats.fov, stat->value, is_add); break;
-                    case ItemStatType_InvulnerableToTraps: toggle(player->flags, EntityFlag_InvulnerableToTraps); break;
-                    
-                    case ItemStatType_PhysicalResistance: change_entity_resist(&resists[EntityDamageType_Physical], stat->value, is_add); break;
-                    case ItemStatType_FireResistance: change_entity_resist(&resists[EntityDamageType_Fire], stat->value, is_add); break;
-                    case ItemStatType_IceResistance: change_entity_resist(&resists[EntityDamageType_Ice], stat->value, is_add); break;
-                    case ItemStatType_LightningResistance: change_entity_resist(&resists[EntityDamageType_Lightning], stat->value, is_add); break;
-                    case ItemStatType_PoisonResistance: change_entity_resist(&resists[EntityDamageType_Poison], stat->value, is_add); break;
-                    case ItemStatType_HolyResistance: change_entity_resist(&resists[EntityDamageType_Holy], stat->value, is_add); break;
-                    case ItemStatType_DarkResistance: change_entity_resist(&resists[EntityDamageType_Dark], stat->value, is_add); break;
-                    
-                    invalid_default_case;
-                }
+                        if(!get_entity_status(player->statuses, EntityStatusType_TrapInvulnerability))
+                        {
+                            EntityStatus status = {0};
+                            status.removed_manually = true;
+                            status.type = EntityStatusType_TrapInvulnerability;
+                            add_entity_status(random, player, ui, &status);
+                        }
+                    }
+                    else
+                    {
+                        assert(!player->p.equipment[item->slot]);
+                        assert(!is_set(item->flags, ItemFlag_Equipped));
+                        
+                        if(!player_equipment_has_item_stat_type(player, stat_type))
+                        {
+                            EntityStatus *status = get_entity_status(player->statuses, EntityStatusType_TrapInvulnerability);
+                            assert(status);
+                            
+                            remove_entity_status(status);
+                        }
+                    }
+                } break;
+                
+                case ItemStatType_PhysicalResistance: change_entity_resist(&resists[EntityDamageType_Physical], stat->value, is_add); break;
+                case ItemStatType_FireResistance: change_entity_resist(&resists[EntityDamageType_Fire], stat->value, is_add); break;
+                case ItemStatType_IceResistance: change_entity_resist(&resists[EntityDamageType_Ice], stat->value, is_add); break;
+                case ItemStatType_LightningResistance: change_entity_resist(&resists[EntityDamageType_Lightning], stat->value, is_add); break;
+                case ItemStatType_PoisonResistance: change_entity_resist(&resists[EntityDamageType_Poison], stat->value, is_add); break;
+                case ItemStatType_HolyResistance: change_entity_resist(&resists[EntityDamageType_Holy], stat->value, is_add); break;
+                case ItemStatType_DarkResistance: change_entity_resist(&resists[EntityDamageType_Dark], stat->value, is_add); break;
+                
+                invalid_default_case;
             }
         }
-        
+    }
+    
+    if(item->type == ItemType_Weapon)
+    {
         change_entity_stat(&player->p.weight, item->w.weight, is_add);
     }
     else if(item->type == ItemType_Armor)
@@ -655,7 +819,7 @@ internal ItemInfo *
 get_item_info_from_id(ItemState *item_state, ItemID id)
 {
     assert(item_state);
-    assert(is_item_id_potion_or_scroll(id) || id == ItemID_Ration);
+    assert(is_item_id_consumable(id));
     
     ItemInfo *result = 0;
     
@@ -915,36 +1079,6 @@ get_equipped_item_from_item_slot(ItemSlot slot, Inventory *inventory)
     return(result);
 }
 
-internal char *
-get_item_status_color(u32 item_flags, ItemRarity rarity)
-{
-    assert(item_flags);
-    assert(rarity);
-    
-    char *result = start_color(Color_White);
-    
-    if(is_set(item_flags, ItemFlag_Identified))
-    {
-        if(is_set(item_flags, ItemFlag_Cursed))
-        {
-            result = start_color(Color_LightRed);
-        }
-        else
-        {
-            switch(rarity)
-            {
-                case ItemRarity_Common: result = start_color(Color_White); break;
-                case ItemRarity_Magical: result = start_color(Color_DarkBlue); break;
-                case ItemRarity_Mythical: result = start_color(Color_Orange); break;
-                
-                invalid_default_case;
-            }
-        }
-    }
-    
-    return(result);
-}
-
 internal String128
 get_item_mark_string(u32 item_flags, char *mark_array)
 {
@@ -1021,12 +1155,12 @@ unequip_item(Game *game, Entity *player, Item *item, UI *ui, b32 came_from_drop_
         }
         else
         {
-            unset(item->flags, ItemFlag_Equipped);
-            apply_item_stats_to_player(player, item, false);
-            log_add_item_action_string(item, ui, ItemActionType_Unequip);
-            
             assert(item->slot);
             player->p.equipment[item->slot] = 0;
+            unset(item->flags, ItemFlag_Equipped);
+            
+            add_player_item_stats(&game->random, player, item, ui, false);
+            log_add_item_action_string(item, ui, ItemActionType_Unequip);
             
             game->passed_time = player->p.action_time;
             return(true);
@@ -1060,7 +1194,7 @@ equip_item(Game *game, Entity *player, Item *item, Inventory *inventory, UI *ui,
         if(can_equip_item)
         {
             set(item->flags, ItemFlag_Identified | ItemFlag_Equipped);
-            apply_item_stats_to_player(player, item, true);
+            add_player_item_stats(&game->random, player, item, ui, true);
             if(add_to_log) log_add_item_action_string(item, ui, ItemActionType_Equip);
             
             assert(item->slot);
@@ -1274,7 +1408,7 @@ get_inventory_item_count(Inventory *inventory)
 }
 
 internal void
-unset_all_item_is_selected_flags(ItemState *item_state, u32 dungeon_level)
+unselect_all_items(ItemState *item_state, u32 dungeon_level)
 {
     assert(item_state);
     assert(is_dungeon_level_valid(dungeon_level));
@@ -1282,7 +1416,10 @@ unset_all_item_is_selected_flags(ItemState *item_state, u32 dungeon_level)
     for(u32 index = 0; index < MAX_ITEM_COUNT; ++index)
     {
         Item *item = &item_state->array[index];
-        if(is_item_valid(item)) unset(item->flags, ItemFlag_Selected);
+        if(is_item_valid(item))
+        {
+            unset(item->flags, ItemFlag_Selected);
+        }
     }
 }
 
@@ -1375,14 +1512,14 @@ get_item_tileset_pos(ItemState *item_state, ItemID id, ItemRarity rarity, b32 is
             case ItemID_Warhammer: result = make_v2u(base.x + 0, base.y + 6); break;
             
             case ItemID_LeatherHelmet: result = make_v2u(base.x + 4, base.y + 1); break;
-            case ItemID_LeatherChestplate: result = make_v2u(base.x + 5, base.y + 1); break;
-            case ItemID_LeatherGreaves: result = make_v2u(base.x + 6, base.y + 1); break;
-            case ItemID_LeatherBoots: result = make_v2u(base.x + 7, base.y + 1); break;
+            case ItemID_LeatherChestplate: result = make_v2u(base.x + 4, base.y + 2); break;
+            case ItemID_LeatherGreaves: result = make_v2u(base.x + 4, base.y + 3); break;
+            case ItemID_LeatherBoots: result = make_v2u(base.x + 4, base.y + 4); break;
             
             case ItemID_SteelHelmet: result = make_v2u(base.x + 4, base.y + 2); break;
-            case ItemID_SteelChestplate: result = make_v2u(base.x + 5, base.y + 2); break;
-            case ItemID_SteelGreaves: result = make_v2u(base.x + 6, base.y + 2); break;
-            case ItemID_SteelBoots: result = make_v2u(base.x + 7, base.y + 2); break;
+            case ItemID_SteelChestplate: result = make_v2u(base.x + 4, base.y + 3); break;
+            case ItemID_SteelGreaves: result = make_v2u(base.x + 4, base.y + 4); break;
+            case ItemID_SteelBoots: result = make_v2u(base.x + 4, base.y + 5); break;
             
             case ItemID_MightPotion:
             case ItemID_WisdomPotion:
@@ -1714,12 +1851,12 @@ get_item_stat_type_value(ItemStat *stats, ItemStatType type)
 }
 
 internal void
-set_item_stat_description(ItemStat *stat, char *stat_name)
+set_item_stat_name(ItemStat *stat, char *name)
 {
     assert(stat);
-    assert(stat_name);
+    assert(name);
     
-    sprintf(stat->description.s, "%s %s", get_signed_absolute(stat->value).s, stat_name);
+    sprintf(stat->name.s, "%s %s", get_signed_absolute(stat->value).s, name);
 }
 
 internal void
@@ -1732,7 +1869,7 @@ set_item_resistance_stat(Random *random,
     assert(type);
     
     stat->resist_type = type;
-    sprintf(stat->description.s, "%s %s Resistance", get_signed_absolute(stat->value).s, get_entity_damage_type_string(stat->resist_type));
+    sprintf(stat->name.s, "%s %s Resistance", get_signed_absolute(stat->value).s, get_entity_damage_type_string(stat->resist_type));
 }
 
 internal v2u
@@ -1850,6 +1987,7 @@ add_item_stats(Random *random, Item *item)
 {
     assert(random);
     assert(is_item_valid(item));
+    assert(is_set(item->flags, ItemFlag_CanEquip));
     
     u32 stat_count = 0;
     switch(item->rarity)
@@ -1859,7 +1997,7 @@ add_item_stats(Random *random, Item *item)
         
         invalid_default_case;
     }
-    //stat_count = MAX_ITEM_STAT_COUNT; // Have all stat types
+    stat_count = MAX_ITEM_STAT_COUNT; // Have all stat types
     
     for(u32 count = 0; count < stat_count; ++count)
     {
@@ -1874,14 +2012,14 @@ add_item_stats(Random *random, Item *item)
         
         switch(stat->type)
         {
-            case ItemStatType_Health: set_item_stat_description(stat, "Health"); break;
-            case ItemStatType_Strength: set_item_stat_description(stat, "Strength"); break;
-            case ItemStatType_Intelligence: set_item_stat_description(stat, "Intelligence"); break;
-            case ItemStatType_Dexterity: set_item_stat_description(stat, "Dexterity"); break;
-            case ItemStatType_Evasion: set_item_stat_description(stat, "Evasion"); break;
-            case ItemStatType_Defence: set_item_stat_description(stat, "Defence"); break;
-            case ItemStatType_ViewRange: set_item_stat_description(stat, "View Range"); break;
-            case ItemStatType_InvulnerableToTraps: strcpy(stat->description.s, "Trap Invulnerability"); break;
+            case ItemStatType_Health: set_item_stat_name(stat, "Health"); break;
+            case ItemStatType_Strength: set_item_stat_name(stat, "Strength"); break;
+            case ItemStatType_Intelligence: set_item_stat_name(stat, "Intelligence"); break;
+            case ItemStatType_Dexterity: set_item_stat_name(stat, "Dexterity"); break;
+            case ItemStatType_Evasion: set_item_stat_name(stat, "Evasion"); break;
+            case ItemStatType_Defence: set_item_stat_name(stat, "Defence"); break;
+            case ItemStatType_ViewRange: set_item_stat_name(stat, "View Range"); break;
+            case ItemStatType_InvulnerableToTraps: strcpy(stat->name.s, "Trap Invulnerability"); break;
             
             case ItemStatType_PhysicalResistance: set_item_resistance_stat(random, stat, EntityDamageType_Physical); break;
             case ItemStatType_FireResistance: set_item_resistance_stat(random, stat, EntityDamageType_Fire); break;
@@ -1963,18 +2101,31 @@ add_item(Random *random,
             strcpy(item->name.s, get_item_name(random, item).s);
             item->tile_src = get_item_tileset_rect(item_state, id, rarity, false);
             
+            if(is_set(item->flags, ItemFlag_CanEquip))
+            {
+                item->equip_tile_src = get_item_tileset_rect(item_state, id, rarity, true);
+            }
+            
+            if(item->rarity != ItemRarity_Common)
+            {
+                assert(is_set(item->flags, ItemFlag_CanEquip));
+                add_item_stats(random, item);
+            }
+            
+            if(is_cursed)
+            {
+                assert(is_set(item->flags, ItemFlag_CanEquip));
+                set(item->flags, ItemFlag_Cursed);
+            }
+            
             if(item->type == ItemType_Weapon)
             {
-                // Add weapon
-                if(is_cursed) set(item->flags, ItemFlag_Cursed);
-                if(item->rarity != ItemRarity_Common) add_item_stats(random, item);
-                
                 // TODO(rami): Second item damage type isn't being used.
                 //if(rarity == ItemRarity_Mythical) item->w.damage.second_type = get_random_damage_type(random, DamageType_Physical);
                 
+                // Add weapon
                 item->slot = ItemSlot_Weapon;
                 item->enchant_level = get_item_enchant_level(random, item);
-                item->equip_tile_src = get_item_tileset_rect(item_state, id, rarity, true);
                 
                 item->w.damage.type = EntityDamageType_Physical;
                 item->w.handedness = get_item_handedness(id);
@@ -2041,10 +2192,7 @@ add_item(Random *random,
             else if(item->type == ItemType_Armor)
             {
                 // Add armor
-                if(is_cursed) set(item->flags, ItemFlag_Cursed);
-                
                 item->enchant_level = get_item_enchant_level(random, item);
-                item->equip_tile_src = get_item_tileset_rect(item_state, id, rarity, true);
                 
                 switch(item->id)
                 {

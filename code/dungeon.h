@@ -505,7 +505,6 @@ internal v2u get_random_dungeon_feature_pos(Random *random, Dungeon *dungeon, It
 internal v2u get_random_dungeon_rect_pos(Random *random, v4u rect);
 internal v4u get_dungeon_tileset_rect(DungeonTileID tile_id);
 internal v4u get_dungeon_trap_tile_src(DungeonTrapType type);
-internal v4u get_dungeon_tile_rect_from_entity_id(EntityID id);
 internal v4u get_dungeon_tile_rect(v2u tile);
 internal DungeonTrap *get_dungeon_pos_trap(DungeonTraps *traps, v2u pos);
 internal DungeonTileID get_dungeon_pos_remains_tile_id(DungeonTiles tiles, v2u pos);

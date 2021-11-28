@@ -533,6 +533,76 @@ update_editor_mark(Input *input, EditorMode *editor, v2u mouse_pos)
 }
 
 internal void
+init_editor_mode(EditorMode *editor, ItemState *item_state, Assets *assets)
+{
+    assert(editor);
+    assert(item_state);
+    assert(assets);
+    
+    if(!editor->is_set)
+    {
+        editor->is_set = true;
+        
+        u32 editor_x = 2;
+        u32 editor_y = 2;
+        editor->font = &assets->fonts[FontName_DosVga];
+        
+        EditorGroup *tile_group = add_editor_group(editor, "Tiles", editor_x, editor_y, 10, false);
+        {
+            add_editor_source_tile(tile_group, EditorSourceType_Wall, DungeonTileID_StoneWall1);
+            add_editor_source_tile(tile_group, EditorSourceType_Water, DungeonTileID_Water1);
+            add_editor_source_tile(tile_group, EditorSourceType_DungeonTile, DungeonTileID_StoneDoorClosed);
+        }
+        
+        EditorGroup *trap_group = add_editor_group(editor, "Traps", editor_x, editor_y + 3, 10, false);
+        {
+            for(DungeonTrapType type = DungeonTrapType_None + 1; type < DungeonTrapType_Count; ++type)
+            {
+                add_editor_source_trap(trap_group, type);
+            }
+        }
+        
+        EditorGroup *entity_group = add_editor_group(editor, "Entities", editor_x, editor_y + 6, 10, true);
+        {
+            for(EntityID id = EntityID_EnemyStart + 1; id < EntityID_EnemyEnd; ++id)
+            {
+                add_editor_source_entity(entity_group, id);
+            }
+        }
+        
+        EditorGroup *item_group = add_editor_group(editor, "Items", editor_x, editor_y + 13, 0, true);
+        {
+            for(ItemID id = ItemID_WeaponStart + 1; id < ItemID_WeaponEnd; ++id)
+            {
+                for(ItemRarity rarity = ItemRarity_None + 1; rarity < ItemRarity_Count; ++rarity)
+                {
+                    add_editor_source_item(item_group, item_state, id, rarity);
+                }
+            }
+            add_editor_newline(item_group, 2);
+            
+            for(ItemID id = ItemID_ArmorStart + 1; id < ItemID_ArmorEnd; ++id)
+            {
+                add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
+            }
+            add_editor_newline(item_group, 2);
+            
+            for(ItemID id = ItemID_PotionStart + 1; id < ItemID_PotionEnd; ++id)
+            {
+                add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
+            }
+            add_editor_newline(item_group, 2);
+            
+            for(ItemID id = ItemID_ScrollStart + 1; id < ItemID_ScrollEnd; ++id)
+            {
+                add_editor_source_item(item_group, item_state, id, ItemRarity_Common);
+            }
+            add_editor_newline(item_group, 2);
+        }
+    }
+}
+
+internal void
 update_editor_mode(Random *random,
                    EditorMode *editor,
                    Input *input,
@@ -618,7 +688,7 @@ render_editor_mode(SDL_Renderer *renderer,
                     v2u padding = {font->size, 8};
                     v2u mark_input_pos =
                     {
-                        name_pos.x + get_text_width(group->name, editor->font, false) + padding.x,
+                        name_pos.x + get_text_width(group->name, editor->font, true) + padding.x,
                         name_pos.y - padding.y
                     };
                     
@@ -635,7 +705,7 @@ render_editor_mode(SDL_Renderer *renderer,
                         if(source->name)
                         {
                             if(is_mark_array_valid(group->mark.array) &&
-                               !string_has_string(source->name, group->mark.array, false))
+                               !string_has_string(source->name, group->mark.array))
                             {
                                 half_color = true;
                             }
